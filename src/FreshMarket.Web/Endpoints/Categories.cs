@@ -13,11 +13,12 @@ public class Categories : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
+            .RequireAuthorization()
             .MapGet(GetAllCategories)
             .MapGet(GetCategoryById, "{id}")
-            .MapPost(CreateCategory).RequireAuthorization()
-            .MapPut(UpdateCategory, "{id}").RequireAuthorization()
-            .MapDelete(DeleteCategory, "{id}").RequireAuthorization();
+            .MapPost(CreateCategory)
+            .MapPut(UpdateCategory, "{id}")
+            .MapDelete(DeleteCategory, "{id}");
     }
 
     public async Task<IResult> GetAllCategories(ISender sender)

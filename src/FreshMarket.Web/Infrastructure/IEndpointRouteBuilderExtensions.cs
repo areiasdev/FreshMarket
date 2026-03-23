@@ -1,40 +1,38 @@
-using System.Reflection;
+using Ardalis.GuardClauses;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FreshMarket.Web.Infrastructure;
 
 public static class IEndpointRouteBuilderExtensions
 {
-    public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group)
+    public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder builder, Delegate handler, [StringSyntax("Route")] string pattern = "")
     {
-        var groupName = group.GetType().Name;
-
-        return app.MapGroup($"/api/{groupName}")
-                  .WithGroupName(groupName)
-                  .WithTags(groupName)
-                  .WithOpenApi();
-    }
-
-    public static RouteGroupBuilder MapGet(this RouteGroupBuilder builder, Delegate handler, string pattern = "")
-    {
-        builder.MapGet(pattern, handler);
+        Guard.Against.AnonymousMethod(handler);
+        builder.MapGet(pattern, handler).WithName(GetEndpointName(handler)).WithOpenApi();
         return builder;
     }
 
-    public static RouteGroupBuilder MapPost(this RouteGroupBuilder builder, Delegate handler, string pattern = "")
+    public static IEndpointRouteBuilder MapPost(this IEndpointRouteBuilder builder, Delegate handler, [StringSyntax("Route")] string pattern = "")
     {
-        builder.MapPost(pattern, handler);
+        Guard.Against.AnonymousMethod(handler);
+        builder.MapPost(pattern, handler).WithName(GetEndpointName(handler)).WithOpenApi();
         return builder;
     }
 
-    public static RouteGroupBuilder MapPut(this RouteGroupBuilder builder, Delegate handler, string pattern = "")
+    public static IEndpointRouteBuilder MapPut(this IEndpointRouteBuilder builder, Delegate handler, [StringSyntax("Route")] string pattern)
     {
-        builder.MapPut(pattern, handler);
+        Guard.Against.AnonymousMethod(handler);
+        builder.MapPut(pattern, handler).WithName(GetEndpointName(handler)).WithOpenApi();
         return builder;
     }
 
-    public static RouteGroupBuilder MapDelete(this RouteGroupBuilder builder, Delegate handler, string pattern = "")
+    public static IEndpointRouteBuilder MapDelete(this IEndpointRouteBuilder builder, Delegate handler, [StringSyntax("Route")] string pattern)
     {
-        builder.MapDelete(pattern, handler);
+        Guard.Against.AnonymousMethod(handler);
+        builder.MapDelete(pattern, handler).WithName(GetEndpointName(handler)).WithOpenApi();
         return builder;
     }
+
+    private static string GetEndpointName(Delegate handler) =>
+        $"{handler.Method.DeclaringType?.Name}_{handler.Method.Name}";
 }

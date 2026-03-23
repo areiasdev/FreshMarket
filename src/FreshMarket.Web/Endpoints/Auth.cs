@@ -11,7 +11,6 @@ public class Auth : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
-            .WithOpenApi()
             .MapPost(Login, "login")
             .MapPost(Register, "register")
             .MapPost(RefreshToken, "refresh-token");

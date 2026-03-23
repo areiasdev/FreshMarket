@@ -14,13 +14,14 @@ public class Products : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
+            .RequireAuthorization()
             .MapGet(GetAllProducts)
             .MapGet(GetProductById, "{id}")
             .MapGet(GetProductsByCategory, "category/{categoryId}")
-            .MapPost(CreateProduct).RequireAuthorization()
-            .MapPut(UpdateProduct, "{id}").RequireAuthorization()
-            .MapDelete(DeleteProduct, "{id}").RequireAuthorization()
-            .MapPut(BulkUpdatePrice, "bulk-price").RequireAuthorization();
+            .MapPost(CreateProduct)
+            .MapPut(UpdateProduct, "{id}")
+            .MapDelete(DeleteProduct, "{id}")
+            .MapPut(BulkUpdatePrice, "bulk-price");
     }
 
     public async Task<IResult> GetAllProducts(ISender sender, int page = 1, int pageSize = 20, int? categoryId = null)
