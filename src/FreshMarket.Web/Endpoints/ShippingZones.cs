@@ -12,10 +12,11 @@ public class ShippingZones : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
+            .RequireAuthorization()
             .MapGet(GetAllShippingZones)
             .MapGet(GetByPostalCode, "postal/{postalCodePrefix}")
-            .MapPost(CreateShippingZone).RequireAuthorization()
-            .MapPut(UpdateShippingZone, "{id}").RequireAuthorization();
+            .MapPost(CreateShippingZone)
+            .MapPut(UpdateShippingZone, "{id}");
     }
 
     public async Task<IResult> GetAllShippingZones(ISender sender)

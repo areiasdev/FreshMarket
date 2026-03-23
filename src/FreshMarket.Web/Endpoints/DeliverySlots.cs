@@ -13,11 +13,12 @@ public class DeliverySlots : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
+            .RequireAuthorization()
             .MapGet(GetAvailableSlots, "available")
             .MapGet(GetSlotsByDate, "date/{date}")
-            .MapPost(CreateSlot).RequireAuthorization()
-            .MapPut(UpdateSlot, "{id}").RequireAuthorization()
-            .MapDelete(DeleteSlot, "{id}").RequireAuthorization();
+            .MapPost(CreateSlot)
+            .MapPut(UpdateSlot, "{id}")
+            .MapDelete(DeleteSlot, "{id}");
     }
 
     public async Task<IResult> GetAvailableSlots(DateOnly date, string postalCodePrefix, ISender sender)
