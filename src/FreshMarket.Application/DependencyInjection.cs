@@ -1,11 +1,19 @@
+using FreshMarket.Application.Categories.Services;
 using FreshMarket.Application.Common.Behaviors;
+using FreshMarket.Application.Common.Interfaces;
+using FreshMarket.Application.DeliverySlots.Services;
+using FreshMarket.Application.Orders.Services;
+using FreshMarket.Application.Products.Services;
+using FreshMarket.Application.ShippingZones.Services;
+using FreshMarket.Application.Users.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FreshMarket.Application;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplication(
+        this IServiceCollection services)
     {
         services.AddMediatR(cfg =>
         {
@@ -15,6 +23,13 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IDeliverySlotService, DeliverySlotService>();
+        services.AddScoped<IShippingZoneService, ShippingZoneService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

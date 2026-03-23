@@ -1,41 +1,80 @@
+using FreshMarket.Application;
+using FreshMarket.Infrastructure;
+using FreshMarket.Web.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using Serilog;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Host.UseSerilog((ctx, config) =>
+    config.ReadFrom.Configuration(ctx.Configuration)
+          .WriteTo.Console()
+          .WriteTo.File("logs/freshmarket-.txt", rollingInterval: RollingInterval.Day));
+
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FreshMarketCors", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
+var app = builder.Build();
+Console.WriteLine(">> App built");
+
 if (app.Environment.IsDevelopment())
 {
+    Console.WriteLine(">> Mapping OpenApi...");
     app.MapOpenApi();
+    Console.WriteLine(">> Mapping Scalar...");
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "FreshMarket API";
+        options.Theme = ScalarTheme.DeepSpace;
+    });
 }
 
-app.UseHttpsRedirection();
+Console.WriteLine(">> Adding middlewares...");
+//app.UseSerilogRequestLogging();
+app.UseExceptionHandler();
+app.UseCors("FreshMarketCors");
+app.UseAuthentication();
+app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+Console.WriteLine(">> Mapping endpoints...");
+app.MapEndpoints();
+Console.WriteLine(">> Endpoints mapped, running app...");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+Console.WriteLine(">> AFTER RUN"); // nunca deve chegar aqui
