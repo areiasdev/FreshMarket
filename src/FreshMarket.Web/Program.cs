@@ -3,6 +3,7 @@ using FreshMarket.Infrastructure;
 using FreshMarket.Web.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
@@ -33,11 +34,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CustomerPolicy", policy =>
+        policy.RequireAuthenticatedUser());
+
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("Admin"));
+});
+
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((doc, context, ct) =>
+    {
+        doc.Components ??= new();
+        doc.Components.SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>
+        {
+            ["Bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
+            }
+        };
+        return Task.CompletedTask;
+    });
+});
+
 
 
 
@@ -51,30 +78,27 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-Console.WriteLine(">> App built");
 
 if (app.Environment.IsDevelopment())
 {
-    Console.WriteLine(">> Mapping OpenApi...");
     app.MapOpenApi();
-    Console.WriteLine(">> Mapping Scalar...");
     app.MapScalarApiReference(options =>
     {
         options.Title = "FreshMarket API";
         options.Theme = ScalarTheme.DeepSpace;
+        options.AddHttpAuthentication("Bearer", auth =>
+        {
+            auth.Description = "JWT Bearer Token";
+        });
     });
 }
 
-Console.WriteLine(">> Adding middlewares...");
-//app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseCors("FreshMarketCors");
 app.UseAuthentication();
 app.UseAuthorization();
 
-Console.WriteLine(">> Mapping endpoints...");
 app.MapEndpoints();
-Console.WriteLine(">> Endpoints mapped, running app...");
 
 app.Run();
-Console.WriteLine(">> AFTER RUN"); // nunca deve chegar aqui

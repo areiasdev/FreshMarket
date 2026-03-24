@@ -12,7 +12,7 @@ public class AdminOrders : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapGroup(this)
+        app.MapGroup(this, "AdminPolicy")
             .RequireAuthorization()
             .MapGet(GetOrdersByStatus, "status/{status}")
             .MapGet(GetOrdersBySlot, "slot/{slotId}")

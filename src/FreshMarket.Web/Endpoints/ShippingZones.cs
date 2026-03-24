@@ -11,8 +11,7 @@ public class ShippingZones : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapGroup(this)
-            .RequireAuthorization()
+        app.MapGroup(this, "CustomerPolicy")
             .MapGet(GetAllShippingZones)
             .MapGet(GetByPostalCode, "postal/{postalCodePrefix}")
             .MapPost(CreateShippingZone)

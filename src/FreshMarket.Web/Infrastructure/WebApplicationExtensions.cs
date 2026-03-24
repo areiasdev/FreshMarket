@@ -4,15 +4,20 @@ namespace FreshMarket.Web.Infrastructure;
 
 public static class WebApplicationExtensions
 {
-    public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group)
+    public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group, string? policy = null)
     {
         var groupName = group.GetType().Name;
-
-        return app
+        var builder = app
             .MapGroup($"/api/{groupName}")
             .WithTags(groupName)
             .WithOpenApi();
+
+        if (policy is not null)
+            builder.RequireAuthorization(policy);
+
+        return builder;
     }
+
 
     public static WebApplication MapEndpoints(this WebApplication app)
     {
@@ -30,4 +35,6 @@ public static class WebApplicationExtensions
 
         return app;
     }
+
+
 }

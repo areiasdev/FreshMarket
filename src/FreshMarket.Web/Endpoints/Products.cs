@@ -14,7 +14,6 @@ public class Products : EndpointGroupBase
     public override void Map(WebApplication app)
     {
         app.MapGroup(this)
-            .RequireAuthorization()
             .MapGet(GetAllProducts)
             .MapGet(GetProductById, "{id}")
             .MapGet(GetProductsByCategory, "category/{categoryId}")
