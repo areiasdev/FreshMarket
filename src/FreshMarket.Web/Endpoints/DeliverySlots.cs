@@ -12,8 +12,7 @@ public class DeliverySlots : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapGroup(this)
-            .RequireAuthorization()
+        app.MapGroup(this, "CustomerPolicy")
             .MapGet(GetAvailableSlots, "available")
             .MapGet(GetSlotsByDate, "date/{date}")
             .MapPost(CreateSlot)

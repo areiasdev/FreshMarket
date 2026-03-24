@@ -9,8 +9,7 @@ public class AdminSlots : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapGroup(this)
-            .RequireAuthorization()
+        app.MapGroup(this, "AdminPolicy")
             .MapGet(GetSlotsByDate, "date/{date}");
     }
 

@@ -9,8 +9,7 @@ public class AdminProducts : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapGroup(this)
-            .RequireAuthorization()
+        app.MapGroup(this, "AdminPolicy")
             .MapPut(BulkUpdatePrice, "bulk-price");
     }
 
