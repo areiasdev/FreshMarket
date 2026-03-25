@@ -78,4 +78,22 @@ public class DeliverySlotService : IDeliverySlotService
         slot.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }
+
+    public async Task<PagedResult<DeliverySlotDto>> GetAdminListAsync(int page, int pageSize, CancellationToken ct)
+    {
+        var query = _db.DeliverySlots
+            .Where(s => s.DeletedAt == null)
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.StartTime);
+
+        var total = await query.CountAsync(ct).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => s.ToDto())
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return new PagedResult<DeliverySlotDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

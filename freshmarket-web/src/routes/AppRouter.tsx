@@ -3,7 +3,7 @@ import AuthPage from "../pages/AuthPage";
 import HomePage from "../pages/HomePage";
 import { useAuth } from "../features/auth/useAuth";
 import AdminRoute from "./AdminRoute";
-import AdminPage from "../pages/admin/AdminPage";
+import AdminPage from "../features/admin/AdminPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();

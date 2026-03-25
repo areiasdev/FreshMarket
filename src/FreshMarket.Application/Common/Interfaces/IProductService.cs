@@ -1,3 +1,4 @@
+using FreshMarket.Application.Categories.Models;
 using FreshMarket.Application.Products.Models;
 
 namespace FreshMarket.Application.Common.Interfaces;
@@ -11,4 +12,6 @@ public interface IProductService
     Task<ProductDto> UpdateAsync(int id, int categoryId, string name, string? description, decimal pricePerUnit, decimal minQuantity, decimal stockQuantity, string? imageUrl, bool isSeasonal, bool isActive, CancellationToken ct);
     Task DeleteAsync(int id, CancellationToken ct);
     Task BulkUpdatePriceAsync(IEnumerable<(int ProductId, decimal NewPrice)> items, CancellationToken ct);
+    Task<PagedResult<ProductListDto>> GetAdminListAsync(string? search, bool? isActive, int page, int pageSize, CancellationToken ct);
+    Task ToggleActiveAsync(int id, CancellationToken ct);
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/useAuth";
 import client from "../api/client";
 import type { AuthResponse } from "../types";
+import { endpoints } from "../lib/endpoints";
 
 export default function AuthPage() {
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function AuthPage() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await client.post<AuthResponse>("/Auth/login", loginForm);
+      const { data } = await client.post<AuthResponse>(endpoints.auth.login, loginForm);
       login(data);
       navigate("/");
     } catch {
@@ -34,7 +35,7 @@ export default function AuthPage() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await client.post<AuthResponse>("/Auth/register", registerForm);
+      const { data } = await client.post<AuthResponse>(endpoints.auth.register, registerForm);
       login(data);
       navigate("/");
     } catch {
