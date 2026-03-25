@@ -7,8 +7,13 @@ public static class WebApplicationExtensions
     public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group, string? policy = null)
     {
         var groupName = group.GetType().Name;
+
+        string path = groupName.StartsWith("Admin", StringComparison.OrdinalIgnoreCase)
+            ? $"/api/admin/{groupName["Admin".Length..].ToLowerInvariant()}"
+            : $"/api/{groupName.ToLowerInvariant()}";
+
         var builder = app
-            .MapGroup($"/api/{groupName}")
+            .MapGroup(path)
             .WithTags(groupName)
             .WithOpenApi();
 

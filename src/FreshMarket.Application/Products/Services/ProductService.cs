@@ -1,8 +1,10 @@
+using FreshMarket.Application.Categories.Models;
 using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Extensions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Mapping;
 using FreshMarket.Application.Products.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace FreshMarket.Application.Products.Services;
@@ -110,6 +112,38 @@ public class ProductService : IProductService
             product.PricePerUnit = itemList.First(i => i.ProductId == product.Id).NewPrice;
             product.UpdatedAt = DateTime.UtcNow;
         }
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    public async Task<PagedResult<ProductListDto>> GetAdminListAsync(string? search, bool? isActive, int page, int pageSize, CancellationToken ct)
+    {
+        var query = _db.Products
+            .Include(p => p.Category)
+            .Where(p => p.DeletedAt == null);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => p.Name.Contains(search));
+
+        if (isActive.HasValue)
+            query = query.Where(p => p.IsActive == isActive.Value);
+
+        return await query
+            .OrderBy(p => p.Name)
+            .Select(p => p.ToListDto())
+            .ToPagedResultAsync(page, pageSize, ct)
+            .ConfigureAwait(false);
+    }
+
+    public async Task ToggleActiveAsync(int id, CancellationToken ct)
+    {
+        var product = await _db.Products
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, ct)
+            .ConfigureAwait(false)
+            ?? throw new NotFoundException(nameof(Product), id);
+
+        product.IsActive = !product.IsActive;
+        product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }

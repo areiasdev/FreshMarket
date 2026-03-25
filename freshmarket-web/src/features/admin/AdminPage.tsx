@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { useAuth } from "../../features/auth/useAuth";
+import { useAuth } from "../auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import AdminProducts from "./AdminProducts";
+import AdminCategories from "./AdminCategories";
+import AdminOrders from "./AdminOrders";
+import AdminDeliverySlots from "./AdminDeliverySlots";
+import AdminShippingZones from "./AdminShippingZones";
 
 type Section = "dashboard" | "products" | "categories" | "orders" | "slots" | "zones";
 
@@ -62,10 +66,10 @@ export default function AdminPage() {
       <main className="ml-64 flex-1 p-8">
         {active === "dashboard" && <DashboardOverview />}
         {active === "products" && <AdminProducts />}
-        {active === "categories" && <ComingSoon label="Categorias" />}
-        {active === "orders" && <ComingSoon label="Encomendas" />}
-        {active === "slots" && <ComingSoon label="Slots de Entrega" />}
-        {active === "zones" && <ComingSoon label="Zonas de Envio" />}
+        {active === "categories" && <AdminCategories />}
+        {active === "orders" && <AdminOrders />}
+        {active === "slots" && <AdminDeliverySlots />}
+        {active === "zones" && <AdminShippingZones />}
       </main>
     </div>
   );
@@ -89,15 +93,6 @@ function DashboardOverview() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function ComingSoon({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-      <p className="text-4xl mb-3">🚧</p>
-      <p className="text-lg font-medium">{label} — em breve</p>
     </div>
   );
 }

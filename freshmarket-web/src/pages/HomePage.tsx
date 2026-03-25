@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import client from "../api/client";
 import { useAuth } from "../features/auth/useAuth";
 import { useNavigate } from "react-router-dom";
+import { endpoints } from "../lib/endpoints";
 
 interface Product {
   id: number;
@@ -21,7 +22,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    client.get("/Products").then((res) => setProducts(res.data.items ?? res.data));
+    client.get(endpoints.products.getAll).then((res) => setProducts(res.data.items ?? res.data));
   }, []);
 
   const categories = ["Todos", ...Array.from(new Set(products.map((p) => p.categoryName)))];
@@ -71,7 +72,7 @@ export default function HomePage() {
           Frutas, legumes e hortaliças selecionadas entregues em casa com qualidade garantida.
         </p>
         <button
-          onClick={() => navigate(isAuthenticated ? "/shop" : "/auth")}
+          onClick={() => navigate("/shop")}
           className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-full text-lg transition shadow-md">
           Encomendar agora
         </button>
@@ -123,7 +124,7 @@ export default function HomePage() {
                     <span className="text-xs font-normal text-gray-400">{unitLabel(p.unitType)}</span>
                   </p>
                   <button
-                    onClick={() => navigate(isAuthenticated ? "/shop" : "/auth")}
+                    onClick={() => navigate(isAuthenticated ? "/cart" : "/auth")}
                     className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 rounded-lg transition">
                     + Adicionar
                   </button>

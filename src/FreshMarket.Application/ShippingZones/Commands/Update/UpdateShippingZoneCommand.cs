@@ -3,19 +3,21 @@ using FreshMarket.Application.ShippingZones.Models;
 
 namespace FreshMarket.Application.ShippingZones.Commands.Update;
 
-public record UpdateShippingZoneCommand(int Id, decimal ShippingFee, decimal MinOrderValue, bool IsActive) : IRequest<ShippingZoneDto>;
+public record UpdateShippingZoneCommand(
+    int Id,
+    string City,
+    string PostalCodePrefix,
+    decimal ShippingFee,
+    decimal MinOrderValue,
+    bool IsActive
+) : IRequest<ShippingZoneDto>;
 
-public class UpdateShippingZoneCommandHandler : IRequestHandler<UpdateShippingZoneCommand, ShippingZoneDto>
+public class UpdateShippingZoneCommandHandler(IShippingZoneService shippingZoneService)
+    : IRequestHandler<UpdateShippingZoneCommand, ShippingZoneDto>
 {
-    private readonly IShippingZoneService _shippingZoneService;
-
-    public UpdateShippingZoneCommandHandler(IShippingZoneService shippingZoneService)
-    {
-        _shippingZoneService = shippingZoneService;
-    }
-
     public async Task<ShippingZoneDto> Handle(UpdateShippingZoneCommand request, CancellationToken ct)
-        => await _shippingZoneService.UpdateAsync(
-            request.Id, request.ShippingFee, request.MinOrderValue, request.IsActive, ct
+        => await shippingZoneService.UpdateAsync(
+            request.Id, request.City, request.PostalCodePrefix,
+            request.ShippingFee, request.MinOrderValue, request.IsActive, ct
         ).ConfigureAwait(false);
 }

@@ -36,11 +36,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("CustomerPolicy", policy =>
-        policy.RequireAuthenticatedUser());
-
     options.AddPolicy("AdminPolicy", policy =>
         policy.RequireRole("Admin"));
+
+    options.AddPolicy("CustomerPolicy", policy =>
+        policy.RequireRole("Customer", "Admin"));
 });
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();

@@ -67,4 +67,21 @@ public class CategoryService : ICategoryService
         category.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }
+
+    public async Task<PagedResult<CategoryDto>> GetAdminListAsync(int page, int pageSize, CancellationToken ct)
+    {
+        var query = _db.Categories
+            .Where(c => c.DeletedAt == null)
+            .OrderBy(c => c.Name);
+
+        var total = await query.CountAsync(ct).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => c.ToDto())
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return new PagedResult<CategoryDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

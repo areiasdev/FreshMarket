@@ -9,4 +9,5 @@ public interface IDeliverySlotService
     Task<DeliverySlotDto> CreateAsync(DateOnly deliveryDate, TimeOnly startTime, TimeOnly endTime, int maxOrders, int? shippingZoneId, CancellationToken ct);
     Task<DeliverySlotDto> UpdateAsync(int id, int maxOrders, bool isActive, CancellationToken ct);
     Task DeleteAsync(int id, CancellationToken ct);
+    Task<PagedResult<DeliverySlotDto>> GetAdminListAsync(int page, int pageSize, CancellationToken ct);
 }
