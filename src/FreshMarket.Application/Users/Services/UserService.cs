@@ -1,3 +1,4 @@
+using FreshMarket.Application.Common.Constants;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Mapping;
 using FreshMarket.Application.Common.Security;
@@ -11,11 +12,13 @@ public class UserService : IUserService
 {
     private readonly IApplicationDbContext _db;
     private readonly ITokenService _tokenService;
+    private readonly ICacheService _cache;
 
-    public UserService(IApplicationDbContext db, ITokenService tokenService)
+    public UserService(IApplicationDbContext db, ITokenService tokenService, ICacheService cache)
     {
         _db = db;
         _tokenService = tokenService;
+        _cache = cache;
     }
 
     public async Task<AuthResponseDto?> LoginAsync(string email, string password, CancellationToken ct)
@@ -54,11 +57,19 @@ public class UserService : IUserService
 
     public async Task<UserDto?> GetByIdAsync(int id, CancellationToken ct)
     {
+        var key = CacheKeys.UserById(id);
+        var cached = await _cache.GetAsync<UserDto>(key, ct);
+        if (cached is not null) return cached;
+
         var user = await _db.Users
             .FirstOrDefaultAsync(u => u.Id == id, ct)
             .ConfigureAwait(false);
 
-        return user == null ? null : user.ToDto();
+        if (user == null) return null;
+
+        var result = user.ToDto();
+        await _cache.SetAsync(key, result, TimeSpan.FromMinutes(30), ct);
+        return result;
     }
 
     private AuthResponseDto GenerateAuthResponse(User user) => new()

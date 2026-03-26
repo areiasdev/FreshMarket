@@ -4,6 +4,11 @@ import HomePage from "../pages/HomePage";
 import { useAuth } from "../features/auth/useAuth";
 import AdminRoute from "./AdminRoute";
 import AdminPage from "../features/admin/AdminPage";
+import CartPage from "../pages/CartPage";
+import ShopPage from "../pages/ShopPage";
+import CheckoutPage from "../pages/CheckoutPage";
+import OrdersPage from "../pages/OrdersPage";
+import OrderDetailPage from "../pages/OrderDetailPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -18,14 +23,29 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={
+          <PrivateRoute>
+            <CheckoutPage />
+          </PrivateRoute>
+        } />
+        <Route path="/orders" element={
+          <PrivateRoute>
+            <OrdersPage />
+          </PrivateRoute>} />
+        <Route path="/orders/:id" element={
+          <PrivateRoute>
+            <OrderDetailPage />
+          </PrivateRoute>} />
         <Route path="/admin" element={
-        <PrivateRoute>
-          <AdminRoute>
-            <AdminPage />
-          </AdminRoute>
-        </PrivateRoute>
-      } />
+          <PrivateRoute>
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          </PrivateRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

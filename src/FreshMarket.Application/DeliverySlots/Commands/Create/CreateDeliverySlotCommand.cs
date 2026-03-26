@@ -8,7 +8,7 @@ public record CreateDeliverySlotCommand(
     TimeOnly StartTime,
     TimeOnly EndTime,
     int MaxOrders,
-    int? ShippingZoneId
+    decimal Shippingfee
 ) : IRequest<DeliverySlotDto>;
 
 public class CreateDeliverySlotCommandHandler : IRequestHandler<CreateDeliverySlotCommand, DeliverySlotDto>
@@ -23,6 +23,6 @@ public class CreateDeliverySlotCommandHandler : IRequestHandler<CreateDeliverySl
     public async Task<DeliverySlotDto> Handle(CreateDeliverySlotCommand request, CancellationToken ct)
         => await _deliverySlotService.CreateAsync(
             request.DeliveryDate, request.StartTime, request.EndTime,
-            request.MaxOrders, request.ShippingZoneId, ct
+            request.MaxOrders, request.Shippingfee, ct
         ).ConfigureAwait(false);
 }

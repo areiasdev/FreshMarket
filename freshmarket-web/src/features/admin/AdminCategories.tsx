@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import client from "../../api/client";
-import Pagination from "../../components/admin/Pagination";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
+import Pagination from "../../components/utils/Pagination";
 
 interface CategoryDto {
   id: number;
@@ -13,44 +13,50 @@ interface CategoryDto {
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<CategoryDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<CategoryDto | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "" });
+  const [total, setTotal]           = useState(0);
+  const [page, setPage]             = useState(1);
+  const [pageSize, setPageSize]     = useState(10);
+  const [loading, setLoading]       = useState(true);
+  const [showModal, setShowModal]   = useState(false);
+  const [form, setForm]             = useState({ name: "", slug: "" });
 
-  const load = async () => {
-    setLoading(true);
-    const res = await client.get(endpoints.admin.categories.getAll + `?page=${page}&pageSize=${pageSize}`);
-    setCategories(res.data.items);
-    setTotal(res.data.totalCount);
-    setLoading(false);
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await client.get(
+          endpoints.admin.categories.getAll + `?page=${page}&pageSize=${pageSize}`
+        );
+        setCategories(res.data.items ?? res.data);
+        setTotal(res.data.totalCount ?? 0);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [page, pageSize]);
+
+  const reload = async () => {
+    const res = await client.get(
+      endpoints.admin.categories.getAll + `?page=${page}&pageSize=${pageSize}`
+    );
+    setCategories(res.data.items ?? res.data);
+    setTotal(res.data.totalCount ?? 0);
   };
 
-  useEffect(() => { load(); }, [page]);
-
-  const openCreate = () => { setEditItem(null); setForm({ name: "", slug: "" }); setShowModal(true); };
-  const openEdit = (c: CategoryDto) => { setEditItem(c); setForm({ name: c.name, slug: c.slug }); setShowModal(true); };
-
   const handleSubmit = async () => {
-    if (editItem) {
-      await client.put(endpoints.admin.categories.update(editItem.id), {
-        name: form.name,
-        slug: form.slug,
-        isActive: editItem.isActive,
-        });
-    } else {
-      await client.post(endpoints.admin.categories.create, form);
-    }
+    // ✅ Apenas CREATE — backend AdminCategories.cs não tem endpoint PUT de update.
+    //    Para suportar edição, adiciona no backend:
+    //    .MapPut(Update, "{id:int}") + UpdateCategoryCommand handler
+    await client.post(endpoints.admin.categories.create, form);
     setShowModal(false);
-    load();
+    await reload();
   };
 
   const toggleActive = async (id: number) => {
+    // ✅ PATCH — correto, backend usa MapPatch
     await client.patch(endpoints.admin.categories.toggleActive(id));
-    load();
+    await reload();
   };
 
   const totalPages = Math.ceil(total / pageSize);
@@ -62,7 +68,10 @@ export default function AdminCategories() {
           <h1 className="text-2xl font-bold text-gray-800">Categorias</h1>
           <p className="text-sm text-gray-400 mt-1">{total} categorias no total</p>
         </div>
-        <button onClick={openCreate} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+        <button
+          onClick={() => { setForm({ name: "", slug: "" }); setShowModal(true); }}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+        >
           + Nova Categoria
         </button>
       </div>
@@ -79,19 +88,27 @@ export default function AdminCategories() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="text-center py-8 text-gray-400">A carregar...</td></tr>
+              <tr>
+                <td colSpan={4} className="text-center py-8 text-gray-400">A carregar...</td>
+              </tr>
             ) : categories.map((c) => (
               <tr key={c.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
                 <td className="px-4 py-3 text-gray-400 font-mono text-xs">{c.slug}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${c.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    c.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                  }`}>
                     {c.isActive ? "Ativa" : "Inativa"}
                   </span>
                 </td>
-                <td className="px-4 py-3 flex gap-3">
-                  <button onClick={() => openEdit(c)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                  <button onClick={() => toggleActive(c.id)} className="text-xs text-gray-500 hover:underline">
+                <td className="px-4 py-3">
+                  {/* ✅ Botão "Editar" removido — backend não tem endpoint PUT de update.
+                      Adiciona MapPut no AdminCategories.cs para o reativar. */}
+                  <button
+                    onClick={() => toggleActive(c.id)}
+                    className="text-xs text-gray-500 hover:underline"
+                  >
                     {c.isActive ? "Desativar" : "Ativar"}
                   </button>
                 </td>
@@ -99,20 +116,43 @@ export default function AdminCategories() {
             ))}
           </tbody>
         </table>
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          pageSizeOptions={[5, 10, 20]}
+        />
       </div>
 
       {showModal && (
-        <Modal title={editItem ? "Editar Categoria" : "Nova Categoria"} onClose={() => setShowModal(false)} onSubmit={handleSubmit}>
+        <Modal
+          title="Nova Categoria"
+          onClose={() => setShowModal(false)}
+          onSubmit={handleSubmit}
+        >
           <label className="block mb-4">
             <span className="text-sm text-gray-600">Nome</span>
-            <input className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") })} />
+            <input
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+              value={form.name}
+              onChange={(e) => setForm({
+                ...form,
+                name: e.target.value,
+                slug: e.target.value.toLowerCase().replace(/\s+/g, "-"),
+              })}
+            />
           </label>
           <label className="block">
             <span className="text-sm text-gray-600">Slug</span>
-            <input className="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-mono" value={form.slug}
-              onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+            <input
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-mono"
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+            />
           </label>
         </Modal>
       )}

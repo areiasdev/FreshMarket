@@ -22,6 +22,65 @@ namespace FreshMarket.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FreshMarket.Domain.Entities.Address", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "IsDefault")
+                        .IsUnique()
+                        .HasFilter("[IsDefault] = 1");
+
+                    b.ToTable("Addresses");
+                });
+
             modelBuilder.Entity("FreshMarket.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -89,8 +148,15 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.Property<int>("MaxOrders")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ShippingZoneId")
-                        .HasColumnType("integer");
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
+
+                    b.Property<decimal>("ShippingFee")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time without time zone");
@@ -99,8 +165,6 @@ namespace FreshMarket.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ShippingZoneId");
 
                     b.HasIndex("DeliveryDate", "IsActive");
 
@@ -118,16 +182,22 @@ namespace FreshMarket.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AddressId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DeliveryAddress")
+                    b.Property<string>("DeliveryCity")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("DeliveryCountry")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("DeliveryPostalCode")
                         .IsRequired()
@@ -137,24 +207,22 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.Property<int>("DeliverySlotId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ExternalTransactionId")
+                    b.Property<string>("DeliveryStreet")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
-                    b.Property<string>("PaymentMethod")
+                    b.Property<string>("OrderNumber")
                         .HasColumnType("text");
 
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("integer");
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("ShippingFee")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
-
-                    b.Property<int>("ShippingZoneId")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -171,9 +239,11 @@ namespace FreshMarket.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AddressId");
+
                     b.HasIndex("DeliverySlotId");
 
-                    b.HasIndex("ShippingZoneId");
+                    b.HasIndex("Status");
 
                     b.HasIndex("UserId");
 
@@ -201,8 +271,8 @@ namespace FreshMarket.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Quantity")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
 
                     b.Property<decimal>("Subtotal")
                         .HasPrecision(10, 2)
@@ -222,6 +292,54 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("FreshMarket.Domain.Entities.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalTransactionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.Product", b =>
@@ -253,22 +371,38 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.Property<bool>("IsSeasonal")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal>("LowStockAlert")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
+
                     b.Property<decimal>("MinQuantity")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("PricePerUnit")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<decimal>("ReservedStock")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<decimal>("StockQuantity")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)");
+
+                    b.Property<bool>("TrackStock")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UnitType")
                         .HasColumnType("integer");
@@ -280,52 +414,12 @@ namespace FreshMarket.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "CategoryId");
+
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("FreshMarket.Domain.Entities.ShippingZone", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("MinOrderValue")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
-                    b.Property<string>("PostalCodePrefix")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)");
-
-                    b.Property<decimal>("ShippingFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostalCodePrefix");
-
-                    b.ToTable("ShippingZones");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.User", b =>
@@ -335,9 +429,6 @@ namespace FreshMarket.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -362,9 +453,6 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("text");
 
-                    b.Property<string>("PostalCode")
-                        .HasColumnType("text");
-
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -381,26 +469,26 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("FreshMarket.Domain.Entities.DeliverySlot", b =>
+            modelBuilder.Entity("FreshMarket.Domain.Entities.Address", b =>
                 {
-                    b.HasOne("FreshMarket.Domain.Entities.ShippingZone", "ShippingZone")
-                        .WithMany("DeliverySlots")
-                        .HasForeignKey("ShippingZoneId");
+                    b.HasOne("FreshMarket.Domain.Entities.User", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("ShippingZone");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("FreshMarket.Domain.Entities.Address", "Address")
+                        .WithMany()
+                        .HasForeignKey("AddressId");
+
                     b.HasOne("FreshMarket.Domain.Entities.DeliverySlot", "DeliverySlot")
                         .WithMany("Orders")
                         .HasForeignKey("DeliverySlotId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FreshMarket.Domain.Entities.ShippingZone", "ShippingZone")
-                        .WithMany("Orders")
-                        .HasForeignKey("ShippingZoneId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -410,9 +498,9 @@ namespace FreshMarket.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("DeliverySlot");
+                    b.Navigation("Address");
 
-                    b.Navigation("ShippingZone");
+                    b.Navigation("DeliverySlot");
 
                     b.Navigation("User");
                 });
@@ -422,16 +510,29 @@ namespace FreshMarket.Infrastructure.Migrations
                     b.HasOne("FreshMarket.Domain.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FreshMarket.Domain.Entities.Product", "Product")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("ProductId");
+                        .WithMany("Items")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Order");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("FreshMarket.Domain.Entities.Payment", b =>
+                {
+                    b.HasOne("FreshMarket.Domain.Entities.Order", "Order")
+                        .WithMany("Payments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.Product", b =>
@@ -458,22 +559,19 @@ namespace FreshMarket.Infrastructure.Migrations
             modelBuilder.Entity("FreshMarket.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.Product", b =>
                 {
-                    b.Navigation("OrderItems");
-                });
-
-            modelBuilder.Entity("FreshMarket.Domain.Entities.ShippingZone", b =>
-                {
-                    b.Navigation("DeliverySlots");
-
-                    b.Navigation("Orders");
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("FreshMarket.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618

@@ -1,4 +1,5 @@
 using FreshMarket.Domain.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace FreshMarket.Domain.Entities;
 
@@ -8,10 +9,12 @@ public class DeliverySlot : BaseEntity
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int MaxOrders { get; set; }
-    public int CurrentOrders { get; set; }
-    public int? ShippingZoneId { get; set; }
+    public int CurrentOrders { get; set; } = 0;
+    public decimal ShippingFee { get; set; } = 0;
     public bool IsActive { get; set; } = true;
 
-    public ShippingZone? ShippingZone { get; set; }
-    public ICollection<Order> Orders { get; set; } = new List<Order>();
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = default!;
+
+    public ICollection<Order> Orders { get; set; } = [];
 }

@@ -15,5 +15,5 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
     }
 
     public async Task<IEnumerable<DeliverySlotDto>> Handle(GetAvailableSlotsQuery request, CancellationToken ct)
-        => await _deliverySlotService.GetAvailableAsync(request.Date, request.PostalCodePrefix, ct).ConfigureAwait(false);
+        => await _deliverySlotService.GetAvailableAsync(request.Date, ct).ConfigureAwait(false);
 }

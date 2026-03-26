@@ -12,8 +12,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.TotalAmount).HasPrecision(10, 2);
         builder.Property(o => o.ShippingFee).HasPrecision(10, 2);
         builder.Property(o => o.Status).HasConversion<int>();
-        builder.Property(o => o.PaymentStatus).HasConversion<int>();
-        builder.Property(o => o.DeliveryAddress).HasMaxLength(500);
         builder.Property(o => o.DeliveryPostalCode).HasMaxLength(8);
 
         builder.HasIndex(o => o.UserId);
@@ -26,9 +24,8 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasOne(o => o.DeliverySlot)
                .WithMany(s => s.Orders)
                .HasForeignKey(o => o.DeliverySlotId);
-
-        builder.HasOne(o => o.ShippingZone)
-               .WithMany(z => z.Orders)
-               .HasForeignKey(o => o.ShippingZoneId);
+        builder.HasIndex(o => o.UserId);
+        builder.HasIndex(o => o.DeliverySlotId);
+        builder.HasIndex(o => o.Status);
     }
 }

@@ -16,7 +16,6 @@ public class Products : EndpointGroupBase
         app.MapGroup(this)
             .MapGet(GetAllProducts)
             .MapGet(GetProductById, "{id}")
-            .MapGet(GetProductsByCategory, "category/{categoryId}")
             .MapPost(CreateProduct)
             .MapPut(UpdateProduct, "{id}")
             .MapDelete(DeleteProduct, "{id}")
@@ -32,12 +31,6 @@ public class Products : EndpointGroupBase
     public async Task<IResult> GetProductById(int id, ISender sender)
     {
         var result = await sender.Send(new GetProductByIdQuery(id)).ConfigureAwait(false);
-        return Results.Ok(result);
-    }
-
-    public async Task<IResult> GetProductsByCategory(int categoryId, ISender sender)
-    {
-        var result = await sender.Send(new GetProductByCategoryQuery(categoryId)).ConfigureAwait(false);
         return Results.Ok(result);
     }
 
