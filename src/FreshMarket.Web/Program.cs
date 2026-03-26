@@ -1,4 +1,5 @@
 using FreshMarket.Application;
+using FreshMarket.Application.Addresses.Queries;
 using FreshMarket.Infrastructure;
 using FreshMarket.Web.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,7 +66,12 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+builder.Services.AddHttpClient<MbWayPaymentProvider>();
 
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<GetUserAddressesQueryHandler>();
+});
 
 
 builder.Services.AddCors(options =>

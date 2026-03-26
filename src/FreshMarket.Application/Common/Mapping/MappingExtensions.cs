@@ -1,25 +1,29 @@
+using FreshMarket.Application.Addresses.Models;
 using FreshMarket.Application.Categories.Models;
 using FreshMarket.Application.DeliverySlots.Models;
 using FreshMarket.Application.Orders.Models;
 using FreshMarket.Application.Products.Models;
-using FreshMarket.Application.ShippingZones.Models;
 using FreshMarket.Application.Users.Models;
 
 namespace FreshMarket.Application.Common.Mapping;
 
 public static class MappingExtensions
 {
-    public static ProductDto ToDto(this Product p) => new()
+    // ─── Product ────────────────────────────────────────────────
+
+    public static ProductDetailDto ToDto(this Product p) => new()
     {
         Id = p.Id,
         CategoryId = p.CategoryId,
         CategoryName = p.Category?.Name ?? string.Empty,
         Name = p.Name,
+        Slug = p.Slug,
         Description = p.Description,
         PricePerUnit = p.PricePerUnit,
         UnitType = p.UnitType,
         MinQuantity = p.MinQuantity,
         StockQuantity = p.StockQuantity,
+        TrackStock = p.TrackStock,
         ImageUrl = p.ImageUrl,
         IsSeasonal = p.IsSeasonal,
         IsActive = p.IsActive
@@ -28,67 +32,88 @@ public static class MappingExtensions
     public static ProductListDto ToListDto(this Product p) => new()
     {
         Id = p.Id,
+        CategoryId = p.CategoryId,
+        CategoryName = p.Category?.Name ?? string.Empty,
         Name = p.Name,
+        Slug = p.Slug,
         PricePerUnit = p.PricePerUnit,
+        MinQuantity = p.MinQuantity,
         UnitType = p.UnitType,
         StockQuantity = p.StockQuantity,
+        TrackStock = p.TrackStock,
         ImageUrl = p.ImageUrl,
         IsSeasonal = p.IsSeasonal,
-        CategoryName = p.Category?.Name ?? string.Empty
     };
+
+    // ─── Category ───────────────────────────────────────────────
 
     public static CategoryDto ToDto(this Category c) => new()
     {
         Id = c.Id,
         Name = c.Name,
         Slug = c.Slug,
-        IsActive = c.IsActive
+        IsActive = c.IsActive,
+        ProductCount = c.Products?.Count(p => p.DeletedAt == null) ?? 0,
     };
+
+    // ─── DeliverySlot ───────────────────────────────────────────
 
     public static DeliverySlotDto ToDto(this DeliverySlot s) => new()
     {
         Id = s.Id,
-        DeliveryDate = s.DeliveryDate,
+        DeliveryDate = s.DeliveryDate,  // ← era s.Date
         StartTime = s.StartTime,
         EndTime = s.EndTime,
         MaxOrders = s.MaxOrders,
         CurrentOrders = s.CurrentOrders,
-        AvailableSlots = s.MaxOrders - s.CurrentOrders,
-        ShippingZoneId = s.ShippingZoneId,
-        IsActive = s.IsActive
+        ShippingFee = s.ShippingFee,
+        IsActive = s.IsActive,
+        // AvailableSpots é computed property no DTO, não precisa de set
     };
 
-    public static ShippingZoneDto ToDto(this ShippingZone z) => new()
-    {
-        Id = z.Id,
-        PostalCodePrefix = z.PostalCodePrefix,
-        City = z.City,
-        ShippingFee = z.ShippingFee,
-        MinOrderValue = z.MinOrderValue,
-        IsActive = z.IsActive
-    };
+    // ─── Order ──────────────────────────────────────────────────
 
     public static OrderSummaryDto ToSummaryDto(this Order o) => new()
     {
         Id = o.Id,
+        OrderNumber = o.OrderNumber,
         Status = o.Status,
         TotalAmount = o.TotalAmount,
         ShippingFee = o.ShippingFee,
-        PaymentMethod = o.PaymentMethod,
-        PaymentStatus = o.PaymentStatus,
         CreatedAt = o.CreatedAt,
-        DeliveryDate = o.DeliverySlot?.DeliveryDate,
-        ItemCount = o.Items?.Count ?? 0
+        DeliveryCity = o.DeliveryCity,       // ← novo
+        DeliveryPostalCode = o.DeliveryPostalCode,
+        ItemCount = o.Items?.Count ?? 0,
+        DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
+        {
+            DeliveryDate = o.DeliverySlot.DeliveryDate, // ← era .Date
+            StartTime = o.DeliverySlot.StartTime,
+            EndTime = o.DeliverySlot.EndTime,
+        },
+        // PaymentMethod/PaymentStatus removidos — estão em Payment entity
     };
+
+    // ─── Address ────────────────────────────────────────────────
+
+    public static AddressDto ToDto(this Address a) => new()
+    {
+        Id = a.Id,
+        Label = a.Label,
+        Street = a.Street,
+        PostalCode = a.PostalCode,
+        City = a.City,
+        Country = a.Country,
+        IsDefault = a.IsDefault,
+    };
+
+    // ─── User ───────────────────────────────────────────────────
 
     public static UserDto ToDto(this User u) => new()
     {
         Id = u.Id,
         FullName = u.FullName,
         Email = u.Email,
-        Phone = u.Phone,
-        Address = u.Address,
-        PostalCode = u.PostalCode,
-        Role = u.Role
+        Role = u.Role,
+        // Phone/Address/PostalCode removidos — Address é entidade separada
     };
 }

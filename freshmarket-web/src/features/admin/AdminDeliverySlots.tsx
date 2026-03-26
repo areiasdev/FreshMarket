@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
-import Pagination from "../../components/admin/Pagination";
 import { endpoints } from "../../lib/endpoints";
+import Pagination from "../../components/utils/Pagination";
 
 interface DeliverySlotDto {
   id: number;
@@ -19,30 +19,37 @@ export default function AdminDeliverySlots() {
   const [slots, setSlots] = useState<DeliverySlotDto[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ dayOfWeek: 1, startTime: "", endTime: "", maxOrders: 10 });
 
-  const load = async () => {
-    setLoading(true);
-    const res = await client.get(endpoints.admin.slots.getAll + `?page=${page}&pageSize=${pageSize}`);
-    setSlots(res.data.items);
-    setTotal(res.data.totalCount);
-    setLoading(false);
-  };
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const res = await client.get(endpoints.admin.slots.getAll + `?page=${page}&pageSize=${pageSize}`);
+      setSlots(res.data.items);
+      setTotal(res.data.totalCount);
+      setLoading(false);
+    };
+      load(); 
+    }, [page, pageSize]);
 
-  useEffect(() => { load(); }, [page]);
+    const reload = async () => {
+      const res = await client.get(endpoints.admin.slots.getAll + `?page=${page}&pageSize=${pageSize}`);
+      setSlots(res.data.items);
+      setTotal(res.data.totalCount);
+      };
 
   const handleSubmit = async () => {
     await client.post(endpoints.admin.slots.create, form);
     setShowModal(false);
-    load();
+    await reload();
   };
 
   const toggleActive = async (id: number) => {
     await client.patch(endpoints.admin.slots.toggleActive(id));
-    load();
+    await reload();
   };
 
   const totalPages = Math.ceil(total / pageSize);
@@ -92,7 +99,15 @@ export default function AdminDeliverySlots() {
             ))}
           </tbody>
         </table>
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalCount={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          pageSizeOptions={[5, 10, 20]}
+        />
       </div>
 
       {showModal && (

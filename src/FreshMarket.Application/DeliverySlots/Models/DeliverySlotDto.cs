@@ -8,7 +8,7 @@ public class DeliverySlotDto
     public TimeOnly EndTime { get; set; }
     public int MaxOrders { get; set; }
     public int CurrentOrders { get; set; }
-    public int AvailableSlots { get; set; }
-    public int? ShippingZoneId { get; set; }
+    public decimal ShippingFee { get; set; }
     public bool IsActive { get; set; }
+    public int AvailableSpots => MaxOrders - CurrentOrders;
 }

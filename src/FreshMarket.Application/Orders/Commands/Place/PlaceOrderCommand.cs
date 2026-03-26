@@ -8,9 +8,11 @@ public record PlaceOrderItem(int ProductId, decimal Quantity);
 public record PlaceOrderCommand(
     int UserId,
     int DeliverySlotId,
-    string PostalCodePrefix,
-    string DeliveryAddress,
+    int? AddressId,
+    string DeliveryStreet,
     string DeliveryPostalCode,
+    string DeliveryCity,
+    string DeliveryCountry,
     string? Notes,
     IEnumerable<PlaceOrderItem> Items
 ) : IRequest<OrderDto>;
@@ -28,9 +30,11 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Order
         => await _orderService.PlaceOrderAsync(
             request.UserId,
             request.DeliverySlotId,
-            request.PostalCodePrefix,
-            request.DeliveryAddress,
+            request.AddressId,
+            request.DeliveryStreet,
             request.DeliveryPostalCode,
+            request.DeliveryCity,
+            request.DeliveryCountry,
             request.Notes,
             request.Items.Select(i => (i.ProductId, i.Quantity)),
             ct

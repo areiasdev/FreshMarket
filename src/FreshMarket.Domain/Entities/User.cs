@@ -8,9 +8,7 @@ public class User : BaseEntity
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public string? Address { get; set; }
-    public string? PostalCode { get; set; }
     public string Role { get; set; } = "Customer";
-
+    public ICollection<Address> Addresses { get; set; } = new List<Address>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

@@ -1,10 +1,10 @@
+using FreshMarket.Application.Addresses.Services;
 using FreshMarket.Application.Categories.Services;
 using FreshMarket.Application.Common.Behaviors;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.DeliverySlots.Services;
 using FreshMarket.Application.Orders.Services;
 using FreshMarket.Application.Products.Services;
-using FreshMarket.Application.ShippingZones.Services;
 using FreshMarket.Application.Users.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,9 +27,10 @@ public static class DependencyInjection
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IDeliverySlotService, DeliverySlotService>();
-        services.AddScoped<IShippingZoneService, ShippingZoneService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IAddressService, AddressService>();
 
         return services;
     }
