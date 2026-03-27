@@ -15,8 +15,10 @@ export default function PaymentSelector({ value, onChange }: Props) {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => onChange(PaymentMethod.Card)}
-          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center ${
-            value === PaymentMethod.Card ? "border-green-600 bg-green-50" : ""
+          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center transition-colors ${
+            value === PaymentMethod.Card
+              ? "border-emerald-700 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 text-slate-600 hover:border-emerald-300"
           }`}
         >
           <Icon icon={IconCreditCard} size={16} />

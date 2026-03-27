@@ -145,70 +145,73 @@ public class OrderService : IOrderService
             .ConfigureAwait(false);
 
     public async Task<OrderDto> PlaceOrderAsync(
-    int userId, int deliverySlotId, int? addressId,
-    string deliveryStreet, string deliveryPostalCode, string deliveryCity, string deliveryCountry,
-    string? notes,
+    int userId, int? deliverySlotId, int? addressId,
+    string deliveryStreet, string deliveryPostalCode,
+    string deliveryCity, string deliveryCountry,
+    string? notes, DateOnly? preferredDeliveryDate,
     IEnumerable<(int ProductId, decimal Quantity)> items,
     CancellationToken ct)
     {
         using var transaction = await _db.Database.BeginTransactionAsync(ct);
-
         try
         {
-            var slot = await _db.DeliverySlots
-                .FirstOrDefaultAsync(s => s.Id == deliverySlotId && s.IsActive, ct)
-                ?? throw new NotFoundException(nameof(DeliverySlot), deliverySlotId);
+            // Slot opcional
+            DeliverySlot? slot = null;
+            if (deliverySlotId.HasValue)
+            {
+                slot = await _db.DeliverySlots
+                    .FirstOrDefaultAsync(s => s.Id == deliverySlotId.Value && s.IsActive, ct)
+                    ?? throw new NotFoundException(nameof(DeliverySlot), deliverySlotId.Value);
 
-            if (slot.CurrentOrders >= slot.MaxOrders)
-                throw new BusinessException("Slot cheio");
+                if (slot.CurrentOrders >= slot.MaxOrders)
+                    throw new BusinessException("Slot cheio");
+            }
 
             var itemList = items.ToList();
             var productIds = itemList.Select(i => i.ProductId).ToList();
-
             var products = await _db.Products
                 .Where(p => productIds.Contains(p.Id) && p.IsActive)
                 .ToDictionaryAsync(p => p.Id, ct);
 
             if (products.Count != itemList.Count)
-                throw new BusinessException("Produto inválido");
+                throw new BusinessException("Produto inválido ou inativo.");
+
+            var shippingFee = slot?.ShippingFee ?? 2.50m;
 
             var order = new Order
             {
                 UserId = userId,
                 DeliverySlotId = deliverySlotId,
                 AddressId = addressId,
-                ShippingFee = slot.ShippingFee,
+                ShippingFee = shippingFee,
                 DeliveryStreet = deliveryStreet,
                 DeliveryPostalCode = deliveryPostalCode,
                 DeliveryCity = deliveryCity,
                 DeliveryCountry = deliveryCountry,
                 Notes = notes,
+                PreferredDeliveryDate = preferredDeliveryDate,
                 OrderNumber = GenerateOrderNumber(),
             };
 
             decimal total = 0;
-
             foreach (var (productId, quantity) in itemList)
             {
                 var product = products[productId];
 
                 if (product.UnitType == UnitType.Unit && quantity % 1 != 0)
-                    throw new BusinessException($"'{product.Name}' só aceita unidades inteiras");
+                    throw new BusinessException($"'{product.Name}' só aceita unidades inteiras.");
 
-                var availableStock = product.StockQuantity - product.ReservedStock;
-
-                if (product.TrackStock && availableStock < quantity)
+                var available = product.StockQuantity - product.ReservedStock;
+                if (product.TrackStock && available < quantity)
                     throw new BusinessException($"'{product.Name}' tem stock insuficiente.");
 
                 if (quantity < product.MinQuantity)
-                    throw new BusinessException($"Quantidade mínima para {product.Name} é {product.MinQuantity}");
-
+                    throw new BusinessException($"Quantidade mínima para '{product.Name}' é {product.MinQuantity}.");
 
                 if (product.TrackStock)
                     product.ReservedStock += quantity;
 
                 var subtotal = Math.Round(quantity * product.PricePerUnit, 2);
-
                 total += subtotal;
 
                 order.Items.Add(new OrderItem
@@ -220,14 +223,13 @@ public class OrderService : IOrderService
                 });
             }
 
-            order.TotalAmount = total + slot.ShippingFee;
+            order.TotalAmount = total + shippingFee;
 
-            slot.CurrentOrders++;
+            if (slot is not null)
+                slot.CurrentOrders++;
 
             _db.Orders.Add(order);
-
             await _db.SaveChangesAsync(ct);
-
             await transaction.CommitAsync(ct);
 
             await _cache.RemoveAsync(CacheKeys.OrdersByUser(userId), ct);

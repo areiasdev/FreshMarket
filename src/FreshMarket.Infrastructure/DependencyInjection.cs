@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentProviderFactory, PaymentProviderFactory>();
         services.AddScoped<OrderCleanupService>();
         services.AddHostedService<OrderCleanupJob>();
+        services.AddScoped<CashPaymentProvider>();
 
         services.AddScoped<IPaymentProvider>(sp =>
         {

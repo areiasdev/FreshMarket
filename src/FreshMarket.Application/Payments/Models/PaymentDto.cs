@@ -17,5 +17,7 @@ namespace FreshMarket.Application.Payments.Models
         public string? Provider { get; set; }
         public DateTime? PaidAt { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public string? RedirectUrl { get; set; }
     }
 }

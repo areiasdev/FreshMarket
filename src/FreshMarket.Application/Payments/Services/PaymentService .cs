@@ -43,7 +43,9 @@ public class PaymentService : IPaymentService
         _db.Payments.Add(payment);
         await _db.SaveChangesAsync(ct);
 
-        return Map(payment);
+        var dto = Map(payment);
+        dto.RedirectUrl = result.CheckoutUrl; 
+        return dto;
     }
 
     public async Task<PaymentDto> ConfirmPaymentAsync(string externalTransactionId, CancellationToken ct)
@@ -114,6 +116,7 @@ public class PaymentService : IPaymentService
             ExternalTransactionId = payment.ExternalTransactionId,
             Provider = payment.Provider,
             PaidAt = payment.PaidAt,
-            CreatedAt = payment.CreatedAt
+            CreatedAt = payment.CreatedAt,
+            
         };
 }

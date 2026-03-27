@@ -5,7 +5,9 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
     public PlaceOrderCommandValidator()
     {
         RuleFor(x => x.UserId).GreaterThan(0);
-        RuleFor(x => x.DeliverySlotId).GreaterThan(0);
+        RuleFor(x => x.DeliverySlotId)
+            .GreaterThan(0)
+            .When(x => x.DeliverySlotId.HasValue);
 
         // ← PostalCodePrefix removido
         RuleFor(x => x.DeliveryStreet).NotEmpty().MaximumLength(300);

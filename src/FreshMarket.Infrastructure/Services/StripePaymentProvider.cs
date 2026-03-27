@@ -11,6 +11,8 @@ public class StripePaymentProvider : IPaymentProvider
     public StripePaymentProvider(IConfiguration config)
     {
         StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
+        _successUrl = config["Stripe:SuccessUrl"];
+        _cancelUrl = config["Stripe:CancelUrl"];
     }
 
     public async Task<PaymentProviderResult> CreateAsync(decimal amount, string currency, string description)

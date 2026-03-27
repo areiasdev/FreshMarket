@@ -15,6 +15,7 @@ public class PaymentProviderFactory : IPaymentProviderFactory
         {
             PaymentMethodEnum.Card => _sp.GetRequiredService<StripePaymentProvider>(),
             PaymentMethodEnum.MBWay => _sp.GetRequiredService<MbWayPaymentProvider>(),
+            PaymentMethodEnum.Cash => _sp.GetRequiredService<CashPaymentProvider>(),
             _ => throw new NotSupportedException($"Método {method} não suportado")
         };
 }

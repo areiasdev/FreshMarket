@@ -6,7 +6,7 @@ namespace FreshMarket.Domain.Entities;
 public class Order : BaseEntity
 {
     public int UserId { get; set; }
-    public int DeliverySlotId { get; set; }
+    public int? DeliverySlotId { get; set; }
     public int? AddressId { get; set; }
 
     // Snapshot imutável no momento da encomenda
@@ -24,8 +24,10 @@ public class Order : BaseEntity
     public DateTime? PaidAt { get; set; }
 
     public User User { get; set; } = null!;
-    public DeliverySlot DeliverySlot { get; set; } = null!;
+    public DeliverySlot? DeliverySlot { get; set; } = null!;
     public Address? Address { get; set; }
+
+    public DateOnly? PreferredDeliveryDate { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = [];
     public ICollection<Payment> Payments { get; set; } = [];
