@@ -3,9 +3,13 @@ using FreshMarket.Application.Orders.Models;
 
 namespace FreshMarket.Application.Orders.Queries;
 
-public record GetOrdersByStatusQuery(OrderStatus Status) : IRequest<IEnumerable<OrderSummaryDto>>;
-
-public class GetOrdersByStatusQueryHandler : IRequestHandler<GetOrdersByStatusQuery, IEnumerable<OrderSummaryDto>>
+public record GetOrdersByStatusQuery : IRequest<PagedResult<OrderSummaryDto>>
+{
+    public OrderStatus Status { get; init; }
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 10;
+}
+public class GetOrdersByStatusQueryHandler : IRequestHandler<GetOrdersByStatusQuery, PagedResult<OrderSummaryDto>>
 {
     private readonly IOrderService _orderService;
 
@@ -14,6 +18,6 @@ public class GetOrdersByStatusQueryHandler : IRequestHandler<GetOrdersByStatusQu
         _orderService = orderService;
     }
 
-    public async Task<IEnumerable<OrderSummaryDto>> Handle(GetOrdersByStatusQuery request, CancellationToken ct)
-        => await _orderService.GetByStatusAsync(request.Status, ct).ConfigureAwait(false);
+    public async Task<PagedResult<OrderSummaryDto>> Handle(GetOrdersByStatusQuery request, CancellationToken ct)
+    => await _orderService.GetByStatusAsync(request.Status, request.Page, request.PageSize, ct).ConfigureAwait(false);
 }

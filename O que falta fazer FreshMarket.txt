@@ -1,12 +1,4 @@
 O que falta fazer
 
-Limpar cache do carrinho passado x tempo e se for user diferente
-criar produtos não funciona
-Categorias a vir mal no admin
-Sempre que entro em encomendas em admin, a pagina fica toda branca
 Ver checkout todo
-isActive ativo na BD mas aparece inativo na pagina de admin
-Ver pagination
-Não quero borders com cor, se for preciso usa dividers
-Admin dashboard não tem nada, tem que ser um onde mostro métricas
-Melhorar o design da pagina admin no geral, esta muito bruto e absuleto, demasiado antigo (priorizar usabilidade, as pessoas querem ganhar mais tempo e perder menos dinheiro, é para isso que servem os dashboards)
+Desativo categorias, aparecem desativas na parte do admin mas o user consegue ver igual

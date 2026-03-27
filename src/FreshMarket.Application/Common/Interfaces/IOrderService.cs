@@ -6,7 +6,7 @@ public interface IOrderService
 {
     Task<OrderDto> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<OrderSummaryDto>> GetMyOrdersAsync(int userId, CancellationToken ct);
-    Task<IEnumerable<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, CancellationToken ct);
+    Task<PagedResult<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, int page, int pageSize, CancellationToken ct);
     Task<IEnumerable<OrderSummaryDto>> GetBySlotAsync(int slotId, CancellationToken ct);
     Task<IEnumerable<HarvestItemDto>> GetHarvestListAsync(DateOnly date, CancellationToken ct);
     Task<OrderDto> PlaceOrderAsync(

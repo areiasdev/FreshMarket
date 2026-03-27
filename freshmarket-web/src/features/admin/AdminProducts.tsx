@@ -3,6 +3,9 @@ import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
+import axios from "axios";
+import ImageInput from "../../components/admin/ImageInput";
+import { badge } from "../../lib/color";
 
 interface Product {
   id: number;
@@ -32,9 +35,11 @@ export default function AdminProducts() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem]   = useState<Product | null>(null);
   const [form, setForm] = useState({
-    name: "", description: "", pricePerUnit: 0, unitType: 1,
+    name: "", description: "", slug: "",
+    pricePerUnit: 0, unitType: 1,
     minQuantity: 0.1, stockQuantity: 0, imageUrl: "",
     isSeasonal: false, isActive: true, categoryId: 0,
+    trackStock: true, lowStockAlert: 0,
   });
 
   useEffect(() => {
@@ -66,39 +71,48 @@ export default function AdminProducts() {
   }, []);
 
   const openCreate = () => {
-    setEditItem(null);
-    setForm({
-      name: "", description: "", pricePerUnit: 0, unitType: 1,
-      minQuantity: 0.1, stockQuantity: 0, imageUrl: "",
-      isSeasonal: false, isActive: true,
-      categoryId: categories[0]?.id ?? 0,
-    });
-    setShowModal(true);
-  };
+  if (categories.length === 0) return; // guard
+  setEditItem(null);
+  setForm({
+    name: "", description: "", slug: "",
+    pricePerUnit: 0, unitType: 1, minQuantity: 0.1,
+    stockQuantity: 0, imageUrl: "", isSeasonal: false,
+    isActive: true, categoryId: categories[0].id,
+    trackStock: true, lowStockAlert: 0,
+  });
+  setShowModal(true);
+};
 
   const openEdit = (p: Product) => {
     setEditItem(p);
     setForm({
-      name: p.name, description: "", pricePerUnit: p.pricePerUnit,
-      unitType: p.unitType, minQuantity: 0.1, stockQuantity: p.stockQuantity,
-      imageUrl: p.imageUrl, isSeasonal: p.isSeasonal,
-      isActive: p.isActive, categoryId: p.categoryId,
+      name: p.name, description: "", slug: p.name.toLowerCase().replace(/\s+/g, "-"),
+      pricePerUnit: p.pricePerUnit, unitType: p.unitType, minQuantity: 0.1,
+      stockQuantity: p.stockQuantity, imageUrl: p.imageUrl,
+      isSeasonal: p.isSeasonal, isActive: p.isActive, categoryId: p.categoryId,
+      trackStock: true, lowStockAlert: 0,
     });
     setShowModal(true);
   };
 
   const handleSubmit = async () => {
-    if (editItem) {
-      await client.put(endpoints.admin.products.update(editItem.id), form);
-    } else {
-      await client.post(endpoints.admin.products.create, form);
+    try {
+      if (editItem) {
+        await client.put(endpoints.admin.products.update(editItem.id), form);
+      } else {
+        await client.post(endpoints.admin.products.create, form);
+      }
+      setShowModal(false);
+      await reload();
+    } catch (err) {
+    const msg = axios.isAxiosError(err)
+      ? (err.response?.data?.title ?? err.message)
+      : "Erro ao guardar produto.";
+    alert(msg);
     }
-    setShowModal(false);
-    await reload();
   };
 
   const toggleActive = async (id: number) => {
-    // ✅ FIX: backend AdminProducts.cs usa MapPut para toggle, não MapPatch
     await client.put(endpoints.admin.products.toggleActive(id));
     await reload();
   };
@@ -114,7 +128,7 @@ export default function AdminProducts() {
         </div>
         <button
           onClick={openCreate}
-          className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
+          className="btn-primary text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
         >
           + Novo Produto
         </button>
@@ -122,7 +136,7 @@ export default function AdminProducts() {
 
       <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="table-header">
             <tr>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Produto</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Categoria</th>
@@ -138,7 +152,7 @@ export default function AdminProducts() {
                 <td colSpan={6} className="text-center py-8 text-gray-400">A carregar...</td>
               </tr>
             ) : products.map((p) => (
-              <tr key={p.id} className="border-b hover:bg-gray-50 transition">
+              <tr key={p.id} className="table-row transition">
                 <td className="px-4 py-3 flex items-center gap-3">
                   <img
                     src={p.imageUrl} alt={p.name}
@@ -153,9 +167,7 @@ export default function AdminProducts() {
                 </td>
                 <td className="px-4 py-3 text-gray-600">{p.stockQuantity}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    p.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-                  }`}>
+                  <span className={p.isActive ? badge.active : badge.inactive}>
                     {p.isActive ? "Ativo" : "Inativo"}
                   </span>
                 </td>
@@ -194,7 +206,7 @@ export default function AdminProducts() {
               <span className="text-sm text-gray-600">Nome</span>
               <input className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                onChange={(e) => setForm({...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), })} />
             </label>
             <label className="block">
               <span className="text-sm text-gray-600">Categoria</span>
@@ -207,9 +219,12 @@ export default function AdminProducts() {
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-sm text-gray-600">Preço (€)</span>
-                <input type="number" step="0.01" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-                  value={form.pricePerUnit}
-                  onChange={(e) => setForm({ ...form, pricePerUnit: +e.target.value })} />
+                <input type="text" step="0.01" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                   value={form.pricePerUnit}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(",", ".");
+                      setForm({ ...form, pricePerUnit: v === "" ? 0 : parseFloat(v) || form.pricePerUnit });
+                    }} />
               </label>
               <label className="block">
                 <span className="text-sm text-gray-600">Stock</span>
@@ -227,12 +242,31 @@ export default function AdminProducts() {
                 <option value={2}>Unidade</option>
               </select>
             </label>
+            <ImageInput
+              value={form.imageUrl}
+              onChange={(url) => setForm({ ...form, imageUrl: url })}
+            />
             <label className="block">
-              <span className="text-sm text-gray-600">URL da Imagem</span>
-              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-                value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+              <span className="text-sm text-gray-600">Slug</span>
+              <input className="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-mono"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })} />
             </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-sm text-gray-600">Alerta stock baixo</span>
+                <input type="number" step="0.1" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                  value={form.lowStockAlert}
+                  onChange={(e) => setForm({ ...form, lowStockAlert: +e.target.value })} />
+              </label>
+
+              <label className="flex items-center gap-2 mt-5">
+                <input type="checkbox" checked={form.trackStock}
+                  onChange={(e) => setForm({ ...form, trackStock: e.target.checked })} />
+                <span className="text-sm text-gray-600">Controlar stock</span>
+              </label>
+            </div>
             <label className="flex items-center gap-2 mt-1">
               <input type="checkbox" checked={form.isSeasonal}
                 onChange={(e) => setForm({ ...form, isSeasonal: e.target.checked })} />

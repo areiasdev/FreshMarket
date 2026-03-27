@@ -95,16 +95,25 @@ public class OrderService : IOrderService
     }
 
     // Admin — sempre IgnoreQueryFilters em orders
-    public async Task<IEnumerable<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, CancellationToken ct)
-        => await _db.Orders
+    public async Task<PagedResult<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, int page, int pageSize, CancellationToken ct)
+    {
+        var query = _db.Orders
             .IgnoreQueryFilters()
             .Include(o => o.Items)
             .Include(o => o.DeliverySlot)
             .Where(o => o.Status == status)
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt);
+
+        var total = await query.CountAsync(ct).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(o => o.ToSummaryDto())
             .ToListAsync(ct)
             .ConfigureAwait(false);
+
+        return new PagedResult<OrderSummaryDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 
     public async Task<IEnumerable<OrderSummaryDto>> GetBySlotAsync(int slotId, CancellationToken ct)
         => await _db.Orders

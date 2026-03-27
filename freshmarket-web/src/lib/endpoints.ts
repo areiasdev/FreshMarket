@@ -39,8 +39,6 @@ export const endpoints = {
     categories: {
       getAll:       `${ADMIN}/categories`,
       create:       `${ADMIN}/categories`,
-      // ⚠️  Nota: backend AdminCategories.cs não tem endpoint PUT de update.
-      //     Se precisares de editar categorias, adiciona o endpoint no backend primeiro.
       update:       (id: number) => `${ADMIN}/categories/${id}`,
       toggleActive: (id: number) => `${ADMIN}/categories/${id}/toggle-active`, // PATCH (correto)
     },
@@ -64,5 +62,9 @@ export const endpoints = {
       create:       `${ADMIN}/slots`,
       toggleActive: (id: number)   => `${ADMIN}/slots/${id}/toggle-active`, // PATCH (correto)
     },
+    dashboard: `${ADMIN}/dashboard`,
+    uploads: {
+    image: `${ADMIN}/uploads/image`,
+  },
   },
 } as const;

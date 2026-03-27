@@ -99,6 +99,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseStaticFiles();
+
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseCors("FreshMarketCors");
