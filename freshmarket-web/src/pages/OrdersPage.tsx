@@ -5,6 +5,8 @@ import { endpoints } from "../lib/endpoints";
 import type { OrderSummaryDto } from "../types";
 import Navbar from "../components/layout/Navbar";
 import StatusBadge from "../components/layout/StatusBadge";
+import Icon from "../components/ui/Icon";
+import { IconPackage } from "../components/ui/icons";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderSummaryDto[]>([]);
@@ -33,13 +35,14 @@ export default function OrdersPage() {
           <p className="text-center py-20 text-sm text-slate-400">A carregar...</p>
         ) : orders.length === 0 ? (
           <div className="card flex flex-col items-center py-20 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xl mb-4">📦</div>
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <Icon icon={IconPackage} size={22} className="text-slate-400" stroke={1.5} />
+            </div>
             <p className="text-sm font-semibold text-slate-900 mb-1">Nenhuma encomenda</p>
             <p className="text-sm text-slate-400 mb-6">As tuas encomendas aparecerão aqui.</p>
             <button onClick={() => navigate("/")} className="btn-primary bg-emerald-700">Ir para a loja</button>
           </div>
         ) : (
-          // RUI: tabela clara com cabeçalho de colunas, hover state, sem bordas excessivas
           <div className="card overflow-hidden">
             <div className="grid grid-cols-[64px_1fr_90px_100px_80px] gap-3 px-5 py-3
                             text-xs font-semibold text-slate-400 uppercase tracking-wide
@@ -59,7 +62,6 @@ export default function OrdersPage() {
                   className="w-full grid grid-cols-[64px_1fr_90px_100px_80px] gap-3 items-center
                              px-5 py-3.5 text-left hover:bg-slate-50 transition-colors group"
                 >
-                  {/* RUI: ID como metadado monospace, discreto */}
                   <span className="text-xs font-mono text-slate-400 tabular">#{o.id}</span>
 
                   <div>
@@ -71,7 +73,6 @@ export default function OrdersPage() {
                     </p>
                   </div>
 
-                  {/* RUI: preço alinhado à direita, cor de destaque */}
                   <span className="text-sm font-bold text-emerald-700 tabular text-right">{o.totalAmount.toFixed(2)}€</span>
 
                   <StatusBadge status={o.status} />

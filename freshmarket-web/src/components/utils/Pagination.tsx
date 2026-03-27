@@ -1,3 +1,6 @@
+import Icon from "../ui/Icon";
+import { IconArrowLeft, IconArrowRight } from "../ui/icons";
+
 interface Props {
   page: number;
   totalPages: number;
@@ -21,7 +24,6 @@ export default function Pagination({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-8">
-      {/* Info + seletor */}
       <div className="flex items-center gap-3 text-sm text-gray-500">
         <span>
           {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalCount)} de {totalCount}
@@ -37,15 +39,14 @@ export default function Pagination({
         </select>
       </div>
 
-      {/* Navegação */}
       {totalPages > 1 && (
         <div className="flex items-center gap-2">
           <button
             disabled={page === 1}
             onClick={() => onPageChange(page - 1)}
-            className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+            className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 transition flex items-center gap-1.5"
           >
-            ← Anterior
+            <Icon icon={IconArrowLeft} size={14} /> Anterior
           </button>
           <span className="px-3 py-2 text-sm text-gray-600 font-medium">
             {page} / {totalPages}
@@ -53,9 +54,9 @@ export default function Pagination({
           <button
             disabled={page === totalPages}
             onClick={() => onPageChange(page + 1)}
-            className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 transition"
+            className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 transition flex items-center gap-1.5"
           >
-            Seguinte →
+            Seguinte <Icon icon={IconArrowRight} size={14} />
           </button>
         </div>
       )}

@@ -5,6 +5,8 @@ import { endpoints } from "../lib/endpoints";
 import { useCart } from "../features/cart/CartContext";
 import { useAuth } from "../features/auth/useAuth";
 import type { Product, Category } from "../types";
+import Icon from "../components/ui/Icon";
+import { IconLeaf, IconShoppingCart, IconArrowLeft, IconArrowRight } from "../components/ui/icons";
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,23 +48,23 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="text-xl font-bold text-green-700">
-            🌿 Horto Píncaro
+          <button onClick={() => navigate("/")} className="text-xl font-bold text-green-700 flex items-center gap-2">
+            <Icon icon={IconLeaf} size={20} className="text-green-700" />
+            Horto Píncaro
           </button>
           <button
             onClick={() => navigate("/cart")}
-            className="relative bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+            className="relative bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
           >
-            🛒 Carrinho
+            <Icon icon={IconShoppingCart} size={16} />
+            Carrinho
           </button>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Categorias */}
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => { setActiveCategory(null); setPage(1); }}
@@ -85,7 +87,6 @@ export default function ShopPage() {
           ))}
         </div>
 
-        {/* Grid */}
         {loading ? (
           <div className="text-center py-20 text-gray-400">A carregar produtos...</div>
         ) : (
@@ -126,23 +127,22 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Paginação */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             <button
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
-              className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100"
+              className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 flex items-center gap-1.5"
             >
-              ← Anterior
+              <Icon icon={IconArrowLeft} size={14} /> Anterior
             </button>
             <span className="px-4 py-2 text-sm text-gray-600">{page} / {totalPages}</span>
             <button
               disabled={page === totalPages}
               onClick={() => setPage(page + 1)}
-              className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100"
+              className="px-4 py-2 rounded-lg border text-sm disabled:opacity-40 hover:bg-gray-100 flex items-center gap-1.5"
             >
-              Seguinte →
+              Seguinte <Icon icon={IconArrowRight} size={14} />
             </button>
           </div>
         )}

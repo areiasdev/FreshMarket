@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
+import Icon from "../components/ui/Icon";
+import { IconCreditCard, IconCheck, IconX, IconArrowRight } from "../components/ui/icons";
 
 type Status = "loading" | "success" | "error";
 
@@ -32,14 +34,13 @@ export default function PaymentResultPage() {
   }, [status, countdown, navigate]);
 
   return (
-    // RUI: centrado, card compacto, sem clutter
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="card w-full max-w-sm p-8 text-center">
 
         {status === "loading" && (
           <>
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5 text-xl animate-pulse">
-              💳
+            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5 animate-pulse">
+              <Icon icon={IconCreditCard} size={22} className="text-blue-400" stroke={1.5} />
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">A confirmar pagamento</h2>
             <p className="text-sm text-slate-400">Por favor aguarda um momento...</p>
@@ -48,9 +49,8 @@ export default function PaymentResultPage() {
 
         {status === "success" && (
           <>
-            {/* RUI: ícone de sucesso verde, não um tick enorme */}
             <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
-              <span className="text-emerald-700 font-bold text-lg">✓</span>
+              <Icon icon={IconCheck} size={22} className="text-emerald-700" stroke={2.5} />
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">Pagamento confirmado</h2>
             <p className="text-sm text-slate-400 mb-6">
@@ -61,8 +61,9 @@ export default function PaymentResultPage() {
                 A redirecionar em {countdown}s...
               </p>
             </div>
-            <button onClick={() => navigate("/orders")} className="btn-primary w-full justify-center bg-emerald-700">
-              Ver encomendas →
+            <button onClick={() => navigate("/orders")} className="btn-primary w-full justify-center bg-emerald-700 flex items-center gap-2">
+              Ver encomendas
+              <Icon icon={IconArrowRight} size={14} />
             </button>
           </>
         )}
@@ -70,7 +71,7 @@ export default function PaymentResultPage() {
         {status === "error" && (
           <>
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
-              <span className="text-red-500 font-bold text-lg">✕</span>
+              <Icon icon={IconX} size={22} className="text-red-500" stroke={2.5} />
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">Erro no pagamento</h2>
             <p className="text-sm text-slate-400 mb-6">
@@ -81,7 +82,6 @@ export default function PaymentResultPage() {
                 className="btn-primary w-full justify-center bg-amber-500 hover:bg-amber-400">
                 Tentar novamente
               </button>
-              {/* RUI: ação secundária como ghost/texto */}
               <button onClick={() => navigate("/orders")} className="btn-secondary w-full justify-center">
                 Ver encomendas
               </button>
