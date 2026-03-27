@@ -68,6 +68,12 @@ public class ProductService : IProductService
         decimal stockQuantity, bool trackStock, decimal lowStockAlert,
         string? imageUrl, bool isSeasonal, CancellationToken ct)
     {
+        var baseSlug = slug;
+        var finalSlug = baseSlug;
+        var i = 1;
+        while (await _db.Products.AnyAsync(p => p.Slug == finalSlug, ct))
+            finalSlug = $"{baseSlug}-{i++}";
+
         var product = new Product
         {
             CategoryId = categoryId,

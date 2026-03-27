@@ -3,6 +3,8 @@ import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
+import axios from "axios";
+import { badge } from "../../lib/color";
 
 interface CategoryDto {
   id: number;
@@ -18,7 +20,8 @@ export default function AdminCategories() {
   const [pageSize, setPageSize]     = useState(10);
   const [loading, setLoading]       = useState(true);
   const [showModal, setShowModal]   = useState(false);
-  const [form, setForm]             = useState({ name: "", slug: "" });
+  const [editItem, setEditItem] = useState<CategoryDto | null>(null);
+  const [form, setForm] = useState({ name: "", slug: "", isActive: true });
 
   useEffect(() => {
     const load = async () => {
@@ -45,18 +48,37 @@ export default function AdminCategories() {
   };
 
   const handleSubmit = async () => {
-    // ✅ Apenas CREATE — backend AdminCategories.cs não tem endpoint PUT de update.
-    //    Para suportar edição, adiciona no backend:
-    //    .MapPut(Update, "{id:int}") + UpdateCategoryCommand handler
-    await client.post(endpoints.admin.categories.create, form);
+  try {
+    if (editItem) {
+      await client.put(endpoints.admin.categories.update(editItem.id), form);
+    } else {
+      await client.post(endpoints.admin.categories.create, form);
+    }
     setShowModal(false);
+    await reload();
+  } catch (err) {
+    const msg = axios.isAxiosError(err)
+      ? (err.response?.data?.title ?? err.message)
+      : "Erro ao guardar categoria.";
+    alert(msg);
+  }
+};
+
+  const toggleActive = async (id: number) => {
+    await client.patch(endpoints.admin.categories.toggleActive(id));
     await reload();
   };
 
-  const toggleActive = async (id: number) => {
-    // ✅ PATCH — correto, backend usa MapPatch
-    await client.patch(endpoints.admin.categories.toggleActive(id));
-    await reload();
+  const openCreate = () => {
+    setEditItem(null);
+    setForm({ name: "", slug: "", isActive: true });
+    setShowModal(true);
+  };
+
+  const openEdit = (c: CategoryDto) => {
+    setEditItem(c);
+    setForm({ name: c.name, slug: c.slug, isActive: c.isActive });
+    setShowModal(true);
   };
 
   const totalPages = Math.ceil(total / pageSize);
@@ -69,8 +91,8 @@ export default function AdminCategories() {
           <p className="text-sm text-gray-400 mt-1">{total} categorias no total</p>
         </div>
         <button
-          onClick={() => { setForm({ name: "", slug: "" }); setShowModal(true); }}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+          onClick={openCreate}
+          className="btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold"
         >
           + Nova Categoria
         </button>
@@ -78,7 +100,7 @@ export default function AdminCategories() {
 
       <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="table-header">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-500">Nome</th>
               <th className="text-left px-4 py-3 font-medium text-gray-500">Slug</th>
@@ -92,23 +114,19 @@ export default function AdminCategories() {
                 <td colSpan={4} className="text-center py-8 text-gray-400">A carregar...</td>
               </tr>
             ) : categories.map((c) => (
-              <tr key={c.id} className="border-t hover:bg-gray-50">
+              <tr key={c.id} className="table-row">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
                 <td className="px-4 py-3 text-gray-400 font-mono text-xs">{c.slug}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    c.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-                  }`}>
+                  <span className={c.isActive ? badge.active : badge.inactive}>
                     {c.isActive ? "Ativa" : "Inativa"}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  {/* ✅ Botão "Editar" removido — backend não tem endpoint PUT de update.
-                      Adiciona MapPut no AdminCategories.cs para o reativar. */}
-                  <button
-                    onClick={() => toggleActive(c.id)}
-                    className="text-xs text-gray-500 hover:underline"
-                  >
+                <td className="px-4 py-3 flex gap-3">
+                  <button onClick={() => openEdit(c)} className="text-xs text-blue-600 hover:underline">
+                    Editar
+                  </button>
+                  <button onClick={() => toggleActive(c.id)} className="text-xs text-gray-500 hover:underline">
                     {c.isActive ? "Desativar" : "Ativar"}
                   </button>
                 </td>
@@ -130,7 +148,7 @@ export default function AdminCategories() {
 
       {showModal && (
         <Modal
-          title="Nova Categoria"
+          title={editItem ? "Editar Categoria" : "Nova Categoria"}
           onClose={() => setShowModal(false)}
           onSubmit={handleSubmit}
         >
@@ -146,13 +164,18 @@ export default function AdminCategories() {
               })}
             />
           </label>
-          <label className="block">
+          <label className="block mb-4">
             <span className="text-sm text-gray-600">Slug</span>
             <input
               className="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-mono"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
             />
+          </label>
+          <label className="flex items-center gap-2 mt-3">
+            <input type="checkbox" checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <span className="text-sm text-gray-600">Ativa</span>
           </label>
         </Modal>
       )}

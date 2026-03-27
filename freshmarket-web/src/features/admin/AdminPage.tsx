@@ -7,9 +7,10 @@ import AdminOrders from "./AdminOrders";
 import AdminDeliverySlots from "./AdminDeliverySlots";
 import {
   IconLeaf, IconChartBar, IconBox, IconFolder,
-  IconClipboardList, IconClock, IconUser, IconCurrencyEuro,
+  IconClipboardList, IconClock,
   type TablerIcon,
 } from "../../components/ui/icons";
+import DashboardOverview from "./DashboardOverview";
 
 type Section = "dashboard" | "products" | "categories" | "orders" | "slots";
 
@@ -81,39 +82,6 @@ export default function AdminPage() {
       <main className="ml-64 flex-1 p-8 min-h-screen">
         {renderContent()}
       </main>
-    </div>
-  );
-}
-
-function DashboardOverview() {
-  const stats = [
-    { label: "Produtos",   value: "—", icon: IconBox,           color: "bg-green-50 text-green-700",   border: "border-green-100"  },
-    { label: "Encomendas", value: "—", icon: IconClipboardList, color: "bg-blue-50 text-blue-700",     border: "border-blue-100"   },
-    { label: "Clientes",   value: "—", icon: IconUser,          color: "bg-purple-50 text-purple-700", border: "border-purple-100" },
-    { label: "Receita",    value: "—", icon: IconCurrencyEuro,  color: "bg-yellow-50 text-yellow-700", border: "border-yellow-100" },
-  ];
-
-  return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Bem-vindo ao painel de administração.</p>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => {
-          const I = stat.icon;
-          return (
-            <div key={stat.label} className={`rounded-2xl p-5 ${stat.color} border ${stat.border}`}>
-              <I size={24} stroke={2} className="mb-1" />
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-sm font-medium mt-1">{stat.label}</p>
-            </div>
-          );
-        })}
-      </div>
-      <div className="bg-white rounded-2xl border shadow-sm p-6 text-center text-gray-400">
-        <p className="text-sm">Seleciona uma secção no menu para começar.</p>
-      </div>
     </div>
   );
 }

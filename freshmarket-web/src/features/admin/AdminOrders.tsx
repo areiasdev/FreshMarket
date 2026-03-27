@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
+import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
 
 interface Order {
   id: number;
@@ -21,9 +22,6 @@ const STATUS_OPTIONS = [
   { label: "Entregue",   value: 4, color: "bg-green-100 text-green-700"  },
   { label: "Cancelado",  value: 5, color: "bg-red-100 text-red-600"      },
 ];
-
-const statusLabel = (value: number) => STATUS_OPTIONS.find((s) => s.value === value)?.label ?? "—";
-const statusColor = (value: number) => STATUS_OPTIONS.find((s) => s.value === value)?.color ?? "bg-gray-100 text-gray-500";
 
 // Estado seguinte possível (linear, exceto Cancelado)
 const NEXT_STATUS: Record<number, { value: number; label: string } | null> = {
@@ -115,7 +113,7 @@ export default function AdminOrders() {
             onClick={() => handleStatusChange(s.value)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
               selectedStatus === s.value
-                ? "border-green-600 text-green-700"
+                ? "border-emerald-700 text-emerald-700"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -125,13 +123,13 @@ export default function AdminOrders() {
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-2xl shadow-sm border p-12 text-center text-gray-400 text-sm">
+        <div className="card p-12 text-center text-gray-400 text-sm">
           A carregar encomendas...
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="table-header">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">#</th>
                 <th className="px-4 py-3 text-left font-medium">Cliente</th>
@@ -152,13 +150,13 @@ export default function AdminOrders() {
                 const nextStatus = NEXT_STATUS[order.status];
                 const isUpdating = updating === order.id;
                 return (
-                  <tr key={order.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
+                  <tr key={order.id} className="table-row transition">
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">#{order.orderNumber}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">{order.userFullName}</td>
                     <td className="px-4 py-3 font-semibold text-green-700">{order.totalAmount.toFixed(2)}€</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>
-                        {statusLabel(order.status)}
+                     <span className={orderStatusBadge[order.status] ?? "badge badge-slate"}>
+                        {orderStatusLabel[order.status] ?? "—"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500">

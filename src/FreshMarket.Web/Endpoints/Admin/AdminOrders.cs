@@ -20,9 +20,9 @@ public class AdminOrders : EndpointGroupBase
             .MapPut(CancelOrder, "{id}/cancel");
     }
 
-    public async Task<IResult> GetOrdersByStatus(OrderStatus status, ISender sender)
+    public async Task<IResult> GetOrdersByStatus([AsParameters] GetOrdersByStatusQuery query, ISender sender)
     {
-        var result = await sender.Send(new GetOrdersByStatusQuery(status)).ConfigureAwait(false);
+        var result = await sender.Send(query).ConfigureAwait(false);
         return Results.Ok(result);
     }
 

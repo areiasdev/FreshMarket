@@ -43,6 +43,7 @@ public static class MappingExtensions
         TrackStock = p.TrackStock,
         ImageUrl = p.ImageUrl,
         IsSeasonal = p.IsSeasonal,
+        IsActive = p.IsActive,
     };
 
     // ─── Category ───────────────────────────────────────────────
