@@ -1,3 +1,6 @@
+import Icon from "../ui/Icon";
+import { IconX } from "../ui/icons";
+
 interface ModalProps {
   title: string;
   children: React.ReactNode;
@@ -11,7 +14,9 @@ export default function Modal({ title, children, onClose, onSubmit }: ModalProps
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-gray-800">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icon icon={IconX} size={20} />
+          </button>
         </div>
         {children}
         <div className="flex justify-end gap-3 mt-6">

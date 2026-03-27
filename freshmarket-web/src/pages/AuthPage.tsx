@@ -4,6 +4,8 @@ import { useAuth } from "../features/auth/useAuth";
 import client from "../api/client";
 import type { AuthResponse } from "../types";
 import { endpoints } from "../lib/endpoints";
+import Icon from "../components/ui/Icon";
+import { IconLeaf, IconTruck, IconStar } from "../components/ui/icons";
 
 export default function AuthPage() {
   const { login } = useAuth();
@@ -35,16 +37,12 @@ export default function AuthPage() {
   };
 
   return (
-    // RUI: layout de duas colunas — painel de marketing + formulário
     <div className="min-h-screen grid lg:grid-cols-2">
 
-      {/* ── Painel esquerdo — branding ──────────────────────────────
-          RUI: fundo escuro cria contexto, não é só decoração.
-          Conteúdo alinhado à esquerda, não centrado.                    */}
       <div className="hidden lg:flex flex-col justify-between bg-emerald-900 p-12">
         <div>
           <div className="flex items-center gap-2.5 text-white mb-16">
-            <span className="text-2xl">🌿</span>
+            <Icon icon={IconLeaf} size={22} className="text-emerald-300" />
             <span className="font-bold text-lg tracking-tight">Horto Píncaro</span>
           </div>
 
@@ -57,15 +55,14 @@ export default function AuthPage() {
             </p>
           </blockquote>
 
-          {/* RUI: feature list simples, ícone semântico + texto */}
           <ul className="space-y-5">
             {[
-              { icon: "🥦", title: "Produtos frescos",        desc: "Diretamente de produtores locais" },
-              { icon: "🚚", title: "Entrega em 48h",          desc: "Processado e enviado rapidamente" },
-              { icon: "⭐", title: "+500 clientes satisfeitos", desc: "Qualidade reconhecida pela comunidade" },
+              { icon: IconLeaf, title: "Produtos frescos",        desc: "Diretamente de produtores locais" },
+              { icon: IconTruck, title: "Entrega em 48h",         desc: "Processado e enviado rapidamente" },
+              { icon: IconStar, title: "+500 clientes satisfeitos", desc: "Qualidade reconhecida pela comunidade" },
             ].map(f => (
               <li key={f.title} className="flex items-start gap-3">
-                <span className="text-base mt-0.5">{f.icon}</span>
+                <Icon icon={f.icon} size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-white">{f.title}</p>
                   <p className="text-xs text-emerald-400 mt-0.5">{f.desc}</p>
@@ -78,18 +75,14 @@ export default function AuthPage() {
         <p className="text-xs text-emerald-600">© 2026 Horto Píncaro</p>
       </div>
 
-      {/* ── Painel direito — formulário ──────────────────────────────
-          RUI: formulário centrado, espaçamento generoso, sem bordas excessivas  */}
       <div className="flex items-center justify-center bg-white px-8 py-12">
         <div className="w-full max-w-sm">
 
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <span className="text-xl">🌿</span>
+            <Icon icon={IconLeaf} size={20} className="text-emerald-700" />
             <span className="font-bold text-slate-900">Horto Píncaro</span>
           </div>
 
-          {/* RUI: heading de tamanho moderado — não precisa de ser gigante */}
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
             {tab === "login" ? "Bem-vindo de volta" : "Criar conta"}
           </h1>
@@ -99,7 +92,6 @@ export default function AuthPage() {
               : "Regista-te para começar a encomendar."}
           </p>
 
-          {/* Tabs — RUI: simples, underline activo */}
           <div className="flex border-b border-slate-200 mb-7">
             {(["login", "register"] as const).map(t => (
               <button
@@ -116,7 +108,6 @@ export default function AuthPage() {
             ))}
           </div>
 
-          {/* ── Login ── */}
           {tab === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -133,7 +124,6 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                // RUI: erros subtis mas claramente vermelhos
                 <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
                   {error}
                 </p>
@@ -147,7 +137,6 @@ export default function AuthPage() {
             </form>
           )}
 
-          {/* ── Register ── */}
           {tab === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
@@ -169,7 +158,6 @@ export default function AuthPage() {
                   onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
               </div>
               <div>
-                {/* RUI: label opcional em linha, não em separado */}
                 <label className="label">
                   Telefone
                   <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">— opcional</span>

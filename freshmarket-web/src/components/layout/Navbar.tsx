@@ -1,6 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
 import { useCart } from "../../features/cart/CartContext";
+import Icon from "../ui/Icon";
+import { IconLeaf, IconShoppingCart } from "../ui/icons";
 
 interface NavbarProps {
   onCartOpen?: () => void;
@@ -22,23 +24,20 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
   ];
 
   return (
-    // RUI: navbar escura, nunca branca — cria separação clara do conteúdo
     <nav className="bg-emerald-900 sticky top-0 z-40">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
 
-          {/* Logo — RUI: peso visual forte, não só um ícone */}
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-2.5 text-white hover:text-emerald-200 transition-colors"
           >
-            <span className="text-xl leading-none">🌿</span>
+            <Icon icon={IconLeaf} size={20} className="text-emerald-300" />
             <span className="font-bold text-[15px] tracking-tight">
               Horto Píncaro
             </span>
           </button>
 
-          {/* Nav links — RUI: active state com bg, não só cor */}
           <div className="hidden sm:flex items-center gap-0.5">
             {navLinks.filter(l => l.show).map(link => (
               <button
@@ -56,11 +55,9 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
             ))}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                {/* RUI: texto secundário de contexto, pequeno e discreto */}
                 <span className="hidden sm:block text-xs text-emerald-400 mr-1">
                   {user?.fullName.split(" ")[0]}
                 </span>
@@ -74,21 +71,17 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
             ) : (
               <button
                 onClick={() => navigate("/auth")}
-                // RUI: o CTA mais importante usa a cor de maior contraste
                 className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3.5 py-1.5 rounded-md transition-colors"
               >
                 Entrar
               </button>
             )}
 
-            {/* Carrinho — RUI: badge sobre ícone, posicionamento preciso */}
             <button
               onClick={onCartOpen ?? (() => navigate("/cart"))}
               className="relative flex items-center gap-1.5 bg-emerald-800 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-md transition-colors ml-1"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <Icon icon={IconShoppingCart} size={16} />
               {totalItems > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 tabular">
                   {totalItems > 99 ? "99+" : totalItems}

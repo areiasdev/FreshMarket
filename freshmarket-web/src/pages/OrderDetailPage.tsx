@@ -6,6 +6,8 @@ import type { OrderDto } from "../types";
 import Navbar from "../components/layout/Navbar";
 import StatusBadge from "../components/layout/StatusBadge";
 import Breadcrumb from "../components/layout/BreadCrumb";
+import Icon from "../components/ui/Icon";
+import { IconCheck, IconCalendar, IconClock, IconNotes } from "../components/ui/icons";
 
 const TIMELINE = [
   { status: 0, label: "Pendente"    },
@@ -16,7 +18,6 @@ const TIMELINE = [
 
 export default function OrderDetailPage() {
   const { id }    = useParams<{ id: string }>();
-  // const navigate  = useNavigate();
   const [order, setOrder]         = useState<OrderDto | null>(null);
   const [loading, setLoading]     = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -62,7 +63,6 @@ export default function OrderDetailPage() {
           { label: `Encomenda #${order.id}` },
         ]} />
 
-        {/* Header — RUI: título + badge de estado na mesma linha */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
@@ -79,10 +79,8 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="grid md:grid-cols-[1fr_240px] gap-5 items-start">
-          {/* Coluna principal */}
           <div className="space-y-4">
 
-            {/* Timeline — RUI: visual progress sem ser excessivo */}
             {order.status !== 4 && (
               <div className="card overflow-hidden">
                 <div className="card-header">Estado</div>
@@ -99,7 +97,7 @@ export default function OrderDetailPage() {
                               active ? "bg-emerald-700 text-white ring-2 ring-emerald-200 ring-offset-1" :
                                        "bg-slate-100 text-slate-400"
                             }`}>
-                              {done ? "✓" : idx + 1}
+                              {done ? <Icon icon={IconCheck} size={12} /> : idx + 1}
                             </div>
                             <span className={`text-[10px] mt-1.5 font-medium text-center leading-tight max-w-[52px] ${
                               active ? "text-slate-900" : "text-slate-400"
@@ -118,7 +116,6 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* Produtos */}
             <div className="card overflow-hidden">
               <div className="card-header">Produtos</div>
               <div className="divide-y divide-slate-50">
@@ -138,7 +135,6 @@ export default function OrderDetailPage() {
                 ))}
               </div>
 
-              {/* Totais */}
               <div className="px-5 py-4 space-y-2 bg-slate-50 border-t border-slate-100">
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>Subtotal</span>
@@ -156,7 +152,6 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Sidebar — RUI: informação de suporte, não principal */}
           <div className="space-y-4 md:sticky md:top-20">
             <div className="card overflow-hidden">
               <div className="card-header">Entrega</div>
@@ -165,19 +160,22 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-slate-400 font-mono">{order.deliveryPostalCode}</p>
                 {order.deliverySlot && (
                   <>
-                    <p className="text-xs text-slate-500">
-                      📅 {new Date(order.deliverySlot.deliveryDate).toLocaleDateString("pt-PT", {
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <Icon icon={IconCalendar} size={12} />
+                      {new Date(order.deliverySlot.deliveryDate).toLocaleDateString("pt-PT", {
                         weekday: "long", day: "numeric", month: "long",
                       })}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      🕐 {order.deliverySlot.startTime} – {order.deliverySlot.endTime}
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <Icon icon={IconClock} size={12} />
+                      {order.deliverySlot.startTime} – {order.deliverySlot.endTime}
                     </p>
                   </>
                 )}
                 {order.notes && (
-                  <p className="text-xs text-slate-400 italic border-t border-slate-100 pt-2 mt-2">
-                    📝 {order.notes}
+                  <p className="text-xs text-slate-400 italic border-t border-slate-100 pt-2 mt-2 flex items-center gap-1.5">
+                    <Icon icon={IconNotes} size={12} />
+                    {order.notes}
                   </p>
                 )}
               </div>
@@ -192,7 +190,6 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* RUI: ação destrutiva visualmente separada, não misturada */}
             {canCancel && (
               <button onClick={handleCancel} disabled={cancelling}
                 className="btn-danger w-full justify-center disabled:opacity-50">

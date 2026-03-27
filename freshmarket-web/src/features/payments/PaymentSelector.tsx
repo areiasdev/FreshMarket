@@ -1,4 +1,6 @@
 import { PaymentMethod } from "../../types/payment";
+import Icon from "../../components/ui/Icon";
+import { IconCreditCard, IconDeviceMobile, IconCoin } from "../../components/ui/icons";
 
 type Props = {
   value: PaymentMethod;
@@ -13,35 +15,32 @@ export default function PaymentSelector({ value, onChange }: Props) {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => onChange(PaymentMethod.Card)}
-          className={`border rounded-xl p-3 text-sm ${
-            value === PaymentMethod.Card
-              ? "border-green-600 bg-green-50"
-              : ""
+          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center ${
+            value === PaymentMethod.Card ? "border-green-600 bg-green-50" : ""
           }`}
         >
-          💳 Cartão (Stripe)
+          <Icon icon={IconCreditCard} size={16} />
+          Cartão (Stripe)
         </button>
 
         <button
           onClick={() => onChange(PaymentMethod.MBWay)}
-          className={`border rounded-xl p-3 text-sm ${
-            value === PaymentMethod.MBWay
-              ? "border-green-600 bg-green-50"
-              : ""
+          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center ${
+            value === PaymentMethod.MBWay ? "border-green-600 bg-green-50" : ""
           }`}
         >
-          📱 MBWay
+          <Icon icon={IconDeviceMobile} size={16} />
+          MBWay
         </button>
 
         <button
           onClick={() => onChange(PaymentMethod.Cash)}
-          className={`border rounded-xl p-3 text-sm col-span-2 ${
-            value === PaymentMethod.Cash
-              ? "border-green-600 bg-green-50"
-              : ""
+          className={`border rounded-xl p-3 text-sm col-span-2 flex items-center gap-2 justify-center ${
+            value === PaymentMethod.Cash ? "border-green-600 bg-green-50" : ""
           }`}
         >
-          💵 Pagar na entrega
+          <Icon icon={IconCoin} size={16} />
+          Pagar na entrega
         </button>
       </div>
     </div>

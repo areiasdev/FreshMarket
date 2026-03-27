@@ -8,6 +8,8 @@ import type { Product, Category } from "../types";
 import CartDrawer from "../components/Cart/CartDrawer";
 import Pagination from "../components/utils/Pagination";
 import Navbar from "../components/layout/Navbar";
+import Icon from "../components/ui/Icon";
+import { IconCheck, IconArrowRight } from "../components/ui/icons";
 
 export default function HomePage() {
   const [products, setProducts]               = useState<Product[]>([]);
@@ -55,9 +57,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50">
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
-      {/* ── Hero ─────────────────────────────────────────────────────
-          RUI: hero escuro cria separação clara. Titulo grande mas não exagerado.
-          Subtítulo de suporte em cor mais clara. CTA único e óbvio.       */}
       <section className="bg-emerald-900 py-16 px-4 text-center">
         <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-4">
           Produção local · Entrega ao domicílio
@@ -77,18 +76,13 @@ export default function HomePage() {
         </a>
       </section>
 
-      {/* ── Produtos ─────────────────────────────────────────────────
-          RUI: categorias como pills discretas, não tabs enormes.
-          Grid compacto — mais informação visível.                          */}
       <section id="produtos" className="max-w-screen-xl mx-auto px-4 sm:px-6 py-10">
 
-        {/* Cabeçalho da secção — RUI: hierarquia subtil */}
         <div className="flex items-baseline justify-between mb-5">
           <h2 className="text-xl font-bold text-slate-900">Produtos</h2>
           <span className="text-sm text-slate-400 tabular">{total} disponíveis</span>
         </div>
 
-        {/* Pills de categoria — RUI: pequenas, funcionais */}
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => { setActiveCategory(null); setPage(1); }}
@@ -115,7 +109,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Grid — RUI: cards sem border quando background difere da página */}
         {loading ? (
           <div className="text-center py-20 text-slate-400 text-sm">
             A carregar produtos...
@@ -131,7 +124,6 @@ export default function HomePage() {
                 key={p.id}
                 className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md transition-shadow"
               >
-                {/* Imagem — RUI: aspect ratio fixo, nunca crop */}
                 <div className="relative overflow-hidden aspect-[4/3]">
                   <img
                     src={p.imageUrl} alt={p.name}
@@ -145,9 +137,7 @@ export default function HomePage() {
                   )}
                 </div>
 
-                {/* Body — RUI: nome em destaque, preço com peso visual forte */}
                 <div className="p-3">
-                  {/* RUI: label de categoria como metadado discreto */}
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5">
                     {p.categoryName}
                   </p>
@@ -155,7 +145,6 @@ export default function HomePage() {
                     {p.name}
                   </p>
                   <div className="flex items-center justify-between gap-1">
-                    {/* RUI: preço é a info mais importante — maior, mais cor */}
                     <span className="text-emerald-700 font-bold text-[15px] tabular">
                       {p.pricePerUnit.toFixed(2)}€
                       <span className="text-xs font-normal text-slate-400">
@@ -186,8 +175,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* ── Stats ────────────────────────────────────────────────────
-          RUI: usar cor com propósito — a secção escura separa visualmente  */}
       <section className="bg-emerald-900 border-t border-emerald-800">
         <div className="max-w-screen-xl mx-auto px-4 py-12 grid grid-cols-3 divide-x divide-emerald-800">
           {[
@@ -196,7 +183,6 @@ export default function HomePage() {
             { value: "48h",  label: "Entrega garantida"    },
           ].map(s => (
             <div key={s.label} className="text-center py-2 px-6">
-              {/* RUI: número grande, label pequeno e discreto */}
               <p className="text-3xl font-bold text-white mb-1 tabular">{s.value}</p>
               <p className="text-sm text-emerald-400">{s.label}</p>
             </div>
@@ -204,7 +190,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Sobre ───────────────────────────────────────────────────── */}
       <section className="bg-white border-t border-slate-100">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-14 grid md:grid-cols-2 gap-12 items-start">
           <div>
@@ -217,7 +202,6 @@ export default function HomePage() {
               Trabalhamos diretamente com produtores locais para garantir qualidade e frescura em cada entrega.
             </p>
           </div>
-          {/* RUI: lista com ícone de check simples, não cards elaborados */}
           <ul className="space-y-4 pt-1">
             {[
               { title: "Produção local",    desc: "Parceria direta com agricultores da região" },
@@ -225,8 +209,8 @@ export default function HomePage() {
               { title: "Entrega em 48h",    desc: "Processamos e enviamos com rapidez"          },
             ].map(item => (
               <li key={item.title} className="flex gap-3">
-                <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-bold">
-                  ✓
+                <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                  <Icon icon={IconCheck} size={11} stroke={2.5} />
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-slate-800">{item.title}</p>
@@ -238,7 +222,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
         <p>© 2026 Horto Píncaro · Todos os direitos reservados</p>
         <p className="mt-1 text-slate-600">Desenvolvido por AreiasDev</p>

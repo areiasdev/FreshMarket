@@ -7,6 +7,8 @@ import PaymentSelector from "../features/payments/PaymentSelector";
 import { PaymentMethod } from "../types/payment";
 import Navbar from "../components/layout/Navbar";
 import Breadcrumb from "../components/layout/BreadCrumb";
+import Icon from "../components/ui/Icon";
+import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle } from "../components/ui/icons";
 
 type Step = "address" | "payment";
 
@@ -18,7 +20,6 @@ const STEPS = [
 function StepIndicator({ current }: { current: Step }) {
   const idx = STEPS.findIndex(s => s.key === current);
   return (
-    // RUI: step indicator discreto, não chamativo
     <div className="flex items-center gap-2 mb-7">
       {STEPS.map((s, i) => {
         const done   = i < idx;
@@ -31,7 +32,7 @@ function StepIndicator({ current }: { current: Step }) {
                 active ? "bg-emerald-700 text-white ring-2 ring-emerald-200" :
                          "bg-slate-200 text-slate-400"
               }`}>
-                {done ? "✓" : i + 1}
+                {done ? <Icon icon={IconCheck} size={10} /> : i + 1}
               </div>
               <span className={`text-xs font-medium ${active ? "text-slate-900" : "text-slate-400"}`}>
                 {s.label}
@@ -117,7 +118,6 @@ export default function CheckoutPage() {
         <StepIndicator current={step} />
 
         <div className="grid md:grid-cols-[1fr_260px] gap-6 items-start">
-          {/* ── Formulário ──────────────────────────────────── */}
           <div className="space-y-4">
             {step === "address" && (
               <div className="card overflow-hidden">
@@ -167,11 +167,11 @@ export default function CheckoutPage() {
                   )}
 
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => navigate("/cart")} className="btn-secondary">
-                      ← Voltar
+                    <button onClick={() => navigate("/cart")} className="btn-secondary flex items-center gap-1.5">
+                      <Icon icon={IconArrowLeft} size={14} /> Voltar
                     </button>
-                    <button onClick={validateAddress} className="btn-primary bg-emerald-700">
-                      Continuar →
+                    <button onClick={validateAddress} className="btn-primary bg-emerald-700 flex items-center gap-1.5">
+                      Continuar <Icon icon={IconArrowRight} size={14} />
                     </button>
                   </div>
                 </div>
@@ -180,7 +180,6 @@ export default function CheckoutPage() {
 
             {step === "payment" && (
               <>
-                {/* Resumo da morada — RUI: confirmação compacta, link para editar */}
                 <div className="card overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entrega</span>
@@ -193,11 +192,17 @@ export default function CheckoutPage() {
                     <p className="font-medium text-slate-800">{form.deliveryAddress}</p>
                     <p className="text-xs text-slate-400 font-mono">{form.deliveryPostalCode} · {getCityFromPostal(form.deliveryPostalCode)}</p>
                     {form.preferredDate && (
-                      <p className="text-xs text-emerald-700 mt-1">
-                        📅 Data preferida: {new Date(form.preferredDate).toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
+                      <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
+                        <Icon icon={IconCalendar} size={12} />
+                        Data preferida: {new Date(form.preferredDate).toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
                       </p>
                     )}
-                    {form.notes && <p className="text-xs text-slate-400 italic mt-1">📝 {form.notes}</p>}
+                    {form.notes && (
+                      <p className="text-xs text-slate-400 italic mt-1 flex items-center gap-1.5">
+                        <Icon icon={IconNotes} size={12} />
+                        {form.notes}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -209,16 +214,16 @@ export default function CheckoutPage() {
                 </div>
 
                 {orderError && (
-                  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
-                    ⚠️ {orderError}
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 flex items-center gap-2">
+                    <Icon icon={IconAlertTriangle} size={14} />
+                    {orderError}
                   </p>
                 )}
 
                 <div className="flex gap-2">
-                  <button onClick={() => setStep("address")} className="btn-secondary flex-1 justify-center">
-                    ← Voltar
+                  <button onClick={() => setStep("address")} className="btn-secondary flex-1 justify-center flex items-center gap-1.5">
+                    <Icon icon={IconArrowLeft} size={14} /> Voltar
                   </button>
-                  {/* RUI: botão de pagar usa cor de accent, mostra valor */}
                   <button onClick={handlePlaceOrder} disabled={submitting}
                     className="btn-primary flex-[2] justify-center bg-amber-500 hover:bg-amber-400 font-bold disabled:opacity-50">
                     {submitting ? "A processar..." : `Pagar ${total.toFixed(2)}€`}
@@ -228,7 +233,6 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* ── Resumo sticky ────────────────────────────────── */}
           <div className="card overflow-hidden md:sticky md:top-20">
             <div className="card-header">
               Resumo · <span className="tabular">{items.length} {items.length === 1 ? "produto" : "produtos"}</span>
