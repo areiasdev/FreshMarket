@@ -18,9 +18,10 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   const navLinks = [
-    { label: "Loja",       path: "/",       show: true },
-    { label: "Encomendas", path: "/orders", show: isAuthenticated },
-    { label: "Admin",      path: "/admin",  show: user?.role === "Admin" },
+    { label: "Loja",       path: "/",        show: true },
+    { label: "Encomendas", path: "/orders",  show: isAuthenticated },
+    { label: "Conta",      path: "/account", show: isAuthenticated },
+    { label: "Admin",      path: "/admin",   show: user?.role === "Admin" },
   ];
 
   return (
@@ -58,9 +59,12 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                <span className="hidden sm:block text-xs text-emerald-400 mr-1">
+                <button
+                  onClick={() => navigate("/account")}
+                  className="hidden sm:block text-xs text-emerald-400 hover:text-white transition-colors font-medium mr-1"
+                >
                   {user?.fullName.split(" ")[0]}
-                </span>
+                </button>
                 <button
                   onClick={() => { logout(); navigate("/"); }}
                   className="text-xs text-emerald-400 hover:text-red-300 transition-colors font-medium"

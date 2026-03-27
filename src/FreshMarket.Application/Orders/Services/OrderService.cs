@@ -100,6 +100,7 @@ public class OrderService : IOrderService
         var query = _db.Orders
             .IgnoreQueryFilters()
             .Include(o => o.Items)
+            .Include(o => o.User)
             .Include(o => o.DeliverySlot)
             .Where(o => o.Status == status)
             .OrderByDescending(o => o.CreatedAt);

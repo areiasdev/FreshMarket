@@ -3,12 +3,24 @@ import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import { useCart } from "../features/cart/CartContext";
+import { useAuth } from "../features/auth/useAuth";
 import PaymentSelector from "../features/payments/PaymentSelector";
 import { PaymentMethod } from "../types/payment";
 import Navbar from "../components/layout/Navbar";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
-import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle } from "../components/ui/icons";
+import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX } from "../components/ui/icons";
+import { parseDateOnly } from "../lib/dates";
+
+interface SavedAddress {
+  id: number;
+  label: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+  isDefault: boolean;
+}
 
 type Step = "address" | "payment";
 
@@ -50,6 +62,7 @@ function StepIndicator({ current }: { current: Step }) {
 
 export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep]   = useState<Step>("address");
@@ -58,8 +71,25 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting]     = useState(false);
   const [orderError, setOrderError]     = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.Card);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
   useEffect(() => { if (items.length === 0) navigate("/cart"); }, [items, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    client.get(endpoints.addresses.byUser(user.id)).then(res => {
+      const addrs: SavedAddress[] = res.data;
+      setSavedAddresses(addrs);
+      const def = addrs.find(a => a.isDefault) ?? addrs[0];
+      if (def) applyAddress(def);
+    }).catch(() => {});
+  }, [user?.id]);
+
+  const applyAddress = (a: SavedAddress) => {
+    setForm(f => ({ ...f, deliveryAddress: a.street, deliveryPostalCode: a.postalCode }));
+    setSelectedAddressId(a.id);
+  };
 
   const validateAddress = () => {
     setAddressError("");
@@ -82,11 +112,14 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setSubmitting(true); setOrderError("");
     try {
+      const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
+      const deliveryCity = selectedAddr?.city || getCityFromPostal(form.deliveryPostalCode);
+      const deliveryCountry = selectedAddr?.country || "PT";
       const orderRes = await client.post(endpoints.orders.place, {
         deliveryStreet: form.deliveryAddress,
         deliveryPostalCode: form.deliveryPostalCode,
-        deliveryCity: getCityFromPostal(form.deliveryPostalCode),
-        deliveryCountry: "PT",
+        deliveryCity,
+        deliveryCountry,
         preferredDeliveryDate: form.preferredDate || undefined,
         notes: form.notes || undefined,
         items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
@@ -123,6 +156,38 @@ export default function CheckoutPage() {
               <div className="card overflow-hidden">
                 <div className="card-header">Morada de entrega</div>
                 <div className="p-5 space-y-4">
+
+                  {savedAddresses.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">As tuas moradas guardadas</p>
+                      <div className="space-y-2">
+                        {savedAddresses.map(a => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => applyAddress(a)}
+                            className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
+                              selectedAddressId === a.id
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium">{a.label || a.street}</span>
+                              {a.isDefault && <span className="text-[10px] font-bold uppercase text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Predefinida</span>}
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">{a.street} · {a.postalCode} {a.city}</p>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 my-4">
+                        <div className="flex-1 h-px bg-slate-100" />
+                        <span className="text-xs text-slate-400">ou introduz manualmente</span>
+                        <div className="flex-1 h-px bg-slate-100" />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="label">Morada</label>
                     <input className="input" placeholder="Rua, número, andar..."
@@ -194,7 +259,7 @@ export default function CheckoutPage() {
                     {form.preferredDate && (
                       <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
                         <Icon icon={IconCalendar} size={12} />
-                        Data preferida: {new Date(form.preferredDate).toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
+                        Data preferida: {parseDateOnly(form.preferredDate)?.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
                       </p>
                     )}
                     {form.notes && (
@@ -214,10 +279,19 @@ export default function CheckoutPage() {
                 </div>
 
                 {orderError && (
-                  <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 flex items-center gap-2">
-                    <Icon icon={IconAlertTriangle} size={14} />
-                    {orderError}
-                  </p>
+                  <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                    <Icon icon={IconAlertTriangle} size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-red-700">Não foi possível concluir</p>
+                      <p className="text-xs text-red-500 mt-0.5">{orderError}</p>
+                    </div>
+                    <button
+                      onClick={() => setOrderError("")}
+                      className="text-red-300 hover:text-red-500 transition-colors flex-shrink-0"
+                    >
+                      <Icon icon={IconX} size={14} />
+                    </button>
+                  </div>
                 )}
 
                 <div className="flex gap-2">

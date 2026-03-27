@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { CartItem, Product } from "../../types";
-import { clearCartStorage, loadCart, saveCart } from "./CartStorage";
+import { clearCartStorage, getCurrentUserId, loadCart, saveCart } from "./CartStorage";
 
 interface CartContextType {
   items: CartItem[];
@@ -17,11 +17,28 @@ const CartContext = createContext<CartContextType | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
 
+  // Quando userId muda (login/logout na mesma tab), recarrega o carrinho correto
+  useEffect(() => {
+    const onStorageChange = (e: StorageEvent) => {
+      if (e.key === "user") setItems(loadCart());
+    };
+    // Custom event disparado pelo AuthProvider para a mesma tab
+    const onUserChange = () => setItems(loadCart());
+
+    window.addEventListener("storage", onStorageChange);
+    window.addEventListener("auth:userChanged", onUserChange);
+    return () => {
+      window.removeEventListener("storage", onStorageChange);
+      window.removeEventListener("auth:userChanged", onUserChange);
+    };
+  }, []);
+
   useEffect(() => {
     saveCart(items);
   }, [items]);
 
   const addItem = (product: Product, quantity: number) => {
+    if (getCurrentUserId() === null) return;
     setItems(prev => {
       const existing = prev.find(i => i.productId === product.id);
       if (existing) {

@@ -1,4 +1,16 @@
 O que falta fazer
 
-Ver checkout todo
-Desativo categorias, aparecem desativas na parte do admin mas o user consegue ver igual
+Em encomendas do cliente, a data também aparece invalida e o estado quando entregue aparece "-"
+No checkou um dos botões não selecionado tem border e outro não
+Continua a vir invalide date em todo o lado tanto admin como user
+Voltar a rever state e cache do carrinho de compras, pode estar a aparecer os produtos de outra conta
+
+Próximas Feautures:
+Criar pagina de métricas em grafico para admin:
+	- Ver por produto a que preço que mais compras teve esse mesmo produto
+	- Numero de vendas por dia, semana, mês e ano
+	- Mais ideias que possas ter
+
+Pagina do cliente:
+	- Pode ver tudo sobre a sua conta, encomendas, pedidos e assim
+Modo Light & Dark

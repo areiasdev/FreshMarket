@@ -9,6 +9,7 @@ import ShopPage from "../pages/ShopPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import OrdersPage from "../pages/OrdersPage";
 import OrderDetailPage from "../pages/OrderDetailPage";
+import AccountPage from "../pages/AccountPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -37,6 +38,10 @@ export default function AppRouter() {
         <Route path="/orders/:id" element={
           <PrivateRoute>
             <OrderDetailPage />
+          </PrivateRoute>} />
+        <Route path="/account" element={
+          <PrivateRoute>
+            <AccountPage />
           </PrivateRoute>} />
         <Route path="/admin" element={
           <PrivateRoute>

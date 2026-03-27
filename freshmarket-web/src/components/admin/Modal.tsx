@@ -1,4 +1,3 @@
-import { text } from "../../lib/color";
 import Icon from "../ui/Icon";
 import { IconX } from "../ui/icons";
 
@@ -13,10 +12,10 @@ interface ModalProps {
 export default function Modal({ title, children, onClose, onSubmit }: ModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 dark:border dark:border-slate-700">
         <div className="flex items-center justify-between mb-5">
-          <h2 className={`text-sm font-bold ${text.primary}`}>{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300">
             <Icon icon={IconX} size={20} />
           </button>
         </div>

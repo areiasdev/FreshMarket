@@ -5,6 +5,7 @@ interface AuthContextType {
   user: User | null;
   login: (data: AuthResponse) => void;
   logout: () => void;
+  updateUser: (updated: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 

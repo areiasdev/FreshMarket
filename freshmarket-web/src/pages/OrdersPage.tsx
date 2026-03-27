@@ -7,6 +7,7 @@ import Navbar from "../components/layout/Navbar";
 import StatusBadge from "../components/layout/StatusBadge";
 import Icon from "../components/ui/Icon";
 import { IconPackage } from "../components/ui/icons";
+import { parseDateTime, parseDateOnly } from "../lib/dates";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderSummaryDto[]>([]);
@@ -66,7 +67,7 @@ export default function OrdersPage() {
 
                   <div>
                     <p className="text-sm font-medium text-slate-800">
-                      {new Date(o.createdAt).toLocaleDateString("pt-PT", { day: "numeric", month: "short", year: "numeric" })}
+                      {parseDateTime(o.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {o.itemCount} {o.itemCount === 1 ? "produto" : "produtos"}
@@ -78,8 +79,10 @@ export default function OrdersPage() {
                   <StatusBadge status={o.status} />
 
                   <span className="text-xs text-slate-400 tabular text-right">
-                    {o.deliveryDate
-                      ? new Date(o.deliveryDate).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
+                    {o.deliverySlot?.deliveryDate
+                      ? parseDateOnly(o.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
+                      : o.preferredDeliveryDate
+                      ? parseDateOnly(o.preferredDeliveryDate)?.toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
                       : "—"}
                   </span>
                 </button>

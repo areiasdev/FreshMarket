@@ -82,16 +82,17 @@ public static class MappingExtensions
         TotalAmount = o.TotalAmount,
         ShippingFee = o.ShippingFee,
         CreatedAt = o.CreatedAt,
-        DeliveryCity = o.DeliveryCity,       // ← novo
+        DeliveryCity = o.DeliveryCity,  
         DeliveryPostalCode = o.DeliveryPostalCode,
         ItemCount = o.Items?.Count ?? 0,
+        UserFullName = o.User?.FullName ?? "—",
         DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
         {
-            DeliveryDate = o.DeliverySlot.DeliveryDate, // ← era .Date
+            DeliveryDate = o.DeliverySlot.DeliveryDate,
             StartTime = o.DeliverySlot.StartTime,
             EndTime = o.DeliverySlot.EndTime,
         },
-        // PaymentMethod/PaymentStatus removidos — estão em Payment entity
+        PreferredDeliveryDate = o.PreferredDeliveryDate,
     };
 
     // ─── Address ────────────────────────────────────────────────

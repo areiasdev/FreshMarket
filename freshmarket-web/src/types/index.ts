@@ -136,6 +136,8 @@ export interface OrderSummaryDto {
   createdAt: string;
   deliveryDate?: string;
   itemCount: number;
+  deliverySlot?: DeliverySlotInfo;
+  preferredDeliveryDate?: string;
 }
 
 // ─── Checkout ─────────────────────────────────────

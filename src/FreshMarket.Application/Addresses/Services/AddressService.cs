@@ -49,10 +49,11 @@ namespace FreshMarket.Application.Addresses.Services
                 IsDefault = request.IsDefault,
             };
 
-            _db.Addresses.Add(address);
-
             if (request.IsDefault)
                 await ClearOtherDefaultsAsync(address.UserId, ct);
+
+            _db.Addresses.Add(address);
+            await _db.SaveChangesAsync(ct);
 
             return address.ToDto();
         }

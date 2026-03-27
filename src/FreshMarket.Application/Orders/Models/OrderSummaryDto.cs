@@ -13,5 +13,8 @@ public class OrderSummaryDto
     public string DeliveryCity { get; set; } = string.Empty;
     public string DeliveryPostalCode { get; set; } = string.Empty;
     public int ItemCount { get; set; }
+    public string UserFullName { get; set; } = string.Empty;
     public DeliverySlotInfo? DeliverySlot { get; set; }
+
+    public DateOnly? PreferredDeliveryDate { get; set; }
 }

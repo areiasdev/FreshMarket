@@ -58,11 +58,11 @@ export const orderStatusBadge: Record<number, string> = {
 
 export const orderStatusLabel: Record<number, string> = {
   0: "Pendente",
-  1: "Pago",
+  1: "Confirmada",
   2: "Em preparo",
   3: "Enviado",
   4: "Entregue",
-  5: "Cancelado",
+  5: "Cancelada",
 };
 
 // ─── Botões ───────────────────────────────────────────────────────────────────

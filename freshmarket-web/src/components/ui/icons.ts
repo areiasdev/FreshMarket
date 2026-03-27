@@ -1,6 +1,10 @@
 export {
   IconLeaf,
+  IconSun,
+  IconMoon,
   IconChartBar,
+  IconChartLine,
+  IconChartPie,
   IconBox,
   IconFolder,
   IconClipboardList,

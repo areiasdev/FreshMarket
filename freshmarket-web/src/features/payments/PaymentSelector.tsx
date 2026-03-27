@@ -27,8 +27,10 @@ export default function PaymentSelector({ value, onChange }: Props) {
 
         <button
           onClick={() => onChange(PaymentMethod.MBWay)}
-          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center ${
-            value === PaymentMethod.MBWay ? "border-green-600 bg-green-50" : ""
+          className={`border rounded-xl p-3 text-sm flex items-center gap-2 justify-center transition-colors ${
+            value === PaymentMethod.MBWay
+              ? "border-emerald-700 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 text-slate-600 hover:border-emerald-300"
           }`}
         >
           <Icon icon={IconDeviceMobile} size={16} />
@@ -37,8 +39,10 @@ export default function PaymentSelector({ value, onChange }: Props) {
 
         <button
           onClick={() => onChange(PaymentMethod.Cash)}
-          className={`border rounded-xl p-3 text-sm col-span-2 flex items-center gap-2 justify-center ${
-            value === PaymentMethod.Cash ? "border-green-600 bg-green-50" : ""
+          className={`border rounded-xl p-3 text-sm col-span-2 flex items-center gap-2 justify-center transition-colors ${
+            value === PaymentMethod.Cash
+              ? "border-emerald-700 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 text-slate-600 hover:border-emerald-300"
           }`}
         >
           <Icon icon={IconCoin} size={16} />

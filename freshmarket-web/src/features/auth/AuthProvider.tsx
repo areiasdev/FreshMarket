@@ -4,6 +4,10 @@ import type { AuthResponse, User } from "../../types";
 import { AuthContext } from "./authContext";
 import { clearCartStorage } from "../cart/CartStorage";
 
+function dispatchUserChanged() {
+  window.dispatchEvent(new Event("auth:userChanged"));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {
@@ -15,14 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = (data: AuthResponse) => {
-    // ── Se for um utilizador diferente do que estava antes, limpar o carrinho
     const previousUser = localStorage.getItem("user");
     if (previousUser) {
       try {
         const prev = JSON.parse(previousUser);
-        if (prev.id !== data.user.id) {
-          clearCartStorage();
-        }
+        if (prev.id !== data.user.id) clearCartStorage();
       } catch { /* ignora */ }
     }
 
@@ -30,6 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("refreshToken", data.refreshToken);
     localStorage.setItem("user",         JSON.stringify(data.user));
     setUser(data.user);
+    dispatchUserChanged();
+  };
+
+  const updateUser = (updated: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updated };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
   };
 
   const logout = () => {
@@ -38,10 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
     clearCartStorage();
     setUser(null);
+    dispatchUserChanged();
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

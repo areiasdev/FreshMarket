@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import type { OrderDto } from "../types";
@@ -8,6 +8,7 @@ import StatusBadge from "../components/layout/StatusBadge";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
 import { IconCheck, IconCalendar, IconClock, IconNotes } from "../components/ui/icons";
+import { parseDateOnly, parseDateTime } from "../lib/dates";
 
 const TIMELINE = [
   { status: 0, label: "Pendente"    },
@@ -21,6 +22,9 @@ export default function OrderDetailPage() {
   const [order, setOrder]         = useState<OrderDto | null>(null);
   const [loading, setLoading]     = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [searchParams] = useSearchParams();
+  const paymentFailed = searchParams.get("payment") === "failed";
+  const navigate = useNavigate();
 
   useEffect(() => {
     client.get(endpoints.orders.getById(Number(id)))
@@ -69,7 +73,7 @@ export default function OrderDetailPage() {
               Encomenda #{order.id}
             </h1>
             <p className="text-xs text-slate-400">
-              {new Date(order.createdAt).toLocaleDateString("pt-PT", {
+              {parseDateTime(order.createdAt)?.toLocaleDateString("pt-PT", {
                 day: "numeric", month: "long", year: "numeric",
                 hour: "2-digit", minute: "2-digit",
               })}
@@ -162,7 +166,7 @@ export default function OrderDetailPage() {
                   <>
                     <p className="text-xs text-slate-500 flex items-center gap-1.5">
                       <Icon icon={IconCalendar} size={12} />
-                      {new Date(order.deliverySlot.deliveryDate).toLocaleDateString("pt-PT", {
+                      {parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT", {
                         weekday: "long", day: "numeric", month: "long",
                       })}
                     </p>
@@ -187,6 +191,15 @@ export default function OrderDetailPage() {
                 <div className="px-5 py-4">
                   <p className="text-sm text-slate-600">{order.paymentMethod}</p>
                 </div>
+              </div>
+            )}
+
+            {paymentFailed && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+                ⚠️ O pagamento não foi processado. A encomenda está pendente — tenta pagar novamente ou escolhe outro método.
+                <button onClick={() => navigate("/checkout")} className="ml-2 font-semibold underline">
+                  Tentar novamente
+                </button>
               </div>
             )}
 

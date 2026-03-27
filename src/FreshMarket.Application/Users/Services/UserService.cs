@@ -72,6 +72,26 @@ public class UserService : IUserService
         return result;
     }
 
+    public async Task<UserDto> UpdateProfileAsync(int id, string fullName, string? phone, string? newPassword, CancellationToken ct)
+    {
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Id == id, ct)
+            .ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"User {id} not found");
+
+        user.FullName = fullName;
+        user.Phone    = phone;
+
+        if (!string.IsNullOrWhiteSpace(newPassword))
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        var result = user.ToDto();
+        await _cache.SetAsync(CacheKeys.UserById(id), result, TimeSpan.FromMinutes(30), ct);
+        return result;
+    }
+
     private AuthResponseDto GenerateAuthResponse(User user) => new()
     {
         AccessToken = _tokenService.GenerateAccessToken(user),

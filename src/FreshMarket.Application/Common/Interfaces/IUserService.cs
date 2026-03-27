@@ -8,4 +8,5 @@ public interface IUserService
     Task<AuthResponseDto> RegisterAsync(string fullName, string email, string password, string? phone, CancellationToken ct);
     Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, CancellationToken ct);
     Task<UserDto?> GetByIdAsync(int id, CancellationToken ct);
+    Task<UserDto> UpdateProfileAsync(int id, string fullName, string? phone, string? newPassword, CancellationToken ct);
 }

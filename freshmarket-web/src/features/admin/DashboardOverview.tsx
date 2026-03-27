@@ -63,9 +63,9 @@ function StatCard({
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{label}</span>
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-          alert   ? "bg-amber-50"    :
-          accent  ? "bg-emerald-50"  :
-                    "bg-slate-50"
+          alert   ? "bg-amber-50 dark:bg-amber-900/30"    :
+          accent  ? "bg-emerald-50 dark:bg-emerald-900/30" :
+                    "bg-slate-50 dark:bg-slate-700"
         }`}>
           <Icon icon={icon} size={15} className={
             alert  ? "text-amber-600"   :
@@ -76,7 +76,7 @@ function StatCard({
       </div>
       <div>
         <p className={`text-2xl font-bold tabular-nums ${
-          alert ? "text-amber-600" : "text-slate-900"
+          alert ? "text-amber-600 dark:text-amber-400" : "text-slate-900 dark:text-slate-100"
         }`}>
           {value}
         </p>
@@ -119,11 +119,11 @@ export default function DashboardOverview() {
   );
 
   return (
-    <div className="space-y-8 max-w-screen-xl">
+    <div className="space-y-8 w-full">
 
       {/* ── Cabeçalho ──────────────────────────────────────────── */}
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
         <p className="text-sm text-slate-400 mt-0.5">
           {new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
         </p>
@@ -132,7 +132,7 @@ export default function DashboardOverview() {
       {/* ── Receita ────────────────────────────────────────────── */}
       <div>
         <SectionTitle>Receita</SectionTitle>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard label="Hoje"       value={`${fmt(stats.revenueToday)}€`}     icon={IconCurrencyEuro} accent sub={`${stats.ordersToday} encomenda${stats.ordersToday !== 1 ? "s" : ""}`} />
           <StatCard label="Esta semana" value={`${fmt(stats.revenueThisWeek)}€`}  icon={IconTrendingUpDown}   sub={`${stats.ordersThisWeek} encomendas`} />
           <StatCard label="Este mês"   value={`${fmt(stats.revenueThisMonth)}€`} icon={IconTrendingUpDown}   sub={`${stats.ordersThisMonth} encomendas`} />
@@ -142,7 +142,7 @@ export default function DashboardOverview() {
       {/* ── Encomendas por estado ───────────────────────────────── */}
       <div>
         <SectionTitle>Encomendas por estado</SectionTitle>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard label="Pendentes"    value={stats.ordersPending}    icon={IconClipboardList} alert={stats.ordersPending > 0} />
           <StatCard label="Em processo"  value={stats.ordersProcessing} icon={IconClipboardList} />
           <StatCard label="Entregues"    value={stats.ordersDelivered}  icon={IconClipboardList} accent />
@@ -151,12 +151,12 @@ export default function DashboardOverview() {
       </div>
 
       {/* ── Linha: Produtos + Clientes ──────────────────────────── */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Produtos */}
         <div>
           <SectionTitle>Produtos</SectionTitle>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard label="Total"      value={stats.productsTotal}    icon={IconBox} />
             <StatCard label="Ativos"     value={stats.productsActive}   icon={IconBox} accent />
             <StatCard label="Stock baixo" value={stats.productsLowStock} icon={IconAlertTriangle}
@@ -175,7 +175,7 @@ export default function DashboardOverview() {
         {/* Clientes */}
         <div>
           <SectionTitle>Clientes</SectionTitle>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <StatCard label="Total"         value={stats.customersTotal}    icon={IconUser} />
             <StatCard label="Novos este mês" value={stats.customersNewMonth} icon={IconUser} accent />
           </div>
@@ -196,9 +196,9 @@ export default function DashboardOverview() {
 
         <div className="card overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[60px_1fr_100px_110px_80px] gap-3 px-4 py-2.5
+          <div className="hidden sm:grid grid-cols-[60px_1fr_100px_110px_80px] gap-3 px-4 py-2.5
                           text-xs font-semibold text-slate-400 uppercase tracking-wide
-                          bg-slate-50 border-b border-slate-100">
+                          bg-slate-50 border-b border-slate-100 dark:bg-slate-700/50 dark:border-slate-700">
             <span>#</span>
             <span>Cliente</span>
             <span className="text-right">Total</span>
@@ -211,13 +211,13 @@ export default function DashboardOverview() {
           ) : stats.recentOrders.map((o, idx) => (
             <div
               key={o.id}
-              className={`grid grid-cols-[60px_1fr_100px_110px_80px] gap-3 items-center
+              className={`grid grid-cols-[1fr_80px] sm:grid-cols-[60px_1fr_100px_110px_80px]  gap-3 items-center
                           px-4 py-3 text-sm
-                          ${idx < stats.recentOrders.length - 1 ? "border-b border-slate-50" : ""}`}
+                          ${idx < stats.recentOrders.length - 1 ? "border-b border-slate-50 dark:border-slate-700/40" : ""}`}
             >
               <span className="font-mono text-xs text-slate-400 tabular-nums">#{o.id}</span>
-              <span className="font-medium text-slate-800 truncate">{o.userFullName}</span>
-              <span className="font-semibold text-emerald-700 tabular-nums text-right">
+              <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{o.userFullName}</span>
+              <span className="font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums text-right">
                 {fmt(o.totalAmount)}€
               </span>
               <span className={orderStatusBadge[o.status] ?? "badge badge-slate"}>

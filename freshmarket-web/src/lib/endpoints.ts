@@ -22,6 +22,16 @@ export const endpoints = {
     available: `${BASE}/deliveryslots/available`,  // query: ?date=&postalCodePrefix=
     byDate:    (date: string) => `${BASE}/deliveryslots/date/${date}`,
   },
+  users: {
+    me:     `${BASE}/users/me`,
+  },
+  addresses: {
+    byUser: (userId: number) => `${BASE}/addresses/user/${userId}`,
+    create: `${BASE}/addresses`,
+    update: (id: number)     => `${BASE}/addresses/${id}`,
+    delete: (id: number)     => `${BASE}/addresses/${id}`,
+    setDefault: (id: number) => `${BASE}/addresses/${id}/default`,
+  },
   orders: {
     my:     `${BASE}/orders/my`,
     getById:(id: number) => `${BASE}/orders/${id}`,
@@ -63,6 +73,7 @@ export const endpoints = {
       toggleActive: (id: number)   => `${ADMIN}/slots/${id}/toggle-active`, // PATCH (correto)
     },
     dashboard: `${ADMIN}/dashboard`,
+    metrics:   `${ADMIN}/metrics`,
     uploads: {
     image: `${ADMIN}/uploads/image`,
   },

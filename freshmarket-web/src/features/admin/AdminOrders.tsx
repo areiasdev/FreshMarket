@@ -3,6 +3,7 @@ import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
 import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
+import { parseDateOnly, parseDateTime } from "../../lib/dates";
 
 interface Order {
   id: number;
@@ -10,8 +11,8 @@ interface Order {
   userFullName: string;
   totalAmount: number;
   status: number;
-  deliveryDate: string;
   createdAt: string;
+  deliverySlot?: { deliveryDate: string; startTime: string; endTime: string };
 }
 
 const STATUS_OPTIONS = [
@@ -135,6 +136,7 @@ export default function AdminOrders() {
                 <th className="px-4 py-3 text-left font-medium">Cliente</th>
                 <th className="px-4 py-3 text-left font-medium">Total</th>
                 <th className="px-4 py-3 text-left font-medium">Estado</th>
+                <th className="px-4 py-3 text-left font-medium">Criada em</th>
                 <th className="px-4 py-3 text-left font-medium">Entrega</th>
                 <th className="px-4 py-3 text-left font-medium">Ações</th>
               </tr>
@@ -142,7 +144,7 @@ export default function AdminOrders() {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
                     Sem encomendas neste estado.
                   </td>
                 </tr>
@@ -160,7 +162,12 @@ export default function AdminOrders() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500">
-                      {new Date(order.deliveryDate).toLocaleDateString("pt-PT")}
+                      {parseDateTime(order.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {order.deliverySlot
+                        ? `${parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT")} ${order.deliverySlot.startTime}–${order.deliverySlot.endTime}`
+                        : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2 flex-wrap">
