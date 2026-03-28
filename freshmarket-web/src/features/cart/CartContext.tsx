@@ -86,7 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clearCartStorage();
   };
 
-  const totalItems  = items.reduce((sum, i) => sum + i.quantity, 0);
+  // kg items count as 1 regardless of weight; unit items count by quantity
+  const totalItems  = items.reduce((sum, i) => sum + (i.unitType === 1 ? 1 : i.quantity), 0);
   const totalAmount = Math.round(items.reduce((sum, i) => sum + i.subtotal, 0) * 100) / 100;
 
   return (

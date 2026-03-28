@@ -51,11 +51,11 @@ function StepIndicator({ current }: { current: Step }) {
               <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                 done   ? "bg-emerald-700 text-white" :
                 active ? "bg-emerald-700 text-white ring-2 ring-emerald-200" :
-                         "bg-slate-200 text-slate-400"
+                         "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
               }`}>
                 {done ? <Icon icon={IconCheck} size={10} /> : i + 1}
               </div>
-              <span className={`text-xs font-medium ${active ? "text-slate-900" : "text-slate-400"}`}>
+              <span className={`text-xs font-medium ${active ? "text-slate-900 dark:text-slate-100" : "text-slate-400"}`}>
                 {s.label}
               </span>
             </div>
@@ -82,6 +82,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.Card);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [postalWarning, setPostalWarning] = useState("");
 
   // Delivery slots
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
@@ -123,14 +124,22 @@ export default function CheckoutPage() {
     setSelectedAddressId(a.id);
   };
 
-  const validateAddress = () => {
-    setAddressError("");
+  const validateAddress = async () => {
+    setAddressError(""); setPostalWarning("");
     if (!form.deliveryAddress.trim()) { setAddressError("Insere a morada."); return; }
     if (!form.deliveryPostalCode.trim()) { setAddressError("Insere o código postal."); return; }
     if (!/^\d{4}-\d{3}$/.test(form.deliveryPostalCode)) {
       setAddressError("Código postal inválido (ex: 3750-123)");
       return;
     }
+    try {
+      const res = await client.get(endpoints.addresses.validatePostalCode, {
+        params: { postalCode: form.deliveryPostalCode },
+      });
+      if (!res.data.isInDeliveryArea && res.data.message) {
+        setPostalWarning(res.data.message);
+      }
+    } catch { /* non-blocking */ }
     setStep("payment");
   };
 
@@ -173,7 +182,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
 
       <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8">
@@ -203,8 +212,8 @@ export default function CheckoutPage() {
                             onClick={() => applyAddress(a)}
                             className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
                               selectedAddressId === a.id
-                                ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700"
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300"
+                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-slate-700"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
@@ -216,9 +225,9 @@ export default function CheckoutPage() {
                         ))}
                       </div>
                       <div className="flex items-center gap-2 my-4">
-                        <div className="flex-1 h-px bg-slate-100" />
+                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
                         <span className="text-xs text-slate-400">ou introduz manualmente</span>
-                        <div className="flex-1 h-px bg-slate-100" />
+                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
                       </div>
                     </div>
                   )}
@@ -266,8 +275,8 @@ export default function CheckoutPage() {
                             onClick={() => setSelectedSlotId(s.id)}
                             className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
                               selectedSlotId === s.id
-                                ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700"
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300"
+                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-slate-700"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
@@ -288,7 +297,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   {!loadingSlots && form.preferredDate && /^\d{4}-\d{3}$/.test(form.deliveryPostalCode) && availableSlots.length === 0 && (
-                    <p className="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                    <p className="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700">
                       Sem horários disponíveis para esta data. Escolhe outra data ou prossegue sem horário específico.
                     </p>
                   )}
@@ -304,8 +313,14 @@ export default function CheckoutPage() {
                       onChange={e => setForm({ ...form, notes: e.target.value })} />
                   </div>
 
+                  {postalWarning && (
+                    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
+                      ⚠️ {postalWarning}
+                    </p>
+                  )}
+
                   {addressError && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
+                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                       {addressError}
                     </p>
                   )}
@@ -325,15 +340,15 @@ export default function CheckoutPage() {
             {step === "payment" && (
               <>
                 <div className="card overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+                  <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entrega</span>
                     <button onClick={() => setStep("address")}
                       className="text-xs text-emerald-700 hover:text-emerald-900 font-medium transition-colors">
                       Editar
                     </button>
                   </div>
-                  <div className="px-5 py-4 text-sm text-slate-600 space-y-1">
-                    <p className="font-medium text-slate-800">{form.deliveryAddress}</p>
+                  <div className="px-5 py-4 text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                    <p className="font-medium text-slate-800 dark:text-slate-100">{form.deliveryAddress}</p>
                     <p className="text-xs text-slate-400 font-mono">{form.deliveryPostalCode} · {getCityFromPostal(form.deliveryPostalCode)}</p>
                     {selectedSlot && (
                       <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
@@ -349,7 +364,7 @@ export default function CheckoutPage() {
                       </p>
                     )}
                     {!selectedSlot && !form.preferredDate && (
-                      <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-start gap-1.5">
+                      <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-start gap-1.5 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
                         <Icon icon={IconCalendar} size={12} className="mt-0.5 flex-shrink-0" />
                         <span>
                           Sem data de entrega escolhida. Estimamos a entrega até <strong>{format72hEstimate()}</strong> (72h úteis).
@@ -373,7 +388,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {orderError && (
-                  <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 dark:bg-red-900/20 dark:border-red-800">
                     <Icon icon={IconAlertTriangle} size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-red-700">Não foi possível concluir</p>
@@ -405,32 +420,32 @@ export default function CheckoutPage() {
             <div className="card-header">
               Resumo · <span className="tabular">{items.length} {items.length === 1 ? "produto" : "produtos"}</span>
             </div>
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50 dark:divide-slate-700">
               {items.map(item => (
                 <div key={item.productId} className="flex justify-between gap-2 px-4 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-800 truncate">{item.name}</p>
+                    <p className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate">{item.name}</p>
                     <p className="text-xs text-slate-400 tabular mt-0.5">
                       {item.unitType === 1 ? `${item.quantity.toFixed(1)} kg` : `${item.quantity} un`}
                     </p>
                   </div>
-                  <span className="text-xs font-semibold text-slate-800 tabular flex-shrink-0">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 tabular flex-shrink-0">
                     {item.subtotal.toFixed(2)}€
                   </span>
                 </div>
               ))}
             </div>
-            <div className="px-4 py-4 space-y-2 border-t border-slate-100">
-              <div className="flex justify-between text-xs text-slate-500">
+            <div className="px-4 py-4 space-y-2 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
                 <span>Subtotal</span>
                 <span className="tabular">{totalAmount.toFixed(2)}€</span>
               </div>
-              <div className="flex justify-between text-xs text-slate-500">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
                 <span>Envio{selectedSlot && <span className="ml-1 text-slate-400">({selectedSlot.startTime}–{selectedSlot.endTime})</span>}</span>
                 <span className="tabular">{shippingFee.toFixed(2)}€</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-slate-100">
-                <span className="text-sm font-bold text-slate-900">Total</span>
+              <div className="flex justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Total</span>
                 <span className="text-sm font-bold text-emerald-700 tabular">{total.toFixed(2)}€</span>
               </div>
             </div>

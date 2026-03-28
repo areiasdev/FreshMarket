@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
 import { useCart } from "../../features/cart/CartContext";
+import { useTheme } from "../../features/theme/ThemeContext";
 import NotificationBell from "../../features/notifications/NotificationBell";
 import Icon from "../ui/Icon";
-import { IconLeaf, IconShoppingCart } from "../ui/icons";
+import { IconLeaf, IconShoppingCart, IconSun, IconMoon } from "../ui/icons";
 
 interface NavbarProps {
   onCartOpen?: () => void;
@@ -12,6 +13,7 @@ interface NavbarProps {
 export default function Navbar({ onCartOpen }: NavbarProps) {
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -19,10 +21,9 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   const navLinks = [
-    { label: "Loja",       path: "/",        show: true },
-    { label: "Encomendas", path: "/orders",  show: isAuthenticated },
-    { label: "Conta",      path: "/account", show: isAuthenticated },
-    { label: "Admin",      path: "/admin",   show: user?.role === "Admin" },
+    { label: "Loja",       path: "/",       show: true },
+    { label: "Encomendas", path: "/orders", show: isAuthenticated },
+    { label: "Admin",      path: "/admin",  show: user?.role === "Admin" },
   ];
 
   return (
@@ -68,6 +69,12 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 </button>
                 <NotificationBell />
                 <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center w-8 h-8 rounded-md text-emerald-300 hover:text-white hover:bg-emerald-800/60 transition-colors"
+                >
+                  <Icon icon={theme === "dark" ? IconSun : IconMoon} size={16} />
+                </button>
+                <button
                   onClick={() => { logout(); navigate("/"); }}
                   className="text-xs text-emerald-400 hover:text-red-300 transition-colors font-medium"
                 >
@@ -75,12 +82,20 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => navigate("/auth")}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3.5 py-1.5 rounded-md transition-colors"
-              >
-                Entrar
-              </button>
+              <>
+                <button
+                  onClick={() => navigate("/auth")}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3.5 py-1.5 rounded-md transition-colors"
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center w-8 h-8 rounded-md text-emerald-300 hover:text-white hover:bg-emerald-800/60 transition-colors"
+                >
+                  <Icon icon={theme === "dark" ? IconSun : IconMoon} size={16} />
+                </button>
+              </>
             )}
 
             <button

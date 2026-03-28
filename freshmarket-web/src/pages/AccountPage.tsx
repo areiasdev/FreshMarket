@@ -7,6 +7,8 @@ import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import { parseDateTime, parseDateOnly } from "../lib/dates";
 import type { OrderSummaryDto } from "../types";
+import Icon from "../components/ui/Icon";
+import { IconEye, IconEyeOff } from "../components/ui/icons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,8 +29,8 @@ type Tab = "profile" | "addresses" | "orders";
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50">
-        <h2 className="text-sm font-semibold text-slate-700">{title}</h2>
+      <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{title}</h2>
       </div>
       <div className="px-5 py-5">{children}</div>
     </div>
@@ -44,8 +46,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls = "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent";
-const inputReadCls = "w-full border border-slate-100 rounded-lg px-3 py-2 text-sm text-slate-400 bg-slate-50 cursor-not-allowed";
+const inputCls = "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500";
+const inputReadCls = "w-full border border-slate-100 rounded-lg px-3 py-2 text-sm text-slate-400 bg-slate-50 cursor-not-allowed dark:bg-slate-700 dark:border-slate-700 dark:text-slate-500";
 
 // ─── Profile Tab ──────────────────────────────────────────────────────────────
 
@@ -56,6 +58,8 @@ function ProfileTab() {
   const [phone, setPhone]           = useState(user?.phone ?? "");
   const [newPw, setNewPw]           = useState("");
   const [confirmPw, setConfirmPw]   = useState("");
+  const [showNewPw, setShowNewPw]       = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [savingPw, setSavingPw]     = useState(false);
   const [msg, setMsg]               = useState<{ ok: boolean; text: string } | null>(null);
@@ -132,10 +136,24 @@ function ProfileTab() {
       <SectionCard title="Alterar palavra-passe">
         <div className="space-y-4">
           <Field label="Nova palavra-passe">
-            <input className={inputCls} type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            <div className="relative">
+              <input className={inputCls + " pr-10"} type={showNewPw ? "text" : "password"}
+                value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mínimo 6 caracteres" />
+              <button type="button" onClick={() => setShowNewPw(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                <Icon icon={showNewPw ? IconEyeOff : IconEye} size={15} />
+              </button>
+            </div>
           </Field>
           <Field label="Confirmar nova palavra-passe">
-            <input className={inputCls} type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+            <div className="relative">
+              <input className={inputCls + " pr-10"} type={showConfirmPw ? "text" : "password"}
+                value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+              <button type="button" onClick={() => setShowConfirmPw(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                <Icon icon={showConfirmPw ? IconEyeOff : IconEye} size={15} />
+              </button>
+            </div>
           </Field>
 
           {pwMsg && (
@@ -266,7 +284,7 @@ function AddressesTab() {
               <button onClick={save} disabled={saving} className="btn-primary bg-emerald-700 disabled:opacity-50">
                 {saving ? "A guardar..." : "Guardar"}
               </button>
-              <button onClick={closeForm} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-lg transition-colors">
+              <button onClick={closeForm} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-lg transition-colors dark:text-slate-400 dark:border-slate-600 dark:hover:text-slate-200">
                 Cancelar
               </button>
             </div>
@@ -282,14 +300,14 @@ function AddressesTab() {
       ) : (
         <div className="space-y-3">
           {addresses.map(a => (
-            <div key={a.id} className={`card p-4 flex items-start justify-between gap-4 ${a.isDefault ? "ring-1 ring-emerald-500" : ""}`}>
+            <div key={a.id} className={`card p-4 flex items-start justify-between gap-4 dark:border-slate-700 ${a.isDefault ? "ring-1 ring-emerald-500" : ""}`}>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-800">{a.label || "Sem etiqueta"}</p>
-                  {a.isDefault && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Predefinida</span>}
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{a.label || "Sem etiqueta"}</p>
+                  {a.isDefault && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">Predefinida</span>}
                 </div>
-                <p className="text-xs text-slate-500">{a.street}</p>
-                <p className="text-xs text-slate-500">{a.postalCode} {a.city} · {a.country}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{a.street}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{a.postalCode} {a.city} · {a.country}</p>
               </div>
               <div className="flex gap-2 flex-shrink-0 items-center">
                 {confirmDelete === a.id ? (
@@ -358,23 +376,23 @@ function OrdersTab() {
 
   return (
     <div className="card overflow-hidden">
-      <div className="grid grid-cols-[56px_1fr_88px_100px_72px] gap-3 px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-50 border-b border-slate-100">
+      <div className="grid grid-cols-[56px_1fr_88px_100px_72px] gap-3 px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-50 border-b border-slate-100 dark:bg-slate-800 dark:border-slate-700">
         <span>#</span>
         <span>Data</span>
         <span className="text-right">Total</span>
         <span>Estado</span>
         <span className="text-right">Entrega</span>
       </div>
-      <div className="divide-y divide-slate-50">
+      <div className="divide-y divide-slate-50 dark:divide-slate-700">
         {orders.map(o => (
           <button
             key={o.id}
             onClick={() => navigate(`/orders/${o.id}`)}
-            className="w-full grid grid-cols-[56px_1fr_88px_100px_72px] gap-3 items-center px-5 py-3.5 text-left hover:bg-slate-50 transition-colors"
+            className="w-full grid grid-cols-[56px_1fr_88px_100px_72px] gap-3 items-center px-5 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors"
           >
             <span className="text-xs font-mono text-slate-400">#{o.id}</span>
             <div>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                 {parseDateTime(o.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
               <p className="text-xs text-slate-400 mt-0.5">{o.itemCount} {o.itemCount === 1 ? "produto" : "produtos"}</p>
@@ -409,7 +427,7 @@ export default function AccountPage() {
   const [tab, setTab] = useState<Tab>("profile");
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
 
       <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8">
@@ -417,19 +435,19 @@ export default function AccountPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">A minha conta</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">A minha conta</h1>
             <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
           </div>
           <button
             onClick={() => { logout(); navigate("/"); }}
-            className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors border border-red-100 hover:border-red-200 px-3 py-1.5 rounded-lg"
+            className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors border border-red-100 hover:border-red-200 px-3 py-1.5 rounded-lg dark:border-red-900/40"
           >
             Terminar sessão
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0.5 border-b border-slate-200 mb-6">
+        <div className="flex gap-0.5 border-b border-slate-200 dark:border-slate-700 mb-6">
           {TABS.map(t => (
             <button
               key={t.key}
@@ -437,7 +455,7 @@ export default function AccountPage() {
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 tab === t.key
                   ? "border-emerald-700 text-emerald-700"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
               }`}
             >
               {t.label}

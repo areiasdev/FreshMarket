@@ -5,7 +5,7 @@ import client from "../api/client";
 import type { AuthResponse } from "../types";
 import { endpoints } from "../lib/endpoints";
 import Icon from "../components/ui/Icon";
-import { IconLeaf, IconTruck, IconStar } from "../components/ui/icons";
+import { IconLeaf, IconTruck, IconStar, IconEye, IconEyeOff } from "../components/ui/icons";
 
 export default function AuthPage() {
   const { login } = useAuth();
@@ -15,6 +15,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [loginForm,    setLoginForm]    = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({ fullName: "", email: "", password: "", phone: "" });
+  const [showLoginPw,    setShowLoginPw]    = useState(false);
+  const [showRegisterPw, setShowRegisterPw] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +42,12 @@ export default function AuthPage() {
     <div className="min-h-screen grid lg:grid-cols-2">
 
       <div className="hidden lg:flex flex-col justify-between bg-emerald-900 p-12">
-        <div>
-          <div className="flex items-center gap-2.5 text-white mb-16">
-            <Icon icon={IconLeaf} size={22} className="text-emerald-300" />
-            <span className="font-bold text-lg tracking-tight">Horto Píncaro</span>
-          </div>
+        <div className="flex items-center gap-2.5 text-white">
+          <Icon icon={IconLeaf} size={22} className="text-emerald-300" />
+          <span className="font-bold text-lg tracking-tight">Horto Píncaro</span>
+        </div>
 
+        <div>
           <blockquote className="mb-12">
             <p className="text-2xl font-bold text-white leading-snug tracking-tight mb-2">
               "Frescos da quinta<br />à sua porta."
@@ -75,7 +77,7 @@ export default function AuthPage() {
         <p className="text-xs text-emerald-600">© 2026 Horto Píncaro</p>
       </div>
 
-      <div className="flex items-center justify-center bg-white px-8 py-12">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-900 px-8 py-12">
         <div className="w-full max-w-sm">
 
           <div className="flex items-center gap-2 mb-8 lg:hidden">
@@ -83,16 +85,16 @@ export default function AuthPage() {
             <span className="font-bold text-slate-900">Horto Píncaro</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
             {tab === "login" ? "Bem-vindo de volta" : "Criar conta"}
           </h1>
-          <p className="text-sm text-slate-500 mb-8">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
             {tab === "login"
               ? "Entra para ver as tuas encomendas."
               : "Regista-te para começar a encomendar."}
           </p>
 
-          <div className="flex border-b border-slate-200 mb-7">
+          <div className="flex border-b border-slate-200 dark:border-slate-700 mb-7">
             {(["login", "register"] as const).map(t => (
               <button
                 key={t}
@@ -100,7 +102,7 @@ export default function AuthPage() {
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
                   tab === t
                     ? "border-emerald-700 text-emerald-700"
-                    : "border-transparent text-slate-400 hover:text-slate-600"
+                    : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
               >
                 {t === "login" ? "Entrar" : "Criar Conta"}
@@ -118,13 +120,22 @@ export default function AuthPage() {
               </div>
               <div>
                 <label className="label">Password</label>
-                <input type="password" className="input" required
-                  value={loginForm.password}
-                  onChange={e => setLoginForm({ ...loginForm, password: e.target.value })} />
+                <div className="relative">
+                  <input type={showLoginPw ? "text" : "password"} className="input pr-10" required
+                    value={loginForm.password}
+                    onChange={e => setLoginForm({ ...loginForm, password: e.target.value })} />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPw(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <Icon icon={showLoginPw ? IconEyeOff : IconEye} size={16} />
+                  </button>
+                </div>
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {error}
                 </p>
               )}
@@ -153,9 +164,18 @@ export default function AuthPage() {
               </div>
               <div>
                 <label className="label">Password</label>
-                <input type="password" className="input" required
-                  value={registerForm.password}
-                  onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                <div className="relative">
+                  <input type={showRegisterPw ? "text" : "password"} className="input pr-10" required
+                    value={registerForm.password}
+                    onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPw(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <Icon icon={showRegisterPw ? IconEyeOff : IconEye} size={16} />
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="label">
@@ -168,7 +188,7 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {error}
                 </p>
               )}

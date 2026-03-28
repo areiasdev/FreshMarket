@@ -16,89 +16,101 @@ export default function CartDrawer({ open, onClose }: Props) {
     <>
       {open && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 transition-opacity"
+          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
       )}
 
-      <div className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ${
+      <div className={`fixed top-0 right-0 h-full w-full max-w-sm bg-stone-50 dark:bg-slate-800 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ${
         open ? "translate-x-0" : "translate-x-full"
       }`}>
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Icon icon={IconShoppingCart} size={18} />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <h2 className="text-base font-bold text-stone-900 dark:text-slate-100 flex items-center gap-2">
+            <Icon icon={IconShoppingCart} size={17} className="text-emerald-700" />
             Carrinho
+            {items.length > 0 && (
+              <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                {items.length}
+              </span>
+            )}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <Icon icon={IconX} size={20} />
+          <button
+            onClick={onClose}
+            className="text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md p-1 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <Icon icon={IconX} size={18} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto divide-y px-4">
+        {/* Items */}
+        <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-              <Icon icon={IconShoppingCart} size={40} stroke={1.5} />
-              <p className="text-sm">O carrinho está vazio</p>
+            <div className="flex flex-col items-center justify-center h-full text-stone-400 dark:text-slate-400 gap-3 px-4">
+              <div className="w-16 h-16 rounded-2xl bg-stone-100 dark:bg-slate-700 flex items-center justify-center">
+                <Icon icon={IconShoppingCart} size={28} stroke={1.5} />
+              </div>
+              <p className="text-sm font-medium">O carrinho está vazio</p>
+              <p className="text-xs text-stone-400 dark:text-slate-400 text-center">Adiciona produtos da nossa loja para começar</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.productId} className="flex items-center gap-3 py-4">
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
-                  onError={(e) => (e.currentTarget.src = "https://placehold.co/48?text=P")}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
-                  <p className="text-xs text-gray-400">{item.pricePerUnit.toFixed(2)}€{item.unitType === 1 ? "/kg" : "/un"}</p>
-                  <div className="flex items-center gap-2 mt-1">
+            <div className="divide-y divide-stone-100 dark:divide-slate-700 px-4">
+              {items.map((item) => (
+                <div key={item.productId} className="flex items-center gap-3 py-4">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-stone-100 dark:bg-slate-700"
+                    onError={(e) => (e.currentTarget.src = "https://placehold.co/56?text=P")}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-stone-800 dark:text-slate-100 truncate">{item.name}</p>
+                    <p className="text-xs text-stone-400 dark:text-slate-400 mt-0.5">
+                      {item.pricePerUnit.toFixed(2)}€{item.unitType === 1 ? "/kg" : "/un"}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <button
+                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.1 : 1)).toFixed(1)))}
+                        className="w-6 h-6 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-100 text-sm font-bold flex items-center justify-center transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                      >−</button>
+                      <span className="text-xs font-semibold w-8 text-center text-stone-700 dark:text-slate-300">
+                        {item.unitType === 1 ? `${item.quantity.toFixed(1)}kg` : item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.1 : 1)).toFixed(1))}
+                        className="w-6 h-6 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-100 text-sm font-bold flex items-center justify-center transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                      >+</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <p className="text-sm font-bold text-emerald-700">{item.subtotal.toFixed(2)}€</p>
                     <button
-                      onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.1 : 1)).toFixed(1)))}
-                      className="w-6 h-6 rounded-full border text-gray-600 hover:bg-gray-100 text-xs font-bold flex items-center justify-center"
-                    >−</button>
-                    <span className="text-xs font-semibold w-8 text-center">
-                      {item.unitType === 1 ? item.quantity.toFixed(1) : item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.1 : 1)).toFixed(1))}
-                      className="w-6 h-6 rounded-full border text-gray-600 hover:bg-gray-100 text-xs font-bold flex items-center justify-center"
-                    >+</button>
+                      onClick={() => removeItem(item.productId)}
+                      className="text-stone-300 hover:text-red-400 transition-colors p-0.5"
+                    >
+                      <Icon icon={IconX} size={14} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <p className="text-sm font-bold text-green-700">{item.subtotal.toFixed(2)}€</p>
-                  <button
-                    onClick={() => removeItem(item.productId)}
-                    className="text-gray-300 hover:text-red-400 transition"
-                  >
-                    <Icon icon={IconX} size={14} />
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
+        {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t px-5 py-4 space-y-3">
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>Subtotal</span>
-              <span className="font-bold text-gray-800 text-base">{totalAmount.toFixed(2)}€</span>
+          <div className="border-t border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-4 space-y-3">
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-stone-500 dark:text-slate-400">Subtotal</span>
+              <span className="text-lg font-bold text-stone-900 dark:text-slate-100">{totalAmount.toFixed(2)}€</span>
             </div>
-            <p className="text-xs text-gray-400">+ taxa de envio calculada no checkout</p>
+            <p className="text-xs text-stone-400 dark:text-slate-400">Portes de envio calculados no checkout</p>
             <button
               onClick={() => { onClose(); navigate("/checkout"); }}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
+              className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
             >
               Finalizar encomenda
-              <Icon icon={IconArrowRight} size={16} />
-            </button>
-            <button
-              onClick={() => { onClose(); navigate("/cart"); }}
-              className="w-full text-sm text-gray-500 hover:underline text-center"
-            >
-              Ver carrinho completo
+              <Icon icon={IconArrowRight} size={15} />
             </button>
           </div>
         )}

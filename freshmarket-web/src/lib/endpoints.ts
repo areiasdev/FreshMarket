@@ -6,7 +6,7 @@ export const endpoints = {
   auth: {
     login:    `${BASE}/auth/login`,
     register: `${BASE}/auth/register`,
-    refresh:  `${BASE}/auth/refresh-token`,   // ✅ FIX: era /refresh, backend espera /refresh-token
+    refresh:  `${BASE}/auth/refresh-token`,
   },
 
   // ─── Public ─────────────────────────────────────
@@ -19,18 +19,19 @@ export const endpoints = {
     getAll: `${BASE}/categories`,
   },
   deliverySlots: {
-    available: `${BASE}/deliveryslots/available`,  // query: ?date=&postalCodePrefix=
+    available: `${BASE}/deliveryslots/available`,
     byDate:    (date: string) => `${BASE}/deliveryslots/date/${date}`,
   },
   users: {
-    me:     `${BASE}/users/me`,
+    me: `${BASE}/users/me`,
   },
   addresses: {
-    byUser: (userId: number) => `${BASE}/addresses/user/${userId}`,
-    create: `${BASE}/addresses`,
-    update: (id: number)     => `${BASE}/addresses/${id}`,
-    delete: (id: number)     => `${BASE}/addresses/${id}`,
-    setDefault: (id: number) => `${BASE}/addresses/${id}/default`,
+    byUser:           (userId: number) => `${BASE}/addresses/user/${userId}`,
+    create:           `${BASE}/addresses`,
+    update:           (id: number)     => `${BASE}/addresses/${id}`,
+    delete:           (id: number)     => `${BASE}/addresses/${id}`,
+    setDefault:       (id: number)     => `${BASE}/addresses/${id}/default`,
+    validatePostalCode: `${BASE}/addresses/validate-postal-code`,
   },
   orders: {
     my:     `${BASE}/orders/my`,
@@ -49,6 +50,12 @@ export const endpoints = {
     markRead:    (id: number) => `${BASE}/notifications/${id}/read`,
     markAllRead: `${BASE}/notifications/read-all`,
   },
+  reviews: {
+    byProduct: (productId: number) => `${BASE}/reviews/product/${productId}`,
+    summary:   (productId: number) => `${BASE}/reviews/product/${productId}/summary`,
+    create:    `${BASE}/reviews`,
+    delete:    (id: number)        => `${BASE}/reviews/${id}`,
+  },
 
   // ─── Admin ──────────────────────────────────────
   admin: {
@@ -56,13 +63,13 @@ export const endpoints = {
       getAll:       `${ADMIN}/categories`,
       create:       `${ADMIN}/categories`,
       update:       (id: number) => `${ADMIN}/categories/${id}`,
-      toggleActive: (id: number) => `${ADMIN}/categories/${id}/toggle-active`, // PATCH (correto)
+      toggleActive: (id: number) => `${ADMIN}/categories/${id}/toggle-active`,
     },
     products: {
       getAll:          `${ADMIN}/products`,
       create:          `${ADMIN}/products`,
       update:          (id: number) => `${ADMIN}/products/${id}`,
-      toggleActive:    (id: number) => `${ADMIN}/products/${id}/toggle-active`, // ← usar PUT (ver AdminProducts.tsx)
+      toggleActive:    (id: number) => `${ADMIN}/products/${id}/toggle-active`,
       bulkUpdatePrice: `${ADMIN}/products/bulk-price`,
     },
     orders: {
@@ -76,12 +83,18 @@ export const endpoints = {
       getAll:       `${ADMIN}/slots`,
       byDate:       (date: string) => `${ADMIN}/slots/date/${date}`,
       create:       `${ADMIN}/slots`,
-      toggleActive: (id: number)   => `${ADMIN}/slots/${id}/toggle-active`, // PATCH (correto)
+      toggleActive: (id: number)   => `${ADMIN}/slots/${id}/toggle-active`,
+    },
+    users: {
+      getAll:       `${ADMIN}/users`,
+      getById:      (id: number) => `${ADMIN}/users/${id}`,
+      updateRole:   (id: number) => `${ADMIN}/users/${id}/role`,
+      toggleActive: (id: number) => `${ADMIN}/users/${id}/toggle-active`,
     },
     dashboard: `${ADMIN}/dashboard`,
     metrics:   `${ADMIN}/metrics`,
     uploads: {
-    image: `${ADMIN}/uploads/image`,
-  },
+      image: `${ADMIN}/uploads/image`,
+    },
   },
 } as const;
