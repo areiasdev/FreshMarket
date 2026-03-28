@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import { useCart } from "../features/cart/CartContext";
@@ -9,8 +10,15 @@ import { PaymentMethod } from "../types/payment";
 import Navbar from "../components/layout/Navbar";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
-import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX, IconClock } from "../components/ui/icons";
+import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX, IconClock, IconTruck } from "../components/ui/icons";
 import { parseDateOnly, format72hEstimate } from "../lib/dates";
+
+const SHIPPING_SPEEDS = [
+  { key: "standard", label: "Standard", description: "Entrega em 48h úteis", feeLocal: 5.00, feeIntl: 12.00 },
+  { key: "express",  label: "Express",  description: "Entrega em 24h úteis", feeLocal: 10.00, feeIntl: 18.00 },
+] as const;
+
+type ShippingSpeed = typeof SHIPPING_SPEEDS[number]["key"];
 
 interface SavedAddress {
   id: number;
@@ -83,6 +91,7 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [postalWarning, setPostalWarning] = useState("");
+  const [shippingSpeed, setShippingSpeed] = useState<ShippingSpeed>("standard");
 
   // Delivery slots
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
@@ -101,22 +110,40 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, [user?.id]);
 
-  // Fetch slots when postal code + date are ready
+  // Fetch slots when postal code + date are ready — debounced + abortable
+  const slotDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const postal = form.deliveryPostalCode;
-    const date = form.preferredDate;
+    const date   = form.preferredDate;
+
     if (!date || !/^\d{4}-\d{3}$/.test(postal)) {
       setAvailableSlots([]);
       setSelectedSlotId(null);
       return;
     }
-    const prefix = postal.slice(0, 4);
-    setLoadingSlots(true);
-    setSelectedSlotId(null);
-    client.get(endpoints.deliverySlots.available, { params: { date, postalCodePrefix: prefix } })
-      .then(res => setAvailableSlots(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setAvailableSlots([]))
-      .finally(() => setLoadingSlots(false));
+
+    if (slotDebounceRef.current) clearTimeout(slotDebounceRef.current);
+
+    const controller = new AbortController();
+
+    slotDebounceRef.current = setTimeout(() => {
+      const prefix = postal.slice(0, 4);
+      setLoadingSlots(true);
+      setSelectedSlotId(null);
+      client
+        .get(endpoints.deliverySlots.available, {
+          params: { date, postalCodePrefix: prefix },
+          signal: controller.signal,
+        })
+        .then(res => setAvailableSlots(Array.isArray(res.data) ? res.data : []))
+        .catch(err => { if (!axios.isCancel(err)) setAvailableSlots([]); })
+        .finally(() => setLoadingSlots(false));
+    }, 300);
+
+    return () => {
+      if (slotDebounceRef.current) clearTimeout(slotDebounceRef.current);
+      controller.abort();
+    };
   }, [form.preferredDate, form.deliveryPostalCode]);
 
   const applyAddress = (a: SavedAddress) => {
@@ -152,7 +179,9 @@ export default function CheckoutPage() {
   };
 
   const selectedSlot = availableSlots.find(s => s.id === selectedSlotId);
-  const shippingFee = selectedSlot?.shippingFee ?? 2.50;
+  const isInternational = (savedAddresses.find(a => a.id === selectedAddressId)?.country ?? "PT") !== "PT";
+  const speedOption = SHIPPING_SPEEDS.find(s => s.key === shippingSpeed) ?? SHIPPING_SPEEDS[0];
+  const shippingFee = isInternational ? speedOption.feeIntl : speedOption.feeLocal;
   const total = totalAmount + shippingFee;
 
   const handlePlaceOrder = async () => {
@@ -169,6 +198,7 @@ export default function CheckoutPage() {
         preferredDeliveryDate: form.preferredDate || undefined,
         deliverySlotId: selectedSlotId || undefined,
         notes: form.notes || undefined,
+        shippingSpeed,
         items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
       });
       const order = orderRes.data;
@@ -255,6 +285,33 @@ export default function CheckoutPage() {
                         min={new Date().toISOString().split("T")[0]}
                         value={form.preferredDate}
                         onChange={e => setForm({ ...form, preferredDate: e.target.value })} />
+                    </div>
+                  </div>
+
+                  {/* Shipping speed selector */}
+                  <div>
+                    <label className="label flex items-center gap-1.5">
+                      <Icon icon={IconTruck} size={12} /> Velocidade de entrega
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SHIPPING_SPEEDS.map(s => (
+                        <button
+                          key={s.key}
+                          type="button"
+                          onClick={() => setShippingSpeed(s.key)}
+                          className={`text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
+                            shippingSpeed === s.key
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300"
+                              : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-emerald-600 dark:hover:bg-slate-700"
+                          }`}
+                        >
+                          <p className="font-semibold">{s.label}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>
+                          <p className="text-xs font-bold text-emerald-700 mt-1">
+                            {isInternational ? s.feeIntl.toFixed(2) : s.feeLocal.toFixed(2)}€
+                          </p>
+                        </button>
+                      ))}
                     </div>
                   </div>
 

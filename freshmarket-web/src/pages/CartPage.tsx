@@ -8,7 +8,6 @@ import { IconShoppingCart, IconX, IconArrowRight } from "../components/ui/icons"
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalAmount, clearCart } = useCart();
   const navigate = useNavigate();
-  const shippingFee = 2.50;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -70,7 +69,7 @@ export default function CartPage() {
 
                     <div className="flex items-center justify-center gap-1.5">
                       <button
-                        onClick={() => updateQuantity(item.productId, Math.max(0, item.quantity - (item.unitType === 1 ? 0.1 : 1)))}
+                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.5 : 1)).toFixed(1)))}
                         className="w-6 h-6 rounded border border-slate-200 bg-white text-slate-600 text-sm
                                    flex items-center justify-center hover:bg-slate-50 transition-colors leading-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >−</button>
@@ -78,7 +77,7 @@ export default function CartPage() {
                         {item.unitType === 1 ? item.quantity.toFixed(1) : item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.productId, item.quantity + (item.unitType === 1 ? 0.1 : 1))}
+                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.5 : 1)).toFixed(1))}
                         className="w-6 h-6 rounded border border-slate-200 bg-white text-slate-600 text-sm
                                    flex items-center justify-center hover:bg-slate-50 transition-colors leading-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >+</button>
@@ -110,13 +109,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500 dark:text-slate-400">Envio</span>
-                  <span className="font-medium tabular text-slate-800 dark:text-slate-100">{shippingFee.toFixed(2)}€</span>
+                  <span className="font-medium text-slate-400 dark:text-slate-500 italic">no checkout</span>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Total</span>
-                  <span className="text-base font-bold text-emerald-700 tabular">
-                    {(totalAmount + shippingFee).toFixed(2)}€
-                  </span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Subtotal</span>
+                  <span className="text-base font-bold text-emerald-700 tabular">{totalAmount.toFixed(2)}€</span>
                 </div>
               </div>
 

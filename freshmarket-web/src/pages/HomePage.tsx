@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import { useAuth } from "../features/auth/useAuth";
@@ -11,7 +11,7 @@ import Navbar from "../components/layout/Navbar";
 import Icon from "../components/ui/Icon";
 import {
   IconLeaf, IconTruck, IconStar, IconShoppingCart,
-  IconCheck, IconArrowRight, IconClock, IconPackage,
+  IconCheck, IconArrowRight, IconArrowLeft, IconClock, IconPackage,
 } from "../components/ui/icons";
 
 // ─── Static content types ─────────────────────────────────────────────────────
@@ -158,7 +158,6 @@ export default function HomePage() {
 
       <HeroSection isAuthenticated={isAuthenticated} onShop={() => document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" })} />
       <TrustBar />
-      <HowItWorksSection />
       <ProductsSection
         products={products}
         categories={categories}
@@ -172,9 +171,7 @@ export default function HomePage() {
         onPageChange={setPage}
         onAdd={handleAdd}
       />
-      <SocialProofSection />
-      <AboutSection />
-      <FarmGallerySection />
+      <MarketingCarousel />
       <CtaSection isAuthenticated={isAuthenticated} />
       <FooterSection />
 
@@ -923,6 +920,119 @@ function FooterSection() {
   );
 }
 
+// ─── Marketing Carousel ───────────────────────────────────────────────────────
+
+const CAROUSEL_SLIDES = [
+  { id: "como-funciona", label: "Como funciona" },
+  { id: "depoimentos",   label: "Depoimentos"   },
+  { id: "sobre",         label: "Sobre nós"     },
+  { id: "quinta",        label: "A nossa quinta" },
+] as const;
+
+type SlideId = typeof CAROUSEL_SLIDES[number]["id"];
+
+function MarketingCarousel() {
+  const [active, setActive] = useState<SlideId>("como-funciona");
+  const containerRef        = useRef<HTMLDivElement>(null);
+  const ticking             = useRef(false);
+
+  const activeIndex = CAROUSEL_SLIDES.findIndex(s => s.id === active);
+
+  const goTo = useCallback((id: SlideId) => {
+    setActive(id);
+    const container = containerRef.current;
+    if (!container) return;
+    const idx = CAROUSEL_SLIDES.findIndex(s => s.id === id);
+    container.scrollTo({ left: idx * container.clientWidth, behavior: "smooth" });
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (ticking.current) return;
+    ticking.current = true;
+    requestAnimationFrame(() => {
+      const container = containerRef.current;
+      if (container) {
+        const idx = Math.round(container.scrollLeft / container.clientWidth);
+        const slide = CAROUSEL_SLIDES[Math.max(0, Math.min(idx, CAROUSEL_SLIDES.length - 1))];
+        if (slide) setActive(slide.id);
+      }
+      ticking.current = false;
+    });
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-slate-900 border-t border-stone-100 dark:border-slate-800">
+
+      {/* Tab nav */}
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center gap-0 border-b border-stone-100 dark:border-slate-800 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+          {CAROUSEL_SLIDES.map(s => (
+            <button
+              key={s.id}
+              onClick={() => goTo(s.id)}
+              className={`flex-shrink-0 px-5 py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                active === s.id
+                  ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400"
+                  : "border-transparent text-stone-400 hover:text-stone-700 dark:text-slate-500 dark:hover:text-slate-300"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Slides */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [scrollbar-width:none] items-start"
+      >
+        <div className="min-w-full snap-start flex-shrink-0"><HowItWorksSection /></div>
+        <div className="min-w-full snap-start flex-shrink-0"><SocialProofSection /></div>
+        <div className="min-w-full snap-start flex-shrink-0"><AboutSection /></div>
+        <div className="min-w-full snap-start flex-shrink-0"><FarmGallerySection /></div>
+      </div>
+
+      {/* Controls */}
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between border-t border-stone-100 dark:border-slate-800">
+        <button
+          onClick={() => goTo(CAROUSEL_SLIDES[Math.max(0, activeIndex - 1)].id)}
+          disabled={activeIndex === 0}
+          className="flex items-center gap-1.5 text-sm font-medium text-stone-400 hover:text-stone-700 dark:text-slate-500 dark:hover:text-slate-300 disabled:opacity-30 transition-colors"
+        >
+          <Icon icon={IconArrowLeft} size={14} />
+          {activeIndex > 0 ? CAROUSEL_SLIDES[activeIndex - 1].label : ""}
+        </button>
+
+        <div className="flex gap-2">
+          {CAROUSEL_SLIDES.map(s => (
+            <button
+              key={s.id}
+              onClick={() => goTo(s.id)}
+              aria-label={s.label}
+              className={`rounded-full transition-all duration-200 ${
+                active === s.id
+                  ? "w-5 h-2 bg-emerald-600"
+                  : "w-2 h-2 bg-stone-200 hover:bg-stone-300 dark:bg-slate-600 dark:hover:bg-slate-500"
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => goTo(CAROUSEL_SLIDES[Math.min(CAROUSEL_SLIDES.length - 1, activeIndex + 1)].id)}
+          disabled={activeIndex === CAROUSEL_SLIDES.length - 1}
+          className="flex items-center gap-1.5 text-sm font-medium text-stone-400 hover:text-stone-700 dark:text-slate-500 dark:hover:text-slate-300 disabled:opacity-30 transition-colors"
+        >
+          {activeIndex < CAROUSEL_SLIDES.length - 1 ? CAROUSEL_SLIDES[activeIndex + 1].label : ""}
+          <Icon icon={IconArrowRight} size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
 function ProductCard({
@@ -996,8 +1106,8 @@ function ProductCard({
 
           <button
             onClick={handleClick}
-            className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg
-                        transition-all duration-200 ${
+            className={`flex-shrink-0 w-[92px] text-center text-xs font-bold px-3 py-1.5 rounded-lg
+                        whitespace-nowrap transition-all duration-200 ${
               added
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700"
                 : "bg-stone-900 hover:bg-stone-700 text-white active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"

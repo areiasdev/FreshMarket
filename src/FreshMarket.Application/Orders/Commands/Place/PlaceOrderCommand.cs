@@ -1,4 +1,5 @@
 using FreshMarket.Application.Common.Interfaces;
+using FreshMarket.Application.Common.Shipping;
 using FreshMarket.Application.Orders.Models;
 
 namespace FreshMarket.Application.Orders.Commands.Place;
@@ -15,7 +16,8 @@ public record PlaceOrderCommand(
     string DeliveryCountry,
     string? Notes,
     DateOnly? PreferredDeliveryDate,
-    IEnumerable<PlaceOrderItem> Items
+    IEnumerable<PlaceOrderItem> Items,
+    string ShippingSpeed = ShippingSpeed.Standard
 ) : IRequest<OrderDto>;
 
 public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, OrderDto>
@@ -39,6 +41,7 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Order
                 request.Notes,
                 request.PreferredDeliveryDate,
                 request.Items.Select(i => (i.ProductId, i.Quantity)),
+                request.ShippingSpeed,
                 ct
             ).ConfigureAwait(false);
 }

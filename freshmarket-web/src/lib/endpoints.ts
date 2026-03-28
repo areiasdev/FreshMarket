@@ -50,6 +50,9 @@ export const endpoints = {
     markRead:    (id: number) => `${BASE}/notifications/${id}/read`,
     markAllRead: `${BASE}/notifications/read-all`,
   },
+  shipping: {
+    options: `${BASE}/shipping/options`,
+  },
   reviews: {
     byProduct: (productId: number) => `${BASE}/reviews/product/${productId}`,
     summary:   (productId: number) => `${BASE}/reviews/product/${productId}/summary`,
