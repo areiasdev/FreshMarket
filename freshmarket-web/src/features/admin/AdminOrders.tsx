@@ -60,20 +60,16 @@ export default function AdminOrders() {
     load();
   }, [selectedStatus, page, pageSize]);
 
-  const reload = async () => {
-    const res = await client.get(
-      endpoints.admin.orders.byStatus(selectedStatus.toString()),
-      { params: { page, pageSize } }
-    );
-    setOrders(res.data.items);
-    setTotal(res.data.totalCount);
+  const removeOrder = (id: number) => {
+    setOrders(prev => prev.filter(o => o.id !== id));
+    setTotal(t => t - 1);
   };
 
   const handleUpdateStatus = async (id: number, newStatus: number) => {
     setUpdating(id);
     try {
       await client.put(endpoints.admin.orders.updateStatus(id), { status: newStatus });
-      await reload();
+      removeOrder(id);
     } finally {
       setUpdating(null);
     }
@@ -84,7 +80,7 @@ export default function AdminOrders() {
     setUpdating(id);
     try {
       await client.put(endpoints.admin.orders.cancel(id));
-      await reload();
+      removeOrder(id);
     } finally {
       setUpdating(null);
     }

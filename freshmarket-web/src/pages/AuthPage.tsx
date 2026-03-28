@@ -77,7 +77,7 @@ export default function AuthPage() {
         <p className="text-xs text-emerald-600">© 2026 Horto Píncaro</p>
       </div>
 
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-900 px-8 py-12">
+      <div className="auth-light flex min-h-screen items-center justify-center bg-white px-8 py-12">
         <div className="w-full max-w-sm">
 
           <div className="flex items-center gap-2 mb-8 lg:hidden">
@@ -85,16 +85,16 @@ export default function AuthPage() {
             <span className="font-bold text-slate-900">Horto Píncaro</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
             {tab === "login" ? "Bem-vindo de volta" : "Criar conta"}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
+          <p className="text-sm text-slate-500 mb-8">
             {tab === "login"
               ? "Entra para ver as tuas encomendas."
               : "Regista-te para começar a encomendar."}
           </p>
 
-          <div className="flex border-b border-slate-200 dark:border-slate-700 mb-7">
+          <div className="flex border-b border-slate-200 mb-7">
             {(["login", "register"] as const).map(t => (
               <button
                 key={t}
@@ -102,7 +102,7 @@ export default function AuthPage() {
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
                   tab === t
                     ? "border-emerald-700 text-emerald-700"
-                    : "border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                    : "border-transparent text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {t === "login" ? "Entrar" : "Criar Conta"}
@@ -135,7 +135,7 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
                   {error}
                 </p>
               )}
@@ -188,7 +188,7 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
                   {error}
                 </p>
               )}

@@ -70,14 +70,14 @@ export default function CartDrawer({ open, onClose }: Props) {
                     </p>
                     <div className="flex items-center gap-1.5 mt-2">
                       <button
-                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.1 : 1)).toFixed(1)))}
+                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.5 : 1)).toFixed(1)))}
                         className="w-6 h-6 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-100 text-sm font-bold flex items-center justify-center transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >−</button>
                       <span className="text-xs font-semibold w-8 text-center text-stone-700 dark:text-slate-300">
                         {item.unitType === 1 ? `${item.quantity.toFixed(1)}kg` : item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.1 : 1)).toFixed(1))}
+                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.5 : 1)).toFixed(1))}
                         className="w-6 h-6 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-100 text-sm font-bold flex items-center justify-center transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >+</button>
                     </div>

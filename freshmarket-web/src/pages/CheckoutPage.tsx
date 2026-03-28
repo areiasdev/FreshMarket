@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import { useCart } from "../features/cart/CartContext";
@@ -101,22 +102,40 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, [user?.id]);
 
-  // Fetch slots when postal code + date are ready
+  // Fetch slots when postal code + date are ready — debounced + abortable
+  const slotDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const postal = form.deliveryPostalCode;
-    const date = form.preferredDate;
+    const date   = form.preferredDate;
+
     if (!date || !/^\d{4}-\d{3}$/.test(postal)) {
       setAvailableSlots([]);
       setSelectedSlotId(null);
       return;
     }
-    const prefix = postal.slice(0, 4);
-    setLoadingSlots(true);
-    setSelectedSlotId(null);
-    client.get(endpoints.deliverySlots.available, { params: { date, postalCodePrefix: prefix } })
-      .then(res => setAvailableSlots(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setAvailableSlots([]))
-      .finally(() => setLoadingSlots(false));
+
+    if (slotDebounceRef.current) clearTimeout(slotDebounceRef.current);
+
+    const controller = new AbortController();
+
+    slotDebounceRef.current = setTimeout(() => {
+      const prefix = postal.slice(0, 4);
+      setLoadingSlots(true);
+      setSelectedSlotId(null);
+      client
+        .get(endpoints.deliverySlots.available, {
+          params: { date, postalCodePrefix: prefix },
+          signal: controller.signal,
+        })
+        .then(res => setAvailableSlots(Array.isArray(res.data) ? res.data : []))
+        .catch(err => { if (!axios.isCancel(err)) setAvailableSlots([]); })
+        .finally(() => setLoadingSlots(false));
+    }, 300);
+
+    return () => {
+      if (slotDebounceRef.current) clearTimeout(slotDebounceRef.current);
+      controller.abort();
+    };
   }, [form.preferredDate, form.deliveryPostalCode]);
 
   const applyAddress = (a: SavedAddress) => {

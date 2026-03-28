@@ -996,8 +996,8 @@ function ProductCard({
 
           <button
             onClick={handleClick}
-            className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg
-                        transition-all duration-200 ${
+            className={`flex-shrink-0 w-[92px] text-center text-xs font-bold px-3 py-1.5 rounded-lg
+                        whitespace-nowrap transition-all duration-200 ${
               added
                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700"
                 : "bg-stone-900 hover:bg-stone-700 text-white active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
