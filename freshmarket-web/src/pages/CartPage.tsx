@@ -8,7 +8,6 @@ import { IconShoppingCart, IconX, IconArrowRight } from "../components/ui/icons"
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalAmount, clearCart } = useCart();
   const navigate = useNavigate();
-  const shippingFee = 2.50;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -110,13 +109,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500 dark:text-slate-400">Envio</span>
-                  <span className="font-medium tabular text-slate-800 dark:text-slate-100">{shippingFee.toFixed(2)}€</span>
+                  <span className="font-medium text-slate-400 dark:text-slate-500 italic">no checkout</span>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Total</span>
-                  <span className="text-base font-bold text-emerald-700 tabular">
-                    {(totalAmount + shippingFee).toFixed(2)}€
-                  </span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Subtotal</span>
+                  <span className="text-base font-bold text-emerald-700 tabular">{totalAmount.toFixed(2)}€</span>
                 </div>
               </div>
 

@@ -3,6 +3,7 @@ using FreshMarket.Application.Common.Email;
 using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Mapping;
+using FreshMarket.Application.Common.Shipping;
 using FreshMarket.Application.DeliverySlots.Models;
 using FreshMarket.Application.Orders.Models;
 using FreshMarket.Domain.Enums;
@@ -161,6 +162,7 @@ public class OrderService : IOrderService
     string deliveryCity, string deliveryCountry,
     string? notes, DateOnly? preferredDeliveryDate,
     IEnumerable<(int ProductId, decimal Quantity)> items,
+    string shippingSpeed,
     CancellationToken ct)
     {
         using var transaction = await _db.Database.BeginTransactionAsync(ct);
@@ -187,7 +189,7 @@ public class OrderService : IOrderService
             if (products.Count != itemList.Count)
                 throw new BusinessException("Produto inv�lido ou inativo.");
 
-            var shippingFee = slot?.ShippingFee ?? 2.50m;
+            var shippingFee = ShippingCalculator.Calculate(shippingSpeed, deliveryCountry);
 
             var order = new Order
             {

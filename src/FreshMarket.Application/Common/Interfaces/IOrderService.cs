@@ -15,6 +15,7 @@ public interface IOrderService
     string deliveryCity, string deliveryCountry,
     string? notes, DateOnly? preferredDeliveryDate,
     IEnumerable<(int ProductId, decimal Quantity)> items,
+    string shippingSpeed,
     CancellationToken ct);
     Task UpdateStatusAsync(int orderId, OrderStatus status, CancellationToken ct);
     Task CancelAsync(int orderId, CancellationToken ct);
