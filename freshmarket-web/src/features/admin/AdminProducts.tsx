@@ -37,7 +37,7 @@ export default function AdminProducts() {
   const [form, setForm] = useState({
     name: "", description: "", slug: "",
     pricePerUnit: 0, unitType: 1,
-    minQuantity: 0.1, stockQuantity: 0, imageUrl: "",
+    minQuantity: 0.5, stockQuantity: 0, imageUrl: "",
     isSeasonal: false, isActive: true, categoryId: 0,
     trackStock: true, lowStockAlert: 0,
   });
@@ -75,7 +75,7 @@ export default function AdminProducts() {
     setEditItem(null);
     setForm({
       name: "", description: "", slug: "",
-      pricePerUnit: 0, unitType: 1, minQuantity: 0.1,
+      pricePerUnit: 0, unitType: 1, minQuantity: 0.5,
       stockQuantity: 0, imageUrl: "", isSeasonal: false,
       isActive: true, categoryId: categories[0].id,
       trackStock: true, lowStockAlert: 0,
@@ -87,7 +87,7 @@ export default function AdminProducts() {
     setEditItem(p);
     setForm({
       name: p.name, description: "", slug: p.name.toLowerCase().replace(/\s+/g, "-"),
-      pricePerUnit: p.pricePerUnit, unitType: p.unitType, minQuantity: 0.1,
+      pricePerUnit: p.pricePerUnit, unitType: p.unitType, minQuantity: 0.5,
       stockQuantity: p.stockQuantity, imageUrl: p.imageUrl,
       isSeasonal: p.isSeasonal, isActive: p.isActive, categoryId: p.categoryId,
       trackStock: true, lowStockAlert: 0,
@@ -228,9 +228,12 @@ export default function AdminProducts() {
               </label>
               <label className="block">
                 <span className="text-sm text-gray-600 dark:text-slate-300">Stock</span>
-                <input type="number" step="0.1" className="input mt-1"
+                <input type="text" inputMode="decimal" className="input mt-1"
                   value={form.stockQuantity}
-                  onChange={(e) => setForm({ ...form, stockQuantity: +e.target.value })} />
+                  onChange={(e) => {
+                    const v = e.target.value.replace(",", ".");
+                    setForm({ ...form, stockQuantity: v === "" ? 0 : parseFloat(v) || form.stockQuantity });
+                  }} />
               </label>
             </div>
             <label className="block">

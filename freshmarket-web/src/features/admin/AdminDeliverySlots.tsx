@@ -232,22 +232,24 @@ export default function AdminDeliverySlots() {
               <div>
                 <label className="label">Máx. Encomendas</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className="input"
-                  min={1}
                   value={form.maxOrders}
-                  onChange={(e) => setForm({ ...form, maxOrders: +e.target.value || form.maxOrders })}
+                  onChange={(e) => setForm({ ...form, maxOrders: parseInt(e.target.value) || form.maxOrders })}
                 />
               </div>
               <div>
                 <label className="label">Frete (€)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   className="input"
-                  min={0}
-                  step={0.5}
                   value={form.shippingfee}
-                  onChange={(e) => setForm({ ...form, shippingfee: +e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(",", ".");
+                    setForm({ ...form, shippingfee: v === "" ? 0 : parseFloat(v) || form.shippingfee });
+                  }}
                 />
               </div>
             </div>
