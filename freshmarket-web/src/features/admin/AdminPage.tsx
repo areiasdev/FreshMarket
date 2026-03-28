@@ -7,7 +7,7 @@ import AdminOrders from "./AdminOrders";
 import AdminDeliverySlots from "./AdminDeliverySlots";
 import {
   IconLeaf, IconChartBar, IconChartLine, IconBox, IconFolder,
-  IconClipboardList, IconClock, IconSun, IconMoon,
+  IconClipboardList, IconClock, IconSun, IconMoon, IconMenu2,
   type TablerIcon,
 } from "../../components/ui/icons";
 import DashboardOverview from "./DashboardOverview";
@@ -33,6 +33,8 @@ export default function AdminPage() {
     return localStorage.getItem("admin-theme") === "dark";
   });
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("admin-theme", dark ? "dark" : "light");
   }, [dark]);
@@ -51,9 +53,18 @@ export default function AdminPage() {
   return (
     <div className={`flex min-h-screen font-sans ${dark ? "dark bg-slate-900" : "bg-gray-100"}`}>
 
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-10 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ────────────────────────────────────────────────── */}
-      <aside className={`w-64 flex flex-col fixed h-full z-20 border-r shadow-sm transition-colors
-        ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+      <aside className={`w-64 flex flex-col fixed h-full z-20 border-r shadow-sm transition-all duration-300
+        ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
 
         {/* Logo */}
         <div className={`p-5 border-b ${dark ? "border-slate-700" : "border-gray-200"}`}>
@@ -115,8 +126,24 @@ export default function AdminPage() {
       </aside>
 
       {/* ── Main ────────────────────────────────────────────────────── */}
-      <main className={`ml-64 flex-1 p-8 min-h-screen transition-colors ${dark ? "text-slate-100" : ""}`}>
-        {renderContent()}
+      <main className={`ml-0 md:ml-64 flex-1 min-h-screen transition-colors ${dark ? "text-slate-100" : ""}`}>
+        {/* Mobile top bar */}
+        <div className={`flex items-center gap-3 px-4 py-3 border-b md:hidden
+          ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            className={`p-1.5 rounded-lg transition-colors
+              ${dark ? "text-slate-300 hover:bg-slate-700" : "text-gray-600 hover:bg-gray-100"}`}
+          >
+            <IconMenu2 size={20} stroke={2} />
+          </button>
+          <span className={`font-semibold text-sm ${dark ? "text-slate-200" : "text-gray-700"}`}>
+            Painel de Administração
+          </span>
+        </div>
+        <div className="p-4 md:p-8">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

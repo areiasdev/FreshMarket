@@ -8,13 +8,14 @@ import StatusBadge from "../components/layout/StatusBadge";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
 import { IconCheck, IconCalendar, IconClock, IconNotes } from "../components/ui/icons";
-import { parseDateOnly, parseDateTime } from "../lib/dates";
+import { parseDateOnly, parseDateTime, format72hEstimate } from "../lib/dates";
 
 const TIMELINE = [
-  { status: 0, label: "Pendente"    },
-  { status: 1, label: "Confirmada"  },
-  { status: 2, label: "Em entrega"  },
-  { status: 3, label: "Entregue"    },
+  { status: 0, label: "Pendente"   },
+  { status: 1, label: "Pago"       },
+  { status: 2, label: "Em preparo" },
+  { status: 3, label: "Enviado"    },
+  { status: 4, label: "Entregue"   },
 ];
 
 export default function OrderDetailPage() {
@@ -24,6 +25,7 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [searchParams] = useSearchParams();
   const paymentFailed = searchParams.get("payment") === "failed";
+  const orderConfirmed = searchParams.get("confirmed") === "true";
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function OrderDetailPage() {
     setCancelling(true);
     try {
       await client.put(endpoints.orders.cancel(order.id));
-      setOrder({ ...order, status: 4 });
+      setOrder({ ...order, status: 5 });
     } finally { setCancelling(false); }
   };
 
@@ -67,6 +69,18 @@ export default function OrderDetailPage() {
           { label: `Encomenda #${order.id}` },
         ]} />
 
+        {orderConfirmed && (
+          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5">
+            <div className="w-7 h-7 rounded-full bg-emerald-700 flex items-center justify-center flex-shrink-0">
+              <Icon icon={IconCheck} size={14} className="text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-emerald-800">Encomenda realizada com sucesso!</p>
+              <p className="text-xs text-emerald-600 mt-0.5">Obrigado pela tua compra. Receberás uma confirmação em breve.</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
@@ -85,7 +99,7 @@ export default function OrderDetailPage() {
         <div className="grid md:grid-cols-[1fr_240px] gap-5 items-start">
           <div className="space-y-4">
 
-            {order.status !== 4 && (
+            {order.status !== 5 && (
               <div className="card overflow-hidden">
                 <div className="card-header">Estado</div>
                 <div className="px-5 py-5">
@@ -160,7 +174,7 @@ export default function OrderDetailPage() {
             <div className="card overflow-hidden">
               <div className="card-header">Entrega</div>
               <div className="px-5 py-4 space-y-2 text-sm text-slate-600">
-                <p className="font-medium text-slate-800">{order.deliveryAddress}</p>
+                <p className="font-medium text-slate-800">{order.deliveryStreet}, {order.deliveryCity}</p>
                 <p className="text-xs text-slate-400 font-mono">{order.deliveryPostalCode}</p>
                 {order.deliverySlot && (
                   <>
@@ -175,6 +189,14 @@ export default function OrderDetailPage() {
                       {order.deliverySlot.startTime} – {order.deliverySlot.endTime}
                     </p>
                   </>
+                )}
+                {!order.deliverySlot && !order.preferredDeliveryDate && (
+                  <div className="border-t border-slate-100 pt-2 mt-2">
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 flex items-start gap-1.5">
+                      <Icon icon={IconCalendar} size={12} className="mt-0.5 flex-shrink-0" />
+                      <span>Entrega estimada até <strong>{format72hEstimate()}</strong>. Entraremos em contacto para confirmar.</span>
+                    </p>
+                  </div>
                 )}
                 {order.notes && (
                   <p className="text-xs text-slate-400 italic border-t border-slate-100 pt-2 mt-2 flex items-center gap-1.5">

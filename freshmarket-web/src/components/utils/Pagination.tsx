@@ -27,21 +27,19 @@ export default function Pagination({
 
   return (
     // RUI: divider em vez de margin — integra naturalmente na tabela acima
-    <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-slate-100">
+    <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-slate-100 dark:border-slate-700">
 
       {/* Esquerda: contagem + page size */}
       <div className="flex items-center gap-3">
-        {/* RUI: texto secundário discreto, tabular para não saltar */}
-        <span className="text-xs text-slate-400 tabular-nums whitespace-nowrap">
+        <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums whitespace-nowrap">
           {from}–{to} de {totalCount}
         </span>
 
-        {/* RUI: select sem border, sublinhado discreto */}
         <select
           value={pageSize}
           onChange={(e) => { onPageSizeChange(Number(e.target.value)); onPageChange(1); }}
-          className="text-xs text-slate-500 bg-transparent cursor-pointer
-                     focus:outline-none hover:text-slate-700 transition-colors"
+          className="text-xs text-slate-500 dark:text-slate-400 bg-transparent dark:bg-transparent cursor-pointer
+                     focus:outline-none hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
         >
           {pageSizeOptions.map((s) => (
             <option key={s} value={s}>{s} / pág.</option>
@@ -55,8 +53,8 @@ export default function Pagination({
           <button
             disabled={page === 1}
             onClick={() => onPageChange(page - 1)}
-            className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400
-                       hover:bg-slate-100 hover:text-slate-700
+            className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 dark:text-slate-500
+                       hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200
                        disabled:opacity-30 disabled:cursor-not-allowed
                        transition-colors"
             aria-label="Página anterior"
@@ -68,7 +66,7 @@ export default function Pagination({
           <div className="flex items-center gap-0.5">
             {getPageNumbers(page, totalPages).map((p, i) =>
               p === "…" ? (
-                <span key={`ellipsis-${i}`} className="w-7 text-center text-xs text-slate-300 select-none">
+                <span key={`ellipsis-${i}`} className="w-7 text-center text-xs text-slate-300 dark:text-slate-600 select-none">
                   …
                 </span>
               ) : (
@@ -78,7 +76,7 @@ export default function Pagination({
                   className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${
                     p === page
                       ? "bg-emerald-700 text-white"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200"
                   }`}
                 >
                   {p}
@@ -90,8 +88,8 @@ export default function Pagination({
           <button
             disabled={page === totalPages}
             onClick={() => onPageChange(page + 1)}
-            className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400
-                       hover:bg-slate-100 hover:text-slate-700
+            className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 dark:text-slate-500
+                       hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200
                        disabled:opacity-30 disabled:cursor-not-allowed
                        transition-colors"
             aria-label="Próxima página"

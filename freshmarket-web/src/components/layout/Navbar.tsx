@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/useAuth";
 import { useCart } from "../../features/cart/CartContext";
+import NotificationBell from "../../features/notifications/NotificationBell";
 import Icon from "../ui/Icon";
 import { IconLeaf, IconShoppingCart } from "../ui/icons";
 
@@ -65,6 +66,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 >
                   {user?.fullName.split(" ")[0]}
                 </button>
+                <NotificationBell />
                 <button
                   onClick={() => { logout(); navigate("/"); }}
                   className="text-xs text-emerald-400 hover:text-red-300 transition-colors font-medium"

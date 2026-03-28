@@ -1,10 +1,13 @@
 using FreshMarket.Application.Common.Constants;
+using FreshMarket.Application.Common.Email;
 using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Mapping;
 using FreshMarket.Application.DeliverySlots.Models;
 using FreshMarket.Application.Orders.Models;
+using FreshMarket.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FreshMarket.Application.Orders.Services;
 
@@ -12,11 +15,17 @@ public class OrderService : IOrderService
 {
     private readonly IApplicationDbContext _db;
     private readonly ICacheService _cache;
+    private readonly IEmailService _email;
+    private readonly INotificationService _notifications;
+    private readonly ILogger<OrderService> _logger;
 
-    public OrderService(IApplicationDbContext db, ICacheService cache)
+    public OrderService(IApplicationDbContext db, ICacheService cache, IEmailService email, INotificationService notifications, ILogger<OrderService> logger)
     {
-        _db = db;
-        _cache = cache;
+        _db            = db;
+        _cache         = cache;
+        _email         = email;
+        _notifications = notifications;
+        _logger        = logger;
     }
 
     public async Task<OrderDto> GetByIdAsync(int id, CancellationToken ct)
@@ -59,6 +68,7 @@ public class OrderService : IOrderService
                 StartTime = order.DeliverySlot.StartTime,
                 EndTime = order.DeliverySlot.EndTime,
             },
+            PreferredDeliveryDate = order.PreferredDeliveryDate,
             Items = order.Items.Select(i => new OrderItemDto
             {
                 ProductId = i.ProductId,
@@ -94,7 +104,7 @@ public class OrderService : IOrderService
         return result;
     }
 
-    // Admin — sempre IgnoreQueryFilters em orders
+    // Admin ï¿½ sempre IgnoreQueryFilters em orders
     public async Task<PagedResult<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, int page, int pageSize, CancellationToken ct)
     {
         var query = _db.Orders
@@ -175,7 +185,7 @@ public class OrderService : IOrderService
                 .ToDictionaryAsync(p => p.Id, ct);
 
             if (products.Count != itemList.Count)
-                throw new BusinessException("Produto inválido ou inativo.");
+                throw new BusinessException("Produto invï¿½lido ou inativo.");
 
             var shippingFee = slot?.ShippingFee ?? 2.50m;
 
@@ -200,14 +210,14 @@ public class OrderService : IOrderService
                 var product = products[productId];
 
                 if (product.UnitType == UnitType.Unit && quantity % 1 != 0)
-                    throw new BusinessException($"'{product.Name}' só aceita unidades inteiras.");
+                    throw new BusinessException($"'{product.Name}' sï¿½ aceita unidades inteiras.");
 
                 var available = product.StockQuantity - product.ReservedStock;
                 if (product.TrackStock && available < quantity)
                     throw new BusinessException($"'{product.Name}' tem stock insuficiente.");
 
                 if (quantity < product.MinQuantity)
-                    throw new BusinessException($"Quantidade mínima para '{product.Name}' é {product.MinQuantity}.");
+                    throw new BusinessException($"Quantidade mï¿½nima para '{product.Name}' ï¿½ {product.MinQuantity}.");
 
                 if (product.TrackStock)
                     product.ReservedStock += quantity;
@@ -236,12 +246,21 @@ public class OrderService : IOrderService
             await _cache.RemoveAsync(CacheKeys.OrdersByUser(userId), ct);
             await _cache.RemoveByPrefixAsync("slots:", ct);
 
-            return await GetByIdAsync(order.Id, ct);
+            var orderDto = await GetByIdAsync(order.Id, ct);
+
+            // Send confirmation email and notification (non-blocking â€” failure must not break the order)
+            _ = SendOrderPlacedEmailAsync(order.Id, userId, orderDto, ct);
+            _ = _notifications.CreateAsync(userId, NotificationType.OrderPlaced,
+                    "Encomenda recebida!",
+                    $"A tua encomenda {orderDto.OrderNumber} foi recebida e estÃ¡ a ser processada.",
+                    order.Id, ct);
+
+            return orderDto;
         }
         catch (DbUpdateConcurrencyException)
         {
             await transaction.RollbackAsync(ct);
-            throw new BusinessException("Alguém acabou de reservar este slot. Tenta novamente.");
+            throw new BusinessException("Algu\u00e9m acabou de reservar este slot. Tenta novamente.");
         }
         catch
         {
@@ -250,10 +269,45 @@ public class OrderService : IOrderService
         }
     }
 
+    private async Task SendOrderPlacedEmailAsync(int orderId, int userId, OrderDto orderDto, CancellationToken ct)
+    {
+        try
+        {
+            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
+            if (user is null) return;
+
+            string? estimated = orderDto.DeliverySlot is not null
+                ? $"{orderDto.DeliverySlot.DeliveryDate:dd/MM/yyyy} Â· {orderDto.DeliverySlot.StartTime}â€“{orderDto.DeliverySlot.EndTime}"
+                : orderDto.PreferredDeliveryDate.HasValue
+                    ? orderDto.PreferredDeliveryDate.Value.ToString("dd/MM/yyyy")
+                    : DateTime.UtcNow.AddHours(72).ToString("dd/MM/yyyy");
+
+            var items = orderDto.Items.Select(i => (
+                i.ProductName,
+                i.Quantity,
+                i.UnitType == UnitType.Weight ? "kg" : "un",
+                i.UnitPrice,
+                i.Subtotal));
+
+            var address = $"{orderDto.DeliveryStreet}, {orderDto.DeliveryPostalCode} {orderDto.DeliveryCity}";
+            var html = EmailTemplates.OrderPlaced(
+                user.FullName, orderDto.OrderNumber ?? $"#{orderId}",
+                orderDto.TotalAmount, orderDto.ShippingFee,
+                address, estimated, items);
+
+            await _email.SendAsync(user.Email, $"Encomenda {orderDto.OrderNumber} recebida!", html, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send order-placed email for order {OrderId}", orderId);
+        }
+    }
+
     public async Task UpdateStatusAsync(int orderId, OrderStatus status, CancellationToken ct)
     {
         var order = await _db.Orders
             .IgnoreQueryFilters()
+            .Include(o => o.User)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Order), orderId);
@@ -264,12 +318,35 @@ public class OrderService : IOrderService
 
         await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);
         await _cache.RemoveAsync(CacheKeys.OrdersByUser(order.UserId), ct);
+
+        _ = SendStatusUpdateEmailAsync(order, status, ct);
+        _ = CreateStatusNotificationAsync(order.UserId, order.Id, order.OrderNumber, status, ct);
+    }
+
+    private async Task SendStatusUpdateEmailAsync(Order order, OrderStatus status, CancellationToken ct)
+    {
+        try
+        {
+            if (status is OrderStatus.Pending or OrderStatus.Cancelled) return;
+
+            var (label, message, color) = EmailTemplates.StatusInfo(status);
+            var html = EmailTemplates.OrderStatusUpdate(
+                order.User.FullName, order.OrderNumber ?? $"#{order.Id}",
+                label, message, color);
+
+            await _email.SendAsync(order.User.Email, label + $" â€” {order.OrderNumber}", html, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send status-update email for order {OrderId}", order.Id);
+        }
     }
 
     public async Task CancelAsync(int orderId, CancellationToken ct)
     {
         var order = await _db.Orders
             .IgnoreQueryFilters()
+            .Include(o => o.User)
             .Include(o => o.DeliverySlot)
             .Include(o => o.Items).ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct)
@@ -290,6 +367,49 @@ public class OrderService : IOrderService
         await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);
         await _cache.RemoveAsync(CacheKeys.OrdersByUser(order.UserId), ct);
         await _cache.RemoveByPrefixAsync("slots:", ct);
+
+        _ = SendCancelledEmailAsync(order, ct);
+        _ = _notifications.CreateAsync(order.UserId, NotificationType.OrderCancelled,
+                "Encomenda cancelada",
+                $"A encomenda {order.OrderNumber ?? $"#{orderId}"} foi cancelada.",
+                orderId, ct);
+    }
+
+    private async Task SendCancelledEmailAsync(Order order, CancellationToken ct)
+    {
+        try
+        {
+            var html = EmailTemplates.OrderCancelled(
+                order.User.FullName, order.OrderNumber ?? $"#{order.Id}", order.TotalAmount);
+            await _email.SendAsync(order.User.Email, $"Encomenda {order.OrderNumber} cancelada", html, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send cancellation email for order {OrderId}", order.Id);
+        }
+    }
+
+    private async Task CreateStatusNotificationAsync(int userId, int orderId, string? orderNumber, OrderStatus status, CancellationToken ct)
+    {
+        try
+        {
+            var (type, title, message) = status switch
+            {
+                OrderStatus.Paid      => (NotificationType.OrderPaid,      "Pagamento confirmado",    $"O pagamento da encomenda {orderNumber ?? $"#{orderId}"} foi confirmado."),
+                OrderStatus.Preparing => (NotificationType.OrderPreparing, "Encomenda em preparaÃ§Ã£o", $"A tua encomenda {orderNumber ?? $"#{orderId}"} estÃ¡ a ser preparada."),
+                OrderStatus.Shipped   => (NotificationType.OrderShipped,   "Encomenda a caminho!",    $"A tua encomenda {orderNumber ?? $"#{orderId}"} estÃ¡ a caminho."),
+                OrderStatus.Delivered => (NotificationType.OrderDelivered, "Encomenda entregue!",     $"A tua encomenda {orderNumber ?? $"#{orderId}"} foi entregue. Bom proveito!"),
+                _ => default,
+            };
+
+            if (type == default) return;
+
+            await _notifications.CreateAsync(userId, type, title, message, orderId, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create status notification for order {OrderId}", orderId);
+        }
     }
 
     private static string GenerateOrderNumber()

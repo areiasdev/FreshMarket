@@ -225,7 +225,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: number, name: string) => [v, name]}
+                formatter={(v, name) => [v, name]}
                 contentStyle={tip}
               />
               <Legend
@@ -257,7 +257,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
               />
               <Tooltip
                 contentStyle={tip}
-                formatter={(v: number) => [v, "Novos clientes"]}
+                formatter={(v) => [v, "Novos clientes"]}
               />
               <Bar dataKey="newCustomers" fill="#1d4ed8" radius={[4, 4, 0, 0]} maxBarSize={28} />
             </BarChart>
@@ -291,7 +291,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
             />
             <Tooltip
               contentStyle={tip}
-              formatter={(v: number) => [`${fmt(v)}€`, "Receita"]}
+              formatter={(v) => [`${fmt(v as number)}€`, "Receita"]}
             />
             <Bar dataKey="totalRevenue" fill="#15803d" radius={[0, 4, 4, 0]} maxBarSize={18} />
           </BarChart>
@@ -324,7 +324,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
               />
               <Tooltip
                 contentStyle={tip}
-                formatter={(v: number) => [v, "Encomendas"]}
+                formatter={(v) => [v, "Encomendas"]}
                 labelFormatter={h => `${h}h00`}
               />
               <Bar dataKey="orderCount" radius={[4, 4, 0, 0]} maxBarSize={20}>

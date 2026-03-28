@@ -25,7 +25,9 @@ export {
   IconNotes,
   IconAlertTriangle,
   IconPackage,
-  IconTrendingUpDown
+  IconTrendingUpDown,
+  IconMenu2,
+  IconBell,
 } from "@tabler/icons-react";
 
 import type { ComponentType } from "react";
