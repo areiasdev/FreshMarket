@@ -21,12 +21,12 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
       <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8">
 
         <div className="flex items-baseline justify-between mb-6">
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Encomendas</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Encomendas</h1>
           <button onClick={() => navigate("/")} className="btn-primary text-xs py-2 px-3 bg-emerald-700">
             + Nova encomenda
           </button>
@@ -36,10 +36,10 @@ export default function OrdersPage() {
           <p className="text-center py-20 text-sm text-slate-400">A carregar...</p>
         ) : orders.length === 0 ? (
           <div className="card flex flex-col items-center py-20 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
               <Icon icon={IconPackage} size={22} className="text-slate-400" stroke={1.5} />
             </div>
-            <p className="text-sm font-semibold text-slate-900 mb-1">Nenhuma encomenda</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">Nenhuma encomenda</p>
             <p className="text-sm text-slate-400 mb-6">As tuas encomendas aparecerão aqui.</p>
             <button onClick={() => navigate("/")} className="btn-primary bg-emerald-700">Ir para a loja</button>
           </div>
@@ -47,7 +47,7 @@ export default function OrdersPage() {
           <div className="card overflow-hidden">
             <div className="grid grid-cols-[64px_1fr_90px_100px_80px] gap-3 px-5 py-3
                             text-xs font-semibold text-slate-400 uppercase tracking-wide
-                            bg-slate-50 border-b border-slate-100">
+                            bg-slate-50 border-b border-slate-100 dark:bg-slate-800 dark:border-slate-700">
               <span>#</span>
               <span>Data</span>
               <span className="text-right">Total</span>
@@ -55,18 +55,18 @@ export default function OrdersPage() {
               <span className="text-right">Entrega</span>
             </div>
 
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50 dark:divide-slate-700">
               {orders.map(o => (
                 <button
                   key={o.id}
                   onClick={() => navigate(`/orders/${o.id}`)}
                   className="w-full grid grid-cols-[64px_1fr_90px_100px_80px] gap-3 items-center
-                             px-5 py-3.5 text-left hover:bg-slate-50 transition-colors group"
+                             px-5 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors group"
                 >
                   <span className="text-xs font-mono text-slate-400 tabular">#{o.id}</span>
 
                   <div>
-                    <p className="text-sm font-medium text-slate-800">
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                       {parseDateTime(o.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">

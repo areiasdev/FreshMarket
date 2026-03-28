@@ -16,6 +16,7 @@ public interface IApplicationDbContext
     DbSet<Address> Addresses { get; }
     DbSet<Payment> Payments { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<Review> Reviews { get; }
     DatabaseFacade Database { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

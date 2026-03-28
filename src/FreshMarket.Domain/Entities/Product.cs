@@ -25,4 +25,5 @@ public class Product : BaseEntity
 
     public Category Category { get; set; } = null!;
     public ICollection<OrderItem> Items { get; set; } = [];
+    public ICollection<Review> Reviews { get; set; } = [];
 }

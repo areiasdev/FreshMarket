@@ -28,6 +28,9 @@ export {
   IconTrendingUpDown,
   IconMenu2,
   IconBell,
+  IconEye,
+  IconEyeOff,
+  IconUsers,
 } from "@tabler/icons-react";
 
 import type { ComponentType } from "react";

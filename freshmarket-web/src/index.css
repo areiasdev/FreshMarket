@@ -18,6 +18,8 @@
     @apply bg-slate-50 text-slate-900 antialiased;
   }
 
+  .dark body { background-color: rgb(15 23 42); color: rgb(241 245 249); }
+
   /* Remove focus ring on mouse click; keep for keyboard navigation */
   :focus:not(:focus-visible) { outline: none !important; }
 

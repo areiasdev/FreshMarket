@@ -34,7 +34,7 @@ export default function PaymentResultPage() {
   }, [status, countdown, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
       <div className="card w-full max-w-sm p-8 text-center">
 
         {status === "loading" && (
@@ -42,7 +42,7 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5 animate-pulse">
               <Icon icon={IconCreditCard} size={22} className="text-blue-400" stroke={1.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-2">A confirmar pagamento</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">A confirmar pagamento</h2>
             <p className="text-sm text-slate-400">Por favor aguarda um momento...</p>
           </>
         )}
@@ -52,11 +52,11 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
               <Icon icon={IconCheck} size={22} className="text-emerald-700" stroke={2.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-2">Pagamento confirmado</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Pagamento confirmado</h2>
             <p className="text-sm text-slate-400 mb-6">
               A tua encomenda está a ser processada.
             </p>
-            <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3 mb-5">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3 mb-5 dark:bg-emerald-900/20 dark:border-emerald-800">
               <p className="text-xs text-emerald-700 font-medium tabular">
                 A redirecionar em {countdown}s...
               </p>
@@ -73,7 +73,7 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
               <Icon icon={IconX} size={22} className="text-red-500" stroke={2.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-2">Erro no pagamento</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Erro no pagamento</h2>
             <p className="text-sm text-slate-400 mb-6">
               Não conseguimos confirmar o pagamento. Tenta novamente ou contacta-nos.
             </p>

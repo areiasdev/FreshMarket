@@ -1,5 +1,6 @@
 ﻿using FreshMarket.Application.Addresses.Commands;
 using FreshMarket.Application.Addresses.Queries;
+using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Web.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -16,7 +17,8 @@ public class Addresses : EndpointGroupBase
             .MapPost(CreateAddress)
             .MapPut(UpdateAddress, "{id}")
             .MapDelete(DeleteAddress, "{id}")
-            .MapPut(SetDefaultAddress, "{id}/default");
+            .MapPut(SetDefaultAddress, "{id}/default")
+            .MapGet(ValidatePostalCode, "validate-postal-code");
     }
 
     public async Task<IResult> GetUserAddresses(int userId, ISender sender)
@@ -53,5 +55,11 @@ public class Addresses : EndpointGroupBase
     {
         await sender.Send(new SetDefaultAddressCommand(userId, id));
         return Results.NoContent();
+    }
+
+    public Task<IResult> ValidatePostalCode(string postalCode, IPostalCodeService postalCodeService)
+    {
+        var result = postalCodeService.Validate(postalCode);
+        return Task.FromResult(Results.Ok(result));
     }
 }

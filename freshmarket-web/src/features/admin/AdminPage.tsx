@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import AdminProducts from "./AdminProducts";
@@ -7,13 +7,18 @@ import AdminOrders from "./AdminOrders";
 import AdminDeliverySlots from "./AdminDeliverySlots";
 import {
   IconLeaf, IconChartBar, IconChartLine, IconBox, IconFolder,
-  IconClipboardList, IconClock, IconSun, IconMoon, IconMenu2,
+  IconClipboardList, IconClock, IconSun, IconMoon, IconMenu2, IconUsers,
   type TablerIcon,
 } from "../../components/ui/icons";
 import DashboardOverview from "./DashboardOverview";
 import AdminMetrics from "./AdminMetrics";
+import AdminUsers from "./AdminUsers";
+import client from "../../api/client";
+import { endpoints } from "../../lib/endpoints";
 
-type Section = "dashboard" | "metrics" | "products" | "categories" | "orders" | "slots";
+const POLL_MS = 60_000;
+
+type Section = "dashboard" | "metrics" | "products" | "categories" | "orders" | "slots" | "users";
 
 const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
   { key: "dashboard",  label: "Dashboard",       icon: IconChartBar },
@@ -22,10 +27,11 @@ const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
   { key: "categories", label: "Categorias",       icon: IconFolder },
   { key: "orders",     label: "Encomendas",       icon: IconClipboardList },
   { key: "slots",      label: "Slots de Entrega", icon: IconClock },
+  { key: "users",      label: "Utilizadores",     icon: IconUsers },
 ];
 
 export default function AdminPage() {
-  const [active, setActive] = useState<Section>("dashboard");
+  const [active, setActive] = useState<Section>("metrics");
   const { user, logout }    = useAuth();
   const navigate            = useNavigate();
 
@@ -34,10 +40,24 @@ export default function AdminPage() {
   });
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     localStorage.setItem("admin-theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    const fetchPending = async () => {
+      try {
+        const res = await client.get(endpoints.admin.orders.byStatus("0"), { params: { page: 1, pageSize: 1 } });
+        setPendingCount(res.data.totalCount ?? 0);
+      } catch { /* silently ignore */ }
+    };
+    fetchPending();
+    pollRef.current = setInterval(fetchPending, POLL_MS);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, []);
 
   const renderContent = () => {
     switch (active) {
@@ -46,6 +66,7 @@ export default function AdminPage() {
       case "categories": return <AdminCategories />;
       case "orders":     return <AdminOrders />;
       case "slots":      return <AdminDeliverySlots />;
+      case "users":      return <AdminUsers dark={dark} />;
       default:           return <DashboardOverview />;
     }
   };
@@ -79,10 +100,14 @@ export default function AdminPage() {
         <nav className="flex-1 p-4 space-y-1">
           {NAV_ITEMS.map((item) => {
             const I = item.icon;
+            const showBadge = item.key === "orders" && pendingCount > 0 && active !== "orders";
             return (
               <button
                 key={item.key}
-                onClick={() => setActive(item.key)}
+                onClick={() => {
+                  setActive(item.key);
+                  if (item.key === "orders") setPendingCount(0);
+                }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active === item.key
                     ? "bg-green-600 text-white"
@@ -92,7 +117,12 @@ export default function AdminPage() {
                 }`}
               >
                 <I size={16} stroke={2} />
-                {item.label}
+                <span className="flex-1 text-left">{item.label}</span>
+                {showBadge && (
+                  <span className="bg-amber-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
               </button>
             );
           })}
