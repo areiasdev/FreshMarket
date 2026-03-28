@@ -1,6 +1,8 @@
 ﻿using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Security;
+using FreshMarket.Application.Notifications.Services;
 using FreshMarket.Infrastructure.Data.Context;
+using FreshMarket.Infrastructure.Email;
 using FreshMarket.Infrastructure.Services;
 using StackExchange.Redis;
 
@@ -44,6 +46,9 @@ public static class DependencyInjection
             ConnectionMultiplexer.Connect(configuration["Redis:ConnectionString"]!));
 
         services.AddSingleton<ICacheService, CacheService>();
+
+        services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

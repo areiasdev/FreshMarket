@@ -9,8 +9,8 @@ import { PaymentMethod } from "../types/payment";
 import Navbar from "../components/layout/Navbar";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
-import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX } from "../components/ui/icons";
-import { parseDateOnly } from "../lib/dates";
+import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX, IconClock } from "../components/ui/icons";
+import { parseDateOnly, format72hEstimate } from "../lib/dates";
 
 interface SavedAddress {
   id: number;
@@ -20,6 +20,15 @@ interface SavedAddress {
   city: string;
   country: string;
   isDefault: boolean;
+}
+
+interface AvailableSlot {
+  id: number;
+  deliveryDate: string;
+  startTime: string;
+  endTime: string;
+  availableSpots: number;
+  shippingFee?: number;
 }
 
 type Step = "address" | "payment";
@@ -74,6 +83,11 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
+  // Delivery slots
+  const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
+  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [loadingSlots, setLoadingSlots]     = useState(false);
+
   useEffect(() => { if (items.length === 0) navigate("/cart"); }, [items, navigate]);
 
   useEffect(() => {
@@ -86,6 +100,24 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, [user?.id]);
 
+  // Fetch slots when postal code + date are ready
+  useEffect(() => {
+    const postal = form.deliveryPostalCode;
+    const date = form.preferredDate;
+    if (!date || !/^\d{4}-\d{3}$/.test(postal)) {
+      setAvailableSlots([]);
+      setSelectedSlotId(null);
+      return;
+    }
+    const prefix = postal.slice(0, 4);
+    setLoadingSlots(true);
+    setSelectedSlotId(null);
+    client.get(endpoints.deliverySlots.available, { params: { date, postalCodePrefix: prefix } })
+      .then(res => setAvailableSlots(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setAvailableSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [form.preferredDate, form.deliveryPostalCode]);
+
   const applyAddress = (a: SavedAddress) => {
     setForm(f => ({ ...f, deliveryAddress: a.street, deliveryPostalCode: a.postalCode }));
     setSelectedAddressId(a.id);
@@ -94,6 +126,7 @@ export default function CheckoutPage() {
   const validateAddress = () => {
     setAddressError("");
     if (!form.deliveryAddress.trim()) { setAddressError("Insere a morada."); return; }
+    if (!form.deliveryPostalCode.trim()) { setAddressError("Insere o código postal."); return; }
     if (!/^\d{4}-\d{3}$/.test(form.deliveryPostalCode)) {
       setAddressError("Código postal inválido (ex: 3750-123)");
       return;
@@ -109,6 +142,10 @@ export default function CheckoutPage() {
     return "Portugal";
   };
 
+  const selectedSlot = availableSlots.find(s => s.id === selectedSlotId);
+  const shippingFee = selectedSlot?.shippingFee ?? 2.50;
+  const total = totalAmount + shippingFee;
+
   const handlePlaceOrder = async () => {
     setSubmitting(true); setOrderError("");
     try {
@@ -121,6 +158,7 @@ export default function CheckoutPage() {
         deliveryCity,
         deliveryCountry,
         preferredDeliveryDate: form.preferredDate || undefined,
+        deliverySlotId: selectedSlotId || undefined,
         notes: form.notes || undefined,
         items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
       });
@@ -128,14 +166,11 @@ export default function CheckoutPage() {
       const payRes = await client.post(endpoints.payments.create, { orderId: order.id, method: paymentMethod });
       clearCart();
       if (payRes.data.redirectUrl) { window.location.href = payRes.data.redirectUrl; return; }
-      navigate(`/orders/${order.id}`);
+      navigate(`/orders/${order.id}?confirmed=true`);
     } catch {
       setOrderError("Erro ao finalizar encomenda. Por favor tenta novamente.");
     } finally { setSubmitting(false); }
   };
-
-  const shippingFee = 2.50;
-  const total = totalAmount + shippingFee;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -214,6 +249,50 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Delivery slot picker */}
+                  {loadingSlots && (
+                    <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                      <Icon icon={IconClock} size={12} /> A carregar horários disponíveis...
+                    </p>
+                  )}
+                  {!loadingSlots && availableSlots.length > 0 && (
+                    <div>
+                      <label className="label">Horário de entrega</label>
+                      <div className="space-y-2">
+                        {availableSlots.map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setSelectedSlotId(s.id)}
+                            className={`w-full text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
+                              selectedSlotId === s.id
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                                : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium">
+                                {parseDateOnly(s.deliveryDate)?.toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })}
+                                {" · "}{s.startTime}–{s.endTime}
+                              </span>
+                              {s.shippingFee !== undefined && (
+                                <span className="font-semibold text-emerald-700">{s.shippingFee.toFixed(2)}€ envio</span>
+                              )}
+                            </div>
+                            {s.availableSpots !== undefined && (
+                              <p className="text-xs text-slate-400 mt-0.5">{s.availableSpots} vagas disponíveis</p>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {!loadingSlots && form.preferredDate && /^\d{4}-\d{3}$/.test(form.deliveryPostalCode) && availableSlots.length === 0 && (
+                    <p className="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                      Sem horários disponíveis para esta data. Escolhe outra data ou prossegue sem horário específico.
+                    </p>
+                  )}
+
                   <div>
                     <label className="label">
                       Notas
@@ -256,11 +335,26 @@ export default function CheckoutPage() {
                   <div className="px-5 py-4 text-sm text-slate-600 space-y-1">
                     <p className="font-medium text-slate-800">{form.deliveryAddress}</p>
                     <p className="text-xs text-slate-400 font-mono">{form.deliveryPostalCode} · {getCityFromPostal(form.deliveryPostalCode)}</p>
-                    {form.preferredDate && (
+                    {selectedSlot && (
+                      <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
+                        <Icon icon={IconCalendar} size={12} />
+                        {parseDateOnly(selectedSlot.deliveryDate)?.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
+                        {" · "}{selectedSlot.startTime}–{selectedSlot.endTime}
+                      </p>
+                    )}
+                    {!selectedSlot && form.preferredDate && (
                       <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
                         <Icon icon={IconCalendar} size={12} />
                         Data preferida: {parseDateOnly(form.preferredDate)?.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
                       </p>
+                    )}
+                    {!selectedSlot && !form.preferredDate && (
+                      <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-start gap-1.5">
+                        <Icon icon={IconCalendar} size={12} className="mt-0.5 flex-shrink-0" />
+                        <span>
+                          Sem data de entrega escolhida. Estimamos a entrega até <strong>{format72hEstimate()}</strong> (72h úteis).
+                        </span>
+                      </div>
                     )}
                     {form.notes && (
                       <p className="text-xs text-slate-400 italic mt-1 flex items-center gap-1.5">
@@ -332,7 +426,7 @@ export default function CheckoutPage() {
                 <span className="tabular">{totalAmount.toFixed(2)}€</span>
               </div>
               <div className="flex justify-between text-xs text-slate-500">
-                <span>Envio</span>
+                <span>Envio{selectedSlot && <span className="ml-1 text-slate-400">({selectedSlot.startTime}–{selectedSlot.endTime})</span>}</span>
                 <span className="tabular">{shippingFee.toFixed(2)}€</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-slate-100">

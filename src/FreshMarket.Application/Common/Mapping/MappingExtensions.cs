@@ -115,7 +115,7 @@ public static class MappingExtensions
         Id = u.Id,
         FullName = u.FullName,
         Email = u.Email,
+        Phone = u.Phone,
         Role = u.Role,
-        // Phone/Address/PostalCode removidos — Address é entidade separada
     };
 }

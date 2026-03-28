@@ -54,7 +54,6 @@ function ProfileTab() {
 
   const [fullName, setFullName]     = useState(user?.fullName ?? "");
   const [phone, setPhone]           = useState(user?.phone ?? "");
-  const [currentPw, setCurrentPw]   = useState("");
   const [newPw, setNewPw]           = useState("");
   const [confirmPw, setConfirmPw]   = useState("");
   const [saving, setSaving]         = useState(false);
@@ -93,7 +92,7 @@ function ProfileTab() {
         phone: user?.phone ?? null,
         newPassword: newPw,
       });
-      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      setNewPw(""); setConfirmPw("");
       setPwMsg({ ok: true, text: "Palavra-passe alterada com sucesso." });
     } catch {
       setPwMsg({ ok: false, text: "Erro ao alterar a palavra-passe." });
@@ -167,8 +166,9 @@ function AddressesTab() {
   const [editing, setEditing]     = useState<AddressDto | null>(null);
   const [adding, setAdding]       = useState(false);
   const [form, setForm]           = useState(EMPTY_FORM);
-  const [saving, setSaving]       = useState(false);
-  const [deleting, setDeleting]   = useState<number | null>(null);
+  const [saving, setSaving]         = useState(false);
+  const [deleting, setDeleting]     = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -215,8 +215,8 @@ function AddressesTab() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm("Remover esta morada?")) return;
     setDeleting(id);
+    setConfirmDelete(null);
     try {
       await client.delete(endpoints.addresses.delete(id));
       setAddresses(prev => prev.filter(a => a.id !== id));
@@ -291,20 +291,40 @@ function AddressesTab() {
                 <p className="text-xs text-slate-500">{a.street}</p>
                 <p className="text-xs text-slate-500">{a.postalCode} {a.city} · {a.country}</p>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                {!a.isDefault && (
-                  <button onClick={() => setDefault(a.id)} className="text-xs text-slate-400 hover:text-emerald-700 transition-colors">
-                    Predefinir
-                  </button>
+              <div className="flex gap-2 flex-shrink-0 items-center">
+                {confirmDelete === a.id ? (
+                  <>
+                    <span className="text-xs text-slate-500">Tens a certeza?</span>
+                    <button
+                      onClick={() => remove(a.id)}
+                      disabled={deleting === a.id}
+                      className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors disabled:opacity-50"
+                    >
+                      {deleting === a.id ? "..." : "Sim"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(null)}
+                      className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      Não
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {!a.isDefault && (
+                      <button onClick={() => setDefault(a.id)} className="text-xs text-slate-400 hover:text-emerald-700 transition-colors">
+                        Predefinir
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(a)} className="text-xs text-blue-500 hover:text-blue-700 transition-colors">Editar</button>
+                    <button
+                      onClick={() => setConfirmDelete(a.id)}
+                      className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      Remover
+                    </button>
+                  </>
                 )}
-                <button onClick={() => openEdit(a)} className="text-xs text-blue-500 hover:text-blue-700 transition-colors">Editar</button>
-                <button
-                  onClick={() => remove(a.id)}
-                  disabled={deleting === a.id}
-                  className="text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                >
-                  {deleting === a.id ? "..." : "Remover"}
-                </button>
               </div>
             </div>
           ))}

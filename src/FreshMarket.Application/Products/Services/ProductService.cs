@@ -100,7 +100,7 @@ public class ProductService : IProductService
 
     public async Task<ProductDetailDto> UpdateAsync(
         int id, int categoryId, string name, string slug, string? description,
-        decimal pricePerUnit, decimal minQuantity,
+        decimal pricePerUnit, UnitType unitType, decimal minQuantity,
         decimal stockQuantity, bool trackStock, decimal lowStockAlert,
         string? imageUrl, bool isSeasonal, bool isActive, CancellationToken ct)
     {
@@ -117,6 +117,7 @@ public class ProductService : IProductService
         product.Slug = slug;
         product.Description = description;
         product.PricePerUnit = pricePerUnit;
+        product.UnitType = unitType;
         product.MinQuantity = minQuantity;
         product.StockQuantity = stockQuantity;
         product.TrackStock = trackStock;

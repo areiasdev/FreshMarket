@@ -43,7 +43,7 @@ export interface Product {
   categoryName: string;
 }
 
-export type UnitType = 1 | 2; // 1 = Kg, 2 = Unidade
+export type UnitType = 0 | 1; // 0 = Unidade, 1 = Kg (por peso)
 
 // ─── Categories ───────────────────────────────────
 export interface Category {
@@ -88,11 +88,11 @@ export interface ShippingZone {
 }
 
 // ─── Orders ───────────────────────────────────────
-export type OrderStatus = 0 | 1 | 2 | 3 | 4;
-// 0=Pending, 1=Confirmed, 2=InDelivery, 3=Delivered, 4=Cancelled
+export type OrderStatus = 0 | 1 | 2 | 3 | 4 | 5;
+// 0=Pendente, 1=Pago, 2=Em Preparo, 3=Enviado, 4=Entregue, 5=Cancelado
 
-export type PaymentStatus = 0 | 1 | 2;
-// 0=Pending, 1=Paid, 2=Failed
+export type PaymentStatus = 0 | 1 | 2 | 3;
+// 0=Pendente, 1=Pago, 2=Falhado, 3=Reembolsado
 
 export interface OrderItemDto {
   productId: number;
@@ -119,10 +119,13 @@ export interface OrderDto {
   paymentStatus: PaymentStatus;
   externalTransactionId?: string;
   notes?: string;
-  deliveryAddress: string;
+  deliveryStreet: string;
   deliveryPostalCode: string;
+  deliveryCity: string;
+  deliveryCountry: string;
   createdAt: string;
   deliverySlot?: DeliverySlotInfo;
+  preferredDeliveryDate?: string;
   items: OrderItemDto[];
 }
 
@@ -142,10 +145,26 @@ export interface OrderSummaryDto {
 
 // ─── Checkout ─────────────────────────────────────
 export interface PlaceOrderRequest {
-  deliverySlotId: number;
-  postalCodePrefix: string;
-  deliveryAddress: string;
+  deliverySlotId?: number;
+  deliveryStreet: string;
   deliveryPostalCode: string;
+  deliveryCity: string;
+  deliveryCountry: string;
+  preferredDeliveryDate?: string;
   notes?: string;
   items: { productId: number; quantity: number }[];
+}
+
+// ─── Notifications ────────────────────────────────
+export type NotificationType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+// 0=OrderPlaced, 1=OrderPaid, 2=OrderPreparing, 3=OrderShipped, 4=OrderDelivered, 5=OrderCancelled, 6=PaymentFailed
+
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  orderId?: number;
+  createdAt: string;
 }

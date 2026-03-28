@@ -26,7 +26,7 @@ const STATUS_OPTIONS = [
 
 // Estado seguinte possível (linear, exceto Cancelado)
 const NEXT_STATUS: Record<number, { value: number; label: string } | null> = {
-  0: { value: 2, label: "Marcar Em Preparo" },
+  0: { value: 1, label: "Marcar Pago" },
   1: { value: 2, label: "Marcar Em Preparo" },
   2: { value: 3, label: "Marcar Enviado"    },
   3: { value: 4, label: "Marcar Entregue"   },
@@ -101,21 +101,21 @@ export default function AdminOrders() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Encomendas</h2>
-          <p className="text-sm text-gray-400 mt-1">{total} encomendas neste estado</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Encomendas</h2>
+          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} encomendas neste estado</p>
         </div>
       </div>
 
       {/* Tabs de status */}
-      <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
+      <div className="flex gap-1 border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
         {STATUS_OPTIONS.map((s) => (
           <button
             key={s.value}
             onClick={() => handleStatusChange(s.value)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
               selectedStatus === s.value
-                ? "border-emerald-700 text-emerald-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-emerald-700 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400"
+                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
             }`}
           >
             {s.label}
@@ -153,18 +153,18 @@ export default function AdminOrders() {
                 const isUpdating = updating === order.id;
                 return (
                   <tr key={order.id} className="table-row transition">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">#{order.orderNumber}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{order.userFullName}</td>
-                    <td className="px-4 py-3 font-semibold text-green-700">{order.totalAmount.toFixed(2)}€</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-slate-500">#{order.orderNumber}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-slate-200">{order.userFullName}</td>
+                    <td className="px-4 py-3 font-semibold text-green-700 dark:text-emerald-400">{order.totalAmount.toFixed(2)}€</td>
                     <td className="px-4 py-3">
                      <span className={orderStatusBadge[order.status] ?? "badge badge-slate"}>
                         {orderStatusLabel[order.status] ?? "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">
                       {parseDateTime(order.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">
                       {order.deliverySlot
                         ? `${parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT")} ${order.deliverySlot.startTime}–${order.deliverySlot.endTime}`
                         : "—"}

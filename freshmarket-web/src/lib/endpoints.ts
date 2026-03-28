@@ -43,6 +43,12 @@ export const endpoints = {
     confirm:    `${BASE}/payments/confirm`,
     getByOrder: (orderId: number) => `${BASE}/payments/order/${orderId}`,
   },
+  notifications: {
+    getAll:      `${BASE}/notifications`,
+    unreadCount: `${BASE}/notifications/unread-count`,
+    markRead:    (id: number) => `${BASE}/notifications/${id}/read`,
+    markAllRead: `${BASE}/notifications/read-all`,
+  },
 
   // ─── Admin ──────────────────────────────────────
   admin: {

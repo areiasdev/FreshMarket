@@ -34,3 +34,17 @@ export function formatDateTime(d?: string | null): string {
     hour: "2-digit", minute: "2-digit",
   });
 }
+
+/** Retorna a data estimada de entrega (+72h a partir de agora) */
+export function estimate72h(): Date {
+  const d = new Date();
+  d.setHours(d.getHours() + 72);
+  return d;
+}
+
+/** Formata a estimativa +72h para exibição: "quarta-feira, 2 de abril" */
+export function format72hEstimate(): string {
+  return estimate72h().toLocaleDateString("pt-PT", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+}

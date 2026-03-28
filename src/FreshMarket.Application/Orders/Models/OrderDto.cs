@@ -25,5 +25,6 @@ public class OrderDto
     public string? ExternalTransactionId { get; set; }
 
     public DeliverySlotInfo? DeliverySlot { get; set; }
+    public DateOnly? PreferredDeliveryDate { get; set; }
     public List<OrderItemDto> Items { get; set; } = [];
 }

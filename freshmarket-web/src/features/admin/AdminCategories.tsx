@@ -87,8 +87,8 @@ export default function AdminCategories() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Categorias</h1>
-          <p className="text-sm text-gray-400 mt-1">{total} categorias no total</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Categorias</h1>
+          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} categorias no total</p>
         </div>
         <button
           onClick={openCreate}
@@ -98,14 +98,14 @@ export default function AdminCategories() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="table-header">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Nome</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Slug</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Estado</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Ações</th>
+              <th className="text-left px-4 py-3 font-medium">Nome</th>
+              <th className="text-left px-4 py-3 font-medium">Slug</th>
+              <th className="text-left px-4 py-3 font-medium">Estado</th>
+              <th className="text-left px-4 py-3 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -115,18 +115,18 @@ export default function AdminCategories() {
               </tr>
             ) : categories.map((c) => (
               <tr key={c.id} className="table-row">
-                <td className="px-4 py-3 font-medium">{c.name}</td>
-                <td className="px-4 py-3 text-gray-400 font-mono text-xs">{c.slug}</td>
+                <td className="px-4 py-3 font-medium dark:text-slate-200">{c.name}</td>
+                <td className="px-4 py-3 text-gray-400 dark:text-slate-500 font-mono text-xs">{c.slug}</td>
                 <td className="px-4 py-3">
                   <span className={c.isActive ? badge.active : badge.inactive}>
                     {c.isActive ? "Ativa" : "Inativa"}
                   </span>
                 </td>
                 <td className="px-4 py-3 flex gap-3">
-                  <button onClick={() => openEdit(c)} className="text-xs text-blue-600 hover:underline">
+                  <button onClick={() => openEdit(c)} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                     Editar
                   </button>
-                  <button onClick={() => toggleActive(c.id)} className="text-xs text-gray-500 hover:underline">
+                  <button onClick={() => toggleActive(c.id)} className="text-xs text-gray-500 dark:text-slate-400 hover:underline">
                     {c.isActive ? "Desativar" : "Ativar"}
                   </button>
                 </td>
@@ -153,9 +153,9 @@ export default function AdminCategories() {
           onSubmit={handleSubmit}
         >
           <label className="block mb-4">
-            <span className="text-sm text-gray-600">Nome</span>
+            <span className="text-sm text-gray-600 dark:text-slate-300">Nome</span>
             <input
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+              className="input mt-1"
               value={form.name}
               onChange={(e) => setForm({
                 ...form,
@@ -165,9 +165,9 @@ export default function AdminCategories() {
             />
           </label>
           <label className="block mb-4">
-            <span className="text-sm text-gray-600">Slug</span>
+            <span className="text-sm text-gray-600 dark:text-slate-300">Slug</span>
             <input
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-mono"
+              className="input mt-1 font-mono"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
             />
@@ -175,7 +175,7 @@ export default function AdminCategories() {
           <label className="flex items-center gap-2 mt-3">
             <input type="checkbox" checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-            <span className="text-sm text-gray-600">Ativa</span>
+            <span className="text-sm text-gray-600 dark:text-slate-300">Ativa</span>
           </label>
         </Modal>
       )}

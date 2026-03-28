@@ -13,7 +13,7 @@ public interface IProductService
                                            string? imageUrl, bool isSeasonal, CancellationToken ct);
     Task<ProductDetailDto> UpdateAsync(
                                            int id, int categoryId, string name, string slug, string? description,
-                                           decimal pricePerUnit, decimal minQuantity,
+                                           decimal pricePerUnit, UnitType unitType, decimal minQuantity,
                                            decimal stockQuantity, bool trackStock, decimal lowStockAlert,
                                            string? imageUrl, bool isSeasonal, bool isActive, CancellationToken ct);
     Task DeleteAsync(int id, CancellationToken ct);
