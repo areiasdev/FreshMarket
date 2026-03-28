@@ -8,6 +8,7 @@ public record GetOrdersByStatusQuery : IRequest<PagedResult<OrderSummaryDto>>
     public OrderStatus Status { get; init; }
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 10;
+    public string? Search { get; init; }
 }
 public class GetOrdersByStatusQueryHandler : IRequestHandler<GetOrdersByStatusQuery, PagedResult<OrderSummaryDto>>
 {
@@ -19,5 +20,5 @@ public class GetOrdersByStatusQueryHandler : IRequestHandler<GetOrdersByStatusQu
     }
 
     public async Task<PagedResult<OrderSummaryDto>> Handle(GetOrdersByStatusQuery request, CancellationToken ct)
-    => await _orderService.GetByStatusAsync(request.Status, request.Page, request.PageSize, ct).ConfigureAwait(false);
+    => await _orderService.GetByStatusAsync(request.Status, request.Page, request.PageSize, request.Search, ct).ConfigureAwait(false);
 }

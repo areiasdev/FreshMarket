@@ -13,12 +13,15 @@ import Icon from "../components/ui/Icon";
 import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX, IconClock, IconTruck } from "../components/ui/icons";
 import { parseDateOnly, format72hEstimate } from "../lib/dates";
 
-const SHIPPING_SPEEDS = [
-  { key: "standard", label: "Standard", description: "Entrega em 48h úteis", feeLocal: 5.00, feeIntl: 12.00 },
-  { key: "express",  label: "Express",  description: "Entrega em 24h úteis", feeLocal: 10.00, feeIntl: 18.00 },
-] as const;
+interface ShippingOption {
+  key: string;
+  label: string;
+  description: string;
+  fee: number;
+  hours: number;
+}
 
-type ShippingSpeed = typeof SHIPPING_SPEEDS[number]["key"];
+type ShippingSpeed = string;
 
 interface SavedAddress {
   id: number;
@@ -36,7 +39,6 @@ interface AvailableSlot {
   startTime: string;
   endTime: string;
   availableSpots: number;
-  shippingFee?: number;
 }
 
 type Step = "address" | "payment";
@@ -92,6 +94,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [postalWarning, setPostalWarning] = useState("");
   const [shippingSpeed, setShippingSpeed] = useState<ShippingSpeed>("standard");
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
 
   // Delivery slots
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
@@ -109,6 +112,22 @@ export default function CheckoutPage() {
       if (def) applyAddress(def);
     }).catch(() => {});
   }, [user?.id]);
+
+  // Fetch shipping options from backend (source of truth for fees)
+  const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
+  const country = selectedAddr?.country ?? "PT";
+  useEffect(() => {
+    client.get(endpoints.shipping.options, { params: { country } })
+      .then(res => {
+        const opts: ShippingOption[] = Array.isArray(res.data) ? res.data : [];
+        setShippingOptions(opts);
+        if (opts.length > 0 && !opts.find(o => o.key === shippingSpeed)) {
+          setShippingSpeed(opts[0].key);
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
 
   // Fetch slots when postal code + date are ready — debounced + abortable
   const slotDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -179,9 +198,8 @@ export default function CheckoutPage() {
   };
 
   const selectedSlot = availableSlots.find(s => s.id === selectedSlotId);
-  const isInternational = (savedAddresses.find(a => a.id === selectedAddressId)?.country ?? "PT") !== "PT";
-  const speedOption = SHIPPING_SPEEDS.find(s => s.key === shippingSpeed) ?? SHIPPING_SPEEDS[0];
-  const shippingFee = isInternational ? speedOption.feeIntl : speedOption.feeLocal;
+  const speedOption = shippingOptions.find(o => o.key === shippingSpeed) ?? shippingOptions[0];
+  const shippingFee = speedOption?.fee ?? 0;
   const total = totalAmount + shippingFee;
 
   const handlePlaceOrder = async () => {
@@ -294,7 +312,7 @@ export default function CheckoutPage() {
                       <Icon icon={IconTruck} size={12} /> Velocidade de entrega
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {SHIPPING_SPEEDS.map(s => (
+                      {shippingOptions.map(s => (
                         <button
                           key={s.key}
                           type="button"
@@ -307,9 +325,7 @@ export default function CheckoutPage() {
                         >
                           <p className="font-semibold">{s.label}</p>
                           <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>
-                          <p className="text-xs font-bold text-emerald-700 mt-1">
-                            {isInternational ? s.feeIntl.toFixed(2) : s.feeLocal.toFixed(2)}€
-                          </p>
+                          <p className="text-xs font-bold text-emerald-700 mt-1">{s.fee.toFixed(2)}€</p>
                         </button>
                       ))}
                     </div>
@@ -341,9 +357,6 @@ export default function CheckoutPage() {
                                 {parseDateOnly(s.deliveryDate)?.toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })}
                                 {" · "}{s.startTime}–{s.endTime}
                               </span>
-                              {s.shippingFee !== undefined && (
-                                <span className="font-semibold text-emerald-700">{s.shippingFee.toFixed(2)}€ envio</span>
-                              )}
                             </div>
                             {s.availableSpots !== undefined && (
                               <p className="text-xs text-slate-400 mt-0.5">{s.availableSpots} vagas disponíveis</p>

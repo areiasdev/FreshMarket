@@ -4,7 +4,7 @@ namespace FreshMarket.Application.Common.Interfaces;
 
 public interface IProductService
 {
-    Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId, CancellationToken ct);
+    Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId, string? search, bool? isSeasonal, CancellationToken ct);
     Task<ProductDetailDto> GetByIdAsync(int id, CancellationToken ct);
     Task<ProductDetailDto> CreateAsync(
                                            int categoryId, string name, string slug, string? description,

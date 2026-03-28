@@ -15,7 +15,7 @@ public class AdminOrders : EndpointGroupBase
         app.MapGroup(this, "AdminPolicy")
             .MapGet(GetOrdersByStatus, "status/{status}")
             .MapGet(GetOrdersBySlot, "slot/{slotId}")
-            .MapGet(GetHarvestList, "harvest/{date}")
+            .MapGet(GetHarvestList, "harvest")
             .MapPut(UpdateOrderStatus, "{id}/status")
             .MapPut(CancelOrder, "{id}/cancel");
     }
@@ -32,9 +32,9 @@ public class AdminOrders : EndpointGroupBase
         return Results.Ok(result);
     }
 
-    public async Task<IResult> GetHarvestList(DateOnly date, ISender sender)
+    public async Task<IResult> GetHarvestList(DateOnly from, DateOnly to, ISender sender)
     {
-        var result = await sender.Send(new GetHarvestListQuery(date)).ConfigureAwait(false);
+        var result = await sender.Send(new GetHarvestListQuery(from, to)).ConfigureAwait(false);
         return Results.Ok(result);
     }
 

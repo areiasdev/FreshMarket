@@ -3,11 +3,13 @@ using FreshMarket.Application.Addresses.Queries;
 using FreshMarket.Infrastructure;
 using FreshMarket.Web.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,23 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Customer", "Admin"));
 });
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    // Auth endpoints: max 10 attempts per minute per IP
+    options.AddFixedWindowLimiter("auth", opt =>
+    {
+        opt.Window            = TimeSpan.FromMinutes(1);
+        opt.PermitLimit       = 10;
+        opt.QueueLimit        = 0;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// ── Health checks ─────────────────────────────────────────────────────────────
+builder.Services.AddHealthChecks();
+
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
@@ -73,11 +92,15 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblyContaining<GetUserAddressesQueryHandler>();
 });
 
+// ── CORS: origins from config ─────────────────────────────────────────────────
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FreshMarketCors", policy =>
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -99,14 +122,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseCors("FreshMarketCors");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health").AllowAnonymous();
 app.MapEndpoints();
 
 app.Run();

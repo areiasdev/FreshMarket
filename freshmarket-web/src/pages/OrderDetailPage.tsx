@@ -104,12 +104,22 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TIMELINE = [
+// Upfront-payment orders: Paid is second (normal progression)
+const TIMELINE_UPFRONT = [
   { status: 0, label: "Pendente"   },
   { status: 1, label: "Pago"       },
   { status: 2, label: "Em preparo" },
   { status: 3, label: "Enviado"    },
   { status: 4, label: "Entregue"   },
+];
+
+// Cash-on-delivery orders: Paid happens last, after delivery
+const TIMELINE_CASH = [
+  { status: 0, label: "Pendente"   },
+  { status: 2, label: "Em preparo" },
+  { status: 3, label: "Enviado"    },
+  { status: 4, label: "Entregue"   },
+  { status: 1, label: "Pago"       },
 ];
 
 export default function OrderDetailPage() {
@@ -150,6 +160,10 @@ export default function OrderDetailPage() {
       <p className="text-center py-20 text-sm text-slate-400">Encomenda não encontrada.</p>
     </div>
   );
+
+  const isCash = Number(order.paymentMethod) === 0;
+  const timeline = isCash ? TIMELINE_CASH : TIMELINE_UPFRONT;
+  const currentPos = timeline.findIndex(t => t.status === order.status);
 
   const canCancel = order.status === 0 || order.status === 1;
 
@@ -198,9 +212,10 @@ export default function OrderDetailPage() {
                 <div className="card-header">Estado</div>
                 <div className="px-5 py-5">
                   <div className="flex items-start gap-0">
-                    {TIMELINE.map((t, idx) => {
-                      const done   = order.status > t.status;
-                      const active = order.status === t.status;
+                    {timeline.map((t, idx) => {
+                      const stepPos = timeline.findIndex(x => x.status === t.status);
+                      const done    = currentPos >= 0 && stepPos < currentPos;
+                      const active  = stepPos === currentPos;
                       return (
                         <div key={t.status} className="flex items-start flex-1">
                           <div className="flex flex-col items-center flex-shrink-0">
@@ -217,7 +232,7 @@ export default function OrderDetailPage() {
                               {t.label}
                             </span>
                           </div>
-                          {idx < TIMELINE.length - 1 && (
+                          {idx < timeline.length - 1 && (
                             <div className={`flex-1 h-px mt-3.5 mx-1 ${done ? "bg-emerald-500" : "bg-slate-200"}`} />
                           )}
                         </div>
@@ -301,11 +316,13 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {order.paymentMethod && (
+            {order.paymentMethod != null && (
               <div className="card overflow-hidden">
                 <div className="card-header">Pagamento</div>
                 <div className="px-5 py-4">
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{order.paymentMethod}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {({ 0: "Pagar na entrega", 1: "Cartão de crédito", 2: "MB Way", 3: "Transferência bancária" } as Record<number, string>)[Number(order.paymentMethod)] ?? "—"}
+                  </p>
                 </div>
               </div>
             )}

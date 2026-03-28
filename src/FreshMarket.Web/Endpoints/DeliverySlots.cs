@@ -20,7 +20,7 @@ public class DeliverySlots : EndpointGroupBase
             .MapDelete(DeleteSlot, "{id}");
     }
 
-    public async Task<IResult> GetAvailableSlots(DateOnly date, string postalCodePrefix, ISender sender)
+    public async Task<IResult> GetAvailableSlots(DateOnly date, ISender sender, string? postalCodePrefix = null)
     {
         var result = await sender.Send(new GetAvailableSlotsQuery(date, postalCodePrefix)).ConfigureAwait(false);
         return Results.Ok(result);

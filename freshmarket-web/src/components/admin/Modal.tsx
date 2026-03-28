@@ -7,9 +7,11 @@ interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
   onSubmit: () => void;
+  submitLabel?: string;
+  submitDisabled?: boolean;
 }
 
-export default function Modal({ title, children, onClose, onSubmit }: ModalProps) {
+export default function Modal({ title, children, onClose, onSubmit, submitLabel = "Guardar", submitDisabled = false }: ModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 dark:border dark:border-slate-700">
@@ -24,8 +26,8 @@ export default function Modal({ title, children, onClose, onSubmit }: ModalProps
           <button onClick={onClose} className="px-4 py-2 text-sm btn-secondary">
             Cancelar
           </button>
-          <button onClick={onSubmit} className="px-4 py-2 text-sm btn-primary">
-            Guardar
+          <button onClick={onSubmit} disabled={submitDisabled} className="px-4 py-2 text-sm btn-primary disabled:opacity-50">
+            {submitLabel}
           </button>
         </div>
       </div>

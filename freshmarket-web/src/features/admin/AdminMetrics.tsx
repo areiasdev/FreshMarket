@@ -73,10 +73,20 @@ function RevenueTooltip({ active, payload, label, dark }: any) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+type PeriodPreset = 7 | 30 | "custom";
+
+function toIsoDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
 export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
   const [data, setData]       = useState<MetricsDto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod]   = useState<7 | 30>(30);
+  const [period, setPeriod]   = useState<PeriodPreset>(30);
+
+  const today    = toIsoDate(new Date());
+  const [customFrom, setCustomFrom] = useState(() => toIsoDate(new Date(Date.now() - 29 * 86400000)));
+  const [customTo,   setCustomTo]   = useState(today);
 
   const grid   = dark ? "#334155" : "#f1f5f9";
   const tick   = dark ? "#94a3b8" : "#64748b";
@@ -85,11 +95,32 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
     ? { backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }
     : { backgroundColor: "#fff",    border: "1px solid #e2e8f0",  borderRadius: 8, fontSize: 12 };
 
-  useEffect(() => {
-    client.get(endpoints.admin.metrics)
+  const fetchData = (p: PeriodPreset, from?: string, to?: string) => {
+    setLoading(true);
+    let url = endpoints.admin.metrics;
+    if (p === "custom" && from && to) {
+      url += `?from=${from}&to=${to}`;
+    } else if (p !== "custom") {
+      const d = new Date();
+      const f = toIsoDate(new Date(d.getTime() - (p - 1) * 86400000));
+      url += `?from=${f}&to=${toIsoDate(d)}`;
+    }
+    client.get(url)
       .then(res => setData(res.data))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchData(30); }, []);
+
+  const handlePreset = (p: 7 | 30) => {
+    setPeriod(p);
+    fetchData(p);
+  };
+
+  const handleCustomApply = () => {
+    if (!customFrom || !customTo || customFrom > customTo) return;
+    fetchData("custom", customFrom, customTo);
+  };
 
   if (loading) return (
     <div className="flex items-center justify-center h-64 text-sm text-slate-400">
@@ -103,7 +134,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
     </div>
   );
 
-  const revenueData = period === 7 ? data.revenueByDay.slice(-7) : data.revenueByDay;
+  const revenueData = data.revenueByDay;
 
   const totalRevenue = revenueData.reduce((s, d) => s + d.revenue, 0);
   const totalOrders  = revenueData.reduce((s, d) => s + d.orderCount, 0);
@@ -117,37 +148,85 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
           <p className="text-sm text-slate-400 mt-0.5">Análise detalhada do desempenho da loja</p>
         </div>
-        <div className={`flex gap-1 p-1 rounded-lg ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
-          {([7, 30] as const).map(p => (
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className={`flex gap-1 p-1 rounded-lg ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
+            {([7, 30] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => handlePreset(p)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors outline-none ${
+                  period === p
+                    ? dark ? "bg-slate-500 text-white shadow-sm" : "bg-white text-slate-900 shadow-sm"
+                    : dark ? "text-slate-300 hover:text-white"   : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {p}d
+              </button>
+            ))}
             <button
-              key={p}
-              onClick={() => setPeriod(p)}
+              onClick={() => setPeriod("custom")}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors outline-none ${
-                period === p
+                period === "custom"
                   ? dark ? "bg-slate-500 text-white shadow-sm" : "bg-white text-slate-900 shadow-sm"
                   : dark ? "text-slate-300 hover:text-white"   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              {p}d
+              Personalizado
             </button>
-          ))}
+          </div>
+
+          {period === "custom" && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                max={customTo}
+                value={customFrom}
+                onChange={e => setCustomFrom(e.target.value)}
+                className={`text-xs px-2 py-1.5 rounded-lg border outline-none ${
+                  dark ? "bg-slate-700 border-slate-600 text-slate-200" : "bg-white border-slate-200 text-slate-700"
+                }`}
+              />
+              <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-400"}`}>até</span>
+              <input
+                type="date"
+                min={customFrom}
+                max={today}
+                value={customTo}
+                onChange={e => setCustomTo(e.target.value)}
+                className={`text-xs px-2 py-1.5 rounded-lg border outline-none ${
+                  dark ? "bg-slate-700 border-slate-600 text-slate-200" : "bg-white border-slate-200 text-slate-700"
+                }`}
+              />
+              <button
+                onClick={handleCustomApply}
+                disabled={!customFrom || !customTo || customFrom > customTo}
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-40"
+              >
+                Aplicar
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── KPI strip ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">
         <div className="card p-4">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Receita ({period}d)</p>
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+            Receita {period === "custom" ? `(${customFrom} → ${customTo})` : `(${period}d)`}
+          </p>
           <p className="text-2xl font-bold text-emerald-600 tabular-nums mt-1">{fmt(totalRevenue)}€</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Encomendas ({period}d)</p>
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
+            Encomendas {period === "custom" ? `(${customFrom} → ${customTo})` : `(${period}d)`}
+          </p>
           <p className={`text-2xl font-bold tabular-nums mt-1 ${dark ? "text-slate-100" : "text-slate-900"}`}>{totalOrders}</p>
         </div>
       </div>
 
       {/* ── Revenue line chart ───────────────────────────────────────── */}
-      <ChartCard title={`Receita & Encomendas — últimos ${period} dias`} full>
+      <ChartCard title={`Receita & Encomendas — ${period === "custom" ? `${customFrom} a ${customTo}` : `últimos ${period} dias`}`} full>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={revenueData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={grid} />
@@ -155,7 +234,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
               dataKey="date"
               tick={{ fontSize: 10, fill: tick }}
               tickLine={false}
-              interval={period === 30 ? 4 : 0}
+              interval={revenueData.length > 14 ? Math.floor(revenueData.length / 8) : 0}
             />
             <YAxis
               yAxisId="rev"

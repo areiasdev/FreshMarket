@@ -82,10 +82,13 @@ public static class MappingExtensions
         TotalAmount = o.TotalAmount,
         ShippingFee = o.ShippingFee,
         CreatedAt = o.CreatedAt,
-        DeliveryCity = o.DeliveryCity,  
+        DeliveryCity = o.DeliveryCity,
         DeliveryPostalCode = o.DeliveryPostalCode,
         ItemCount = o.Items?.Count ?? 0,
         UserFullName = o.User?.FullName ?? "—",
+        PaymentMethod = o.Payments != null && o.Payments.Count > 0
+            ? o.Payments.OrderByDescending(p => p.CreatedAt).First().Method
+            : null,
         DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
         {
             DeliveryDate = o.DeliverySlot.DeliveryDate,
@@ -93,6 +96,7 @@ public static class MappingExtensions
             EndTime = o.DeliverySlot.EndTime,
         },
         PreferredDeliveryDate = o.PreferredDeliveryDate,
+        Notes = o.Notes,
     };
 
     // ─── Address ────────────────────────────────────────────────

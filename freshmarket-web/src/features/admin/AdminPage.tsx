@@ -5,9 +5,10 @@ import AdminProducts from "./AdminProducts";
 import AdminCategories from "./AdminCategories";
 import AdminOrders from "./AdminOrders";
 import AdminDeliverySlots from "./AdminDeliverySlots";
+import AdminHarvestList from "./AdminHarvestList";
 import {
   IconLeaf, IconChartBar, IconChartLine, IconBox, IconFolder,
-  IconClipboardList, IconClock, IconSun, IconMoon, IconMenu2, IconUsers,
+  IconClipboardList, IconClock, IconSun, IconMoon, IconMenu2, IconUsers, IconPackage,
   type TablerIcon,
 } from "../../components/ui/icons";
 import DashboardOverview from "./DashboardOverview";
@@ -18,7 +19,7 @@ import { endpoints } from "../../lib/endpoints";
 
 const POLL_MS = 60_000;
 
-type Section = "dashboard" | "metrics" | "products" | "categories" | "orders" | "slots" | "users";
+type Section = "dashboard" | "metrics" | "products" | "categories" | "orders" | "slots" | "harvest" | "users";
 
 const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
   { key: "dashboard",  label: "Dashboard",       icon: IconChartBar },
@@ -27,6 +28,7 @@ const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
   { key: "categories", label: "Categorias",       icon: IconFolder },
   { key: "orders",     label: "Encomendas",       icon: IconClipboardList },
   { key: "slots",      label: "Slots de Entrega", icon: IconClock },
+  { key: "harvest",    label: "Colheita",         icon: IconPackage },
   { key: "users",      label: "Utilizadores",     icon: IconUsers },
 ];
 
@@ -66,6 +68,7 @@ export default function AdminPage() {
       case "categories": return <AdminCategories />;
       case "orders":     return <AdminOrders />;
       case "slots":      return <AdminDeliverySlots />;
+      case "harvest":    return <AdminHarvestList />;
       case "users":      return <AdminUsers dark={dark} />;
       default:           return <DashboardOverview />;
     }

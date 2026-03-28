@@ -3,7 +3,7 @@ using FreshMarket.Application.DeliverySlots.Models;
 
 namespace FreshMarket.Application.DeliverySlots.Queries;
 
-public record GetAvailableSlotsQuery(DateOnly Date, string PostalCodePrefix) : IRequest<IEnumerable<DeliverySlotDto>>;
+public record GetAvailableSlotsQuery(DateOnly Date, string? PostalCodePrefix = null) : IRequest<IEnumerable<DeliverySlotDto>>;
 
 public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQuery, IEnumerable<DeliverySlotDto>>
 {

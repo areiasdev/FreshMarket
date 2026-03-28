@@ -1,8 +1,10 @@
 import axios from "axios";
 import { endpoints } from "../lib/endpoints";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5045";
+
 const client = axios.create({
-  baseURL: "http://localhost:5045",
+  baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -63,7 +65,7 @@ client.interceptors.response.use(
 
     try {
       const { data } = await axios.post(
-        `http://localhost:5045${endpoints.auth.refresh}`,
+        `${API_URL}${endpoints.auth.refresh}`,
         { refreshToken }
       );
 

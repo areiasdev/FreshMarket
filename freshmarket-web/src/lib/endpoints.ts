@@ -78,7 +78,7 @@ export const endpoints = {
     orders: {
       byStatus:    (status: string) => `${ADMIN}/orders/status/${status}`,
       bySlot:      (slotId: number) => `${ADMIN}/orders/slot/${slotId}`,
-      harvestList: (date: string)   => `${ADMIN}/orders/harvest/${date}`,
+      harvestList: (from: string, to: string) => `${ADMIN}/orders/harvest?from=${from}&to=${to}`,
       updateStatus:(id: number)     => `${ADMIN}/orders/${id}/status`,
       cancel:      (id: number)     => `${ADMIN}/orders/${id}/cancel`,
     },

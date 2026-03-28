@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FreshMarket.Application.Metrics.Queries;
 
-public record GetMetricsQuery : IRequest<MetricsDto>;
+public record GetMetricsQuery(DateOnly? From = null, DateOnly? To = null) : IRequest<MetricsDto>;
 
 public class GetMetricsQueryHandler : IRequestHandler<GetMetricsQuery, MetricsDto>
 {
@@ -20,7 +20,14 @@ public class GetMetricsQueryHandler : IRequestHandler<GetMetricsQuery, MetricsDt
     public async Task<MetricsDto> Handle(GetMetricsQuery request, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        var thirtyDaysAgo = now.Date.AddDays(-29);
+        var dateFrom = request.From.HasValue
+            ? request.From.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
+            : now.Date.AddDays(-29);
+        var dateTo = request.To.HasValue
+            ? request.To.Value.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc)
+            : now.Date.AddDays(1);
+        var thirtyDaysAgo = dateFrom;
+        var rangeDays = (int)(dateTo.Date - dateFrom.Date).TotalDays + 1;
 
         // ── Load data to memory (following existing project pattern) ──────────
 
@@ -50,16 +57,16 @@ public class GetMetricsQueryHandler : IRequestHandler<GetMetricsQuery, MetricsDt
         // ── Revenue by day (last 30 days, non-cancelled) ──────────────────────
 
         var revenueByDayDict = allOrders
-            .Where(o => o.CreatedAt >= thirtyDaysAgo && o.Status != OrderStatus.Cancelled)
+            .Where(o => o.CreatedAt >= dateFrom && o.CreatedAt <= dateTo && o.Status != OrderStatus.Cancelled)
             .GroupBy(o => o.CreatedAt.Date)
             .ToDictionary(
                 g => g.Key,
                 g => new { Revenue = g.Sum(o => o.TotalAmount), Count = g.Count() });
 
-        var revenueByDay = Enumerable.Range(0, 30)
+        var revenueByDay = Enumerable.Range(0, rangeDays)
             .Select(i =>
             {
-                var date = thirtyDaysAgo.AddDays(i);
+                var date = dateFrom.AddDays(i);
                 revenueByDayDict.TryGetValue(date, out var data);
                 return new DailyRevenueDto
                 {

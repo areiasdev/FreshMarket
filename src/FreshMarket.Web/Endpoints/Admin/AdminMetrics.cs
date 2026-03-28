@@ -12,9 +12,9 @@ public class AdminMetrics : EndpointGroupBase
             .MapGet(GetMetrics, "");
     }
 
-    public async Task<IResult> GetMetrics(ISender sender)
+    public async Task<IResult> GetMetrics(ISender sender, DateOnly? from = null, DateOnly? to = null)
     {
-        var result = await sender.Send(new GetMetricsQuery()).ConfigureAwait(false);
+        var result = await sender.Send(new GetMetricsQuery(from, to)).ConfigureAwait(false);
         return Results.Ok(result);
     }
 }

@@ -3,7 +3,7 @@ using FreshMarket.Application.Orders.Models;
 
 namespace FreshMarket.Application.Orders.Queries;
 
-public record GetHarvestListQuery(DateOnly Date) : IRequest<IEnumerable<HarvestItemDto>>;
+public record GetHarvestListQuery(DateOnly From, DateOnly To) : IRequest<IEnumerable<HarvestItemDto>>;
 
 public class GetHarvestListQueryHandler : IRequestHandler<GetHarvestListQuery, IEnumerable<HarvestItemDto>>
 {
@@ -15,5 +15,5 @@ public class GetHarvestListQueryHandler : IRequestHandler<GetHarvestListQuery, I
     }
 
     public async Task<IEnumerable<HarvestItemDto>> Handle(GetHarvestListQuery request, CancellationToken ct)
-        => await _orderService.GetHarvestListAsync(request.Date, ct).ConfigureAwait(false);
+        => await _orderService.GetHarvestListAsync(request.From, request.To, ct).ConfigureAwait(false);
 }

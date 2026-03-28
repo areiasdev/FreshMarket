@@ -11,7 +11,7 @@ import Navbar from "../components/layout/Navbar";
 import Icon from "../components/ui/Icon";
 import {
   IconLeaf, IconTruck, IconStar, IconShoppingCart,
-  IconCheck, IconArrowRight, IconArrowLeft, IconClock, IconPackage,
+  IconCheck, IconArrowRight, IconArrowLeft, IconClock, IconPackage, IconSearch,
 } from "../components/ui/icons";
 
 // ─── Static content types ─────────────────────────────────────────────────────
@@ -109,11 +109,15 @@ export default function HomePage() {
   const [products, setProducts]             = useState<Product[]>([]);
   const [categories, setCategories]         = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [searchInput, setSearchInput]       = useState("");
+  const [search, setSearch]                 = useState("");
+  const [seasonalOnly, setSeasonalOnly]     = useState(false);
   const [page, setPage]                     = useState(1);
   const [total, setTotal]                   = useState(0);
   const [loading, setLoading]               = useState(true);
   const [cartOpen, setCartOpen]             = useState(false);
   const pageSize                            = 20;
+  const searchDebounceRef                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { isAuthenticated } = useAuth();
   const { addItem }         = useCart();
@@ -127,16 +131,17 @@ export default function HomePage() {
     const load = async () => {
       setLoading(true);
       try {
-        const url = endpoints.products.getAll +
-          `?page=${page}&pageSize=${pageSize}` +
-          (activeCategory ? `&categoryId=${activeCategory}` : "");
-        const res = await client.get(url);
+        const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+        if (activeCategory) params.set("categoryId", String(activeCategory));
+        if (search) params.set("search", search);
+        if (seasonalOnly) params.set("isSeasonal", "true");
+        const res = await client.get(`${endpoints.products.getAll}?${params}`);
         setProducts(res.data.items ?? res.data);
         setTotal(res.data.totalCount ?? 0);
       } finally { setLoading(false); }
     };
     load();
-  }, [page, activeCategory]);
+  }, [page, activeCategory, search, seasonalOnly]);
 
   const totalPages    = Math.ceil(total / pageSize);
   const hasOpenedCart = useRef(false);
@@ -152,6 +157,15 @@ export default function HomePage() {
     setPage(1);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setSearch(value.trim());
+      setPage(1);
+    }, 300);
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
       <Navbar onCartOpen={() => setCartOpen(true)} />
@@ -162,12 +176,17 @@ export default function HomePage() {
         products={products}
         categories={categories}
         activeCategory={activeCategory}
+        searchInput={searchInput}
+        search={search}
+        seasonalOnly={seasonalOnly}
         total={total}
         page={page}
         totalPages={totalPages}
         pageSize={pageSize}
         loading={loading}
         onCategoryChange={handleCategoryChange}
+        onSearchChange={handleSearchChange}
+        onSeasonalToggle={() => { setSeasonalOnly(v => !v); setPage(1); }}
         onPageChange={setPage}
         onAdd={handleAdd}
       />
@@ -431,20 +450,25 @@ interface ProductsSectionProps {
   products: Product[];
   categories: Category[];
   activeCategory: number | null;
+  searchInput: string;
+  search: string;
+  seasonalOnly: boolean;
   total: number;
   page: number;
   totalPages: number;
   pageSize: number;
   loading: boolean;
   onCategoryChange: (id: number | null) => void;
+  onSearchChange: (value: string) => void;
+  onSeasonalToggle: () => void;
   onPageChange: (page: number) => void;
   onAdd: (p: Product) => void;
 }
 
 function ProductsSection({
-  products, categories, activeCategory, total,
+  products, categories, activeCategory, searchInput, search, seasonalOnly, total,
   page, totalPages, pageSize, loading,
-  onCategoryChange, onPageChange, onAdd,
+  onCategoryChange, onSearchChange, onSeasonalToggle, onPageChange, onAdd,
 }: ProductsSectionProps) {
   return (
     <section id="produtos" className="bg-white dark:bg-slate-900">
@@ -465,12 +489,26 @@ function ProductsSection({
           </p>
         </div>
 
-        {/* Category filter */}
+        {/* Search bar */}
+        <div className="relative mb-6">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500 pointer-events-none">
+            <Icon icon={IconSearch} size={16} />
+          </span>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Pesquisar produtos..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-stone-800 dark:text-slate-100 placeholder-stone-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm"
+          />
+        </div>
+
+        {/* Category filter + seasonal toggle */}
         <div className="flex flex-wrap gap-2 mb-10">
           <CategoryPill
             label="Todos"
-            active={activeCategory === null}
-            onClick={() => onCategoryChange(null)}
+            active={activeCategory === null && !seasonalOnly}
+            onClick={() => { onCategoryChange(null); if (seasonalOnly) onSeasonalToggle(); }}
           />
           {categories.map(c => (
             <CategoryPill
@@ -480,6 +518,16 @@ function ProductsSection({
               onClick={() => onCategoryChange(c.id)}
             />
           ))}
+          <button
+            onClick={onSeasonalToggle}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              seasonalOnly
+                ? "bg-amber-500 border-amber-500 text-white"
+                : "border-stone-200 dark:border-slate-700 text-stone-600 dark:text-slate-300 hover:bg-stone-50 dark:hover:bg-slate-800"
+            }`}
+          >
+            🌱 Sazonais
+          </button>
         </div>
 
         {/* Product grid */}
@@ -490,7 +538,15 @@ function ProductsSection({
             ))}
           </div>
         ) : products.length === 0 ? (
-          <EmptyProducts />
+          search ? (
+            <div className="text-center py-20">
+              <Icon icon={IconSearch} size={40} className="mx-auto mb-3 text-stone-300 dark:text-slate-600" />
+              <p className="text-sm font-semibold text-stone-600 dark:text-slate-300 mb-1">Sem resultados para "{search}"</p>
+              <p className="text-xs text-stone-400">Tenta pesquisar por outro nome.</p>
+            </div>
+          ) : (
+            <EmptyProducts />
+          )
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {products.map(p => (

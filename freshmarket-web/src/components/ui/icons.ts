@@ -31,6 +31,7 @@ export {
   IconEye,
   IconEyeOff,
   IconUsers,
+  IconSearch,
 } from "@tabler/icons-react";
 
 import type { ComponentType } from "react";

@@ -4,6 +4,7 @@ import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
 import { parseDateOnly } from "../../lib/dates";
+import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
 import axios from "axios";
 
 interface DeliverySlotDto {
@@ -18,13 +19,26 @@ interface DeliverySlotDto {
   availableSpots: number;
 }
 
+interface SlotOrder {
+  id: number;
+  orderNumber: string;
+  userFullName: string;
+  totalAmount: number;
+  status: number;
+  itemCount: number;
+  deliveryCity: string;
+  deliveryPostalCode: string;
+}
+
 export default function AdminDeliverySlots() {
   const [slots, setSlots]         = useState<DeliverySlotDto[]>([]);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(1);
   const [pageSize, setPageSize]   = useState(10);
-  const [loading, setLoading]     = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [showModal, setShowModal]   = useState(false);
+  const [expandedSlot, setExpandedSlot] = useState<number | null>(null);
+  const [slotOrders, setSlotOrders]     = useState<Record<number, SlotOrder[] | "loading">>({});
   const [form, setForm] = useState({
     deliveryDate: "", startTime: "", endTime: "", maxOrders: 10, shippingfee: 0,
   });
@@ -84,6 +98,19 @@ export default function AdminDeliverySlots() {
     setShowModal(true);
   };
 
+  const toggleSlotOrders = async (slotId: number) => {
+    if (expandedSlot === slotId) { setExpandedSlot(null); return; }
+    setExpandedSlot(slotId);
+    if (slotOrders[slotId]) return; // already loaded
+    setSlotOrders(prev => ({ ...prev, [slotId]: "loading" }));
+    try {
+      const res = await client.get(endpoints.admin.orders.bySlot(slotId));
+      setSlotOrders(prev => ({ ...prev, [slotId]: Array.isArray(res.data) ? res.data : [] }));
+    } catch {
+      setSlotOrders(prev => ({ ...prev, [slotId]: [] }));
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize);
 
   return (
@@ -109,6 +136,7 @@ export default function AdminDeliverySlots() {
                   {h}
                 </th>
               ))}
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-50 border-b border-slate-100 dark:bg-slate-700/50 dark:border-slate-700" />
             </tr>
           </thead>
           <tbody>
@@ -131,48 +159,103 @@ export default function AdminDeliverySlots() {
               const dateLabel = parseDateOnly(s.deliveryDate)?.toLocaleDateString("pt-PT", {
                 weekday: "short", day: "numeric", month: "short",
               }) ?? s.deliveryDate;
+              const isExpanded = expandedSlot === s.id;
+              const orders = slotOrders[s.id];
               return (
-                <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors dark:border-slate-700/40 dark:hover:bg-slate-700/30">
-                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
-                    {dateLabel}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 tabular-nums dark:text-slate-400">
-                    {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 tabular-nums dark:text-slate-400">
-                    {s.shippingFee.toLocaleString("pt-PT", { minimumFractionDigits: 2 })}€
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-600 tabular-nums text-xs dark:text-slate-400">
-                        {s.currentOrders}/{s.maxOrders}
-                      </span>
-                      <div className="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden dark:bg-slate-600">
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            pct >= 90 ? "bg-red-400" :
-                            pct >= 60 ? "bg-amber-400" :
-                                        "bg-emerald-500"
-                          }`}
-                          style={{ width: `${pct}%` }}
-                        />
+                <>
+                  <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors dark:border-slate-700/40 dark:hover:bg-slate-700/30">
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
+                      {dateLabel}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 tabular-nums dark:text-slate-400">
+                      {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 tabular-nums dark:text-slate-400">
+                      {s.shippingFee.toLocaleString("pt-PT", { minimumFractionDigits: 2 })}€
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-600 tabular-nums text-xs dark:text-slate-400">
+                          {s.currentOrders}/{s.maxOrders}
+                        </span>
+                        <div className="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden dark:bg-slate-600">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              pct >= 90 ? "bg-red-400" :
+                              pct >= 60 ? "bg-amber-400" :
+                                          "bg-emerald-500"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={s.isActive ? "badge badge-green" : "badge badge-slate"}>
-                      {s.isActive ? "Ativo" : "Inativo"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => toggleActive(s.id)}
-                      className="text-xs text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
-                    >
-                      {s.isActive ? "Desativar" : "Ativar"}
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={s.isActive ? "badge badge-green" : "badge badge-slate"}>
+                        {s.isActive ? "Ativo" : "Inativo"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => toggleActive(s.id)}
+                        className="text-xs text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
+                      >
+                        {s.isActive ? "Desativar" : "Ativar"}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.currentOrders > 0 && (
+                        <button
+                          onClick={() => toggleSlotOrders(s.id)}
+                          className="text-xs text-emerald-700 hover:text-emerald-600 dark:text-emerald-400 font-semibold transition-colors"
+                        >
+                          {isExpanded ? "Fechar ▲" : `Ver encomendas (${s.currentOrders}) ▼`}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+
+                  {isExpanded && (
+                    <tr key={`${s.id}-orders`} className="bg-slate-50 dark:bg-slate-800/50">
+                      <td colSpan={7} className="px-6 py-4">
+                        {orders === "loading" ? (
+                          <p className="text-xs text-slate-400">A carregar encomendas...</p>
+                        ) : orders == null || orders.length === 0 ? (
+                          <p className="text-xs text-slate-400">Sem encomendas neste slot.</p>
+                        ) : (
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-slate-400 border-b border-slate-200 dark:border-slate-600">
+                                <th className="text-left pb-2 font-semibold">#</th>
+                                <th className="text-left pb-2 font-semibold">Cliente</th>
+                                <th className="text-left pb-2 font-semibold">Morada</th>
+                                <th className="text-left pb-2 font-semibold">Artigos</th>
+                                <th className="text-right pb-2 font-semibold">Total</th>
+                                <th className="text-left pb-2 font-semibold">Estado</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {orders.map(o => (
+                                <tr key={o.id} className="border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                                  <td className="py-2 font-mono text-slate-400">{o.orderNumber ?? `#${o.id}`}</td>
+                                  <td className="py-2 font-medium text-slate-700 dark:text-slate-200">{o.userFullName}</td>
+                                  <td className="py-2 text-slate-500 dark:text-slate-400">{o.deliveryPostalCode} {o.deliveryCity}</td>
+                                  <td className="py-2 text-slate-500 dark:text-slate-400">{o.itemCount} art.</td>
+                                  <td className="py-2 text-right font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">{o.totalAmount.toFixed(2)}€</td>
+                                  <td className="py-2">
+                                    <span className={orderStatusBadge[o.status] ?? "badge badge-slate"}>
+                                      {orderStatusLabel[o.status] ?? "—"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
           </tbody>

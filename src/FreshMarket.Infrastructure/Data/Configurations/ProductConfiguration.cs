@@ -14,6 +14,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Slug).HasMaxLength(200);
         builder.HasIndex(p => p.Slug).IsUnique();
         builder.HasIndex(p => new { p.IsActive, p.CategoryId });
+        builder.HasIndex(p => new { p.IsActive, p.IsSeasonal });
         builder.HasQueryFilter(p => p.DeletedAt == null);
         builder.Property(p => p.ReservedStock).HasPrecision(10, 3);
     }

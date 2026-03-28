@@ -19,21 +19,35 @@ public class ProductService : IProductService
         _cache = cache;
     }
 
-    public async Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId, CancellationToken ct)
+    public async Task<PagedResult<ProductListDto>> GetAllAsync(int page, int pageSize, int? categoryId, string? search, bool? isSeasonal, CancellationToken ct)
     {
-        var key = categoryId.HasValue
-            ? $"products:category:{categoryId.Value}:p{page}:s{pageSize}"
-            : $"products:all:p{page}:s{pageSize}";
+        var hasSearch = !string.IsNullOrWhiteSpace(search);
+        var hasFilter = hasSearch || isSeasonal.HasValue;
 
-        var cached = await _cache.GetAsync<PagedResult<ProductListDto>>(key, ct);
-        if (cached is not null) return cached;
+        var key = !hasFilter
+            ? (categoryId.HasValue
+                ? $"products:category:{categoryId.Value}:p{page}:s{pageSize}"
+                : $"products:all:p{page}:s{pageSize}")
+            : null;
+
+        if (key is not null)
+        {
+            var cached = await _cache.GetAsync<PagedResult<ProductListDto>>(key, ct);
+            if (cached is not null) return cached;
+        }
 
         var query = _db.Products
             .Include(p => p.Category)
-            .Where(p => p.IsActive); // ← DeletedAt já filtrado pelo HasQueryFilter
+            .Where(p => p.IsActive);
 
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
+
+        if (hasSearch)
+            query = query.Where(p => p.Name.Contains(search!) || (p.Description != null && p.Description.Contains(search!)));
+
+        if (isSeasonal.HasValue)
+            query = query.Where(p => p.IsSeasonal == isSeasonal.Value);
 
         var result = await query
             .OrderBy(p => p.Name)
@@ -41,7 +55,9 @@ public class ProductService : IProductService
             .ToPagedResultAsync(page, pageSize, ct)
             .ConfigureAwait(false);
 
-        await _cache.SetAsync(key, result, TimeSpan.FromMinutes(5), ct);
+        if (key is not null)
+            await _cache.SetAsync(key, result, TimeSpan.FromMinutes(5), ct);
+
         return result;
     }
 

@@ -14,9 +14,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.Status).HasConversion<int>();
         builder.Property(o => o.DeliveryPostalCode).HasMaxLength(8);
 
-        builder.HasIndex(o => o.UserId);
-        builder.HasIndex(o => o.DeliverySlotId);
-
         builder.HasOne(o => o.User)
                .WithMany(u => u.Orders)
                .HasForeignKey(o => o.UserId);
@@ -24,8 +21,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasOne(o => o.DeliverySlot)
                .WithMany(s => s.Orders)
                .HasForeignKey(o => o.DeliverySlotId);
+
+        // Individual lookups
         builder.HasIndex(o => o.UserId);
         builder.HasIndex(o => o.DeliverySlotId);
-        builder.HasIndex(o => o.Status);
+
+        // Admin orders list: filter by Status then sort by CreatedAt
+        builder.HasIndex(o => new { o.Status, o.CreatedAt });
     }
 }

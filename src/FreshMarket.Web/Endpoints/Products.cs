@@ -22,9 +22,9 @@ public class Products : EndpointGroupBase
             .MapPut(BulkUpdatePrice, "bulk-price");
     }
 
-    public async Task<IResult> GetAllProducts(ISender sender, int page = 1, int pageSize = 20, int? categoryId = null)
+    public async Task<IResult> GetAllProducts(ISender sender, int page = 1, int pageSize = 20, int? categoryId = null, string? search = null, bool? isSeasonal = null)
     {
-        var result = await sender.Send(new GetAllProductsQuery(page, pageSize, categoryId)).ConfigureAwait(false);
+        var result = await sender.Send(new GetAllProductsQuery(page, pageSize, categoryId, search, isSeasonal)).ConfigureAwait(false);
         return Results.Ok(result);
     }
 

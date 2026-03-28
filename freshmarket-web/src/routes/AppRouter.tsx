@@ -5,7 +5,6 @@ import { useAuth } from "../features/auth/useAuth";
 import AdminRoute from "./AdminRoute";
 import AdminPage from "../features/admin/AdminPage";
 import CartPage from "../pages/CartPage";
-import ShopPage from "../pages/ShopPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import OrdersPage from "../pages/OrdersPage";
 import OrderDetailPage from "../pages/OrderDetailPage";
@@ -24,7 +23,7 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/shop" element={<Navigate to="/" replace />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={
           <PrivateRoute>

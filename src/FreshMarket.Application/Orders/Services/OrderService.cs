@@ -2,7 +2,6 @@ using FreshMarket.Application.Common.Constants;
 using FreshMarket.Application.Common.Email;
 using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
-using FreshMarket.Application.Common.Mapping;
 using FreshMarket.Application.Common.Shipping;
 using FreshMarket.Application.DeliverySlots.Models;
 using FreshMarket.Application.Orders.Models;
@@ -93,11 +92,33 @@ public class OrderService : IOrderService
 
         var result = await _db.Orders
             .IgnoreQueryFilters()
-            .Include(o => o.Items)
-            .Include(o => o.DeliverySlot)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt)
-            .Select(o => o.ToSummaryDto())
+            .Select(o => new OrderSummaryDto
+            {
+                Id = o.Id,
+                OrderNumber = o.OrderNumber,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
+                ShippingFee = o.ShippingFee,
+                CreatedAt = o.CreatedAt,
+                DeliveryCity = o.DeliveryCity,
+                DeliveryPostalCode = o.DeliveryPostalCode,
+                Notes = o.Notes,
+                PreferredDeliveryDate = o.PreferredDeliveryDate,
+                ItemCount = o.Items.Count,
+                UserFullName = o.User != null ? o.User.FullName : "—",
+                PaymentMethod = o.Payments
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => (PaymentMethodEnum?)p.Method)
+                    .FirstOrDefault(),
+                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
+                {
+                    DeliveryDate = o.DeliverySlot.DeliveryDate,
+                    StartTime = o.DeliverySlot.StartTime,
+                    EndTime = o.DeliverySlot.EndTime,
+                },
+            })
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -106,21 +127,48 @@ public class OrderService : IOrderService
     }
 
     // Admin � sempre IgnoreQueryFilters em orders
-    public async Task<PagedResult<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<OrderSummaryDto>> GetByStatusAsync(OrderStatus status, int page, int pageSize, string? search, CancellationToken ct)
     {
         var query = _db.Orders
             .IgnoreQueryFilters()
-            .Include(o => o.Items)
-            .Include(o => o.User)
-            .Include(o => o.DeliverySlot)
-            .Where(o => o.Status == status)
-            .OrderByDescending(o => o.CreatedAt);
+            .Where(o => o.Status == status);
 
-        var total = await query.CountAsync(ct).ConfigureAwait(false);
-        var items = await query
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(o =>
+                (o.OrderNumber != null && o.OrderNumber.Contains(search)) ||
+                o.User.FullName.Contains(search));
+
+        var orderedQuery = query.OrderByDescending(o => o.CreatedAt);
+
+        var total = await orderedQuery.CountAsync(ct).ConfigureAwait(false);
+        var items = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(o => o.ToSummaryDto())
+            .Select(o => new OrderSummaryDto
+            {
+                Id = o.Id,
+                OrderNumber = o.OrderNumber,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
+                ShippingFee = o.ShippingFee,
+                CreatedAt = o.CreatedAt,
+                DeliveryCity = o.DeliveryCity,
+                DeliveryPostalCode = o.DeliveryPostalCode,
+                Notes = o.Notes,
+                PreferredDeliveryDate = o.PreferredDeliveryDate,
+                ItemCount = o.Items.Count,
+                UserFullName = o.User != null ? o.User.FullName : "—",
+                PaymentMethod = o.Payments
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => (PaymentMethodEnum?)p.Method)
+                    .FirstOrDefault(),
+                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
+                {
+                    DeliveryDate = o.DeliverySlot.DeliveryDate,
+                    StartTime = o.DeliverySlot.StartTime,
+                    EndTime = o.DeliverySlot.EndTime,
+                },
+            })
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -130,20 +178,41 @@ public class OrderService : IOrderService
     public async Task<IEnumerable<OrderSummaryDto>> GetBySlotAsync(int slotId, CancellationToken ct)
         => await _db.Orders
             .IgnoreQueryFilters()
-            .Include(o => o.Items)
-            .Include(o => o.DeliverySlot)
             .Where(o => o.DeliverySlotId == slotId)
-            .Select(o => o.ToSummaryDto())
+            .Select(o => new OrderSummaryDto
+            {
+                Id = o.Id,
+                OrderNumber = o.OrderNumber,
+                Status = o.Status,
+                TotalAmount = o.TotalAmount,
+                ShippingFee = o.ShippingFee,
+                CreatedAt = o.CreatedAt,
+                DeliveryCity = o.DeliveryCity,
+                DeliveryPostalCode = o.DeliveryPostalCode,
+                Notes = o.Notes,
+                ItemCount = o.Items.Count,
+                UserFullName = o.User != null ? o.User.FullName : "—",
+                PaymentMethod = o.Payments
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => (PaymentMethodEnum?)p.Method)
+                    .FirstOrDefault(),
+                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
+                {
+                    DeliveryDate = o.DeliverySlot.DeliveryDate,
+                    StartTime = o.DeliverySlot.StartTime,
+                    EndTime = o.DeliverySlot.EndTime,
+                },
+            })
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
-    public async Task<IEnumerable<HarvestItemDto>> GetHarvestListAsync(DateOnly date, CancellationToken ct)
+    public async Task<IEnumerable<HarvestItemDto>> GetHarvestListAsync(DateOnly from, DateOnly to, CancellationToken ct)
         => await _db.OrderItems
             .IgnoreQueryFilters()
-            .Include(i => i.Product)
-            .Include(i => i.Order).ThenInclude(o => o.DeliverySlot)
             .Where(i =>
-                i.Order.DeliverySlot.DeliveryDate == date &&
+                i.Order.DeliverySlot != null &&
+                i.Order.DeliverySlot.DeliveryDate >= from &&
+                i.Order.DeliverySlot.DeliveryDate <= to &&
                 i.Order.Status != OrderStatus.Cancelled)
             .GroupBy(i => new { i.ProductId, i.Product.Name, i.Product.UnitType })
             .Select(g => new HarvestItemDto
@@ -310,12 +379,24 @@ public class OrderService : IOrderService
         var order = await _db.Orders
             .IgnoreQueryFilters()
             .Include(o => o.User)
+            .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Order), orderId);
 
         order.Status = status;
         order.UpdatedAt = DateTime.UtcNow;
+
+        // Cash orders: when delivered, automatically mark the payment as collected
+        var isCash = order.Payments.OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefault()?.Method == PaymentMethodEnum.Cash;
+        if (isCash && status == OrderStatus.Delivered)
+        {
+            var cashPayment = order.Payments.OrderByDescending(p => p.CreatedAt).First();
+            cashPayment.Status = PaymentStatusEnum.Succeeded;
+            cashPayment.UpdatedAt = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
         await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);

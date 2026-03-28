@@ -4,6 +4,35 @@ import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
 import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
 import { parseDateOnly, parseDateTime } from "../../lib/dates";
+import Icon from "../../components/ui/Icon";
+import { IconX } from "../../components/ui/icons";
+
+interface OrderDetail {
+  id: number;
+  orderNumber: string;
+  userFullName?: string;
+  status: number;
+  totalAmount: number;
+  shippingFee: number;
+  createdAt: string;
+  deliveryStreet: string;
+  deliveryPostalCode: string;
+  deliveryCity: string;
+  deliveryCountry: string;
+  notes?: string;
+  paymentMethod?: number | null;
+  paymentStatus?: number | null;
+  preferredDeliveryDate?: string;
+  deliverySlot?: { deliveryDate: string; startTime: string; endTime: string };
+  items: { productId: number; productName: string; quantity: number; unitType: number; unitPrice: number; subtotal: number }[];
+}
+
+const PAYMENT_LABELS: Record<number, string> = {
+  0: "Pagar na entrega", 1: "Cartão de crédito", 2: "MB Way", 3: "Transferência bancária",
+};
+const PAYMENT_STATUS_LABELS: Record<number, string> = {
+  0: "Pendente", 1: "Pago", 2: "Falhou", 3: "Reembolsado",
+};
 
 interface Order {
   id: number;
@@ -11,6 +40,8 @@ interface Order {
   userFullName: string;
   totalAmount: number;
   status: number;
+  paymentMethod?: number | null;
+  notes?: string | null;
   createdAt: string;
   deliverySlot?: { deliveryDate: string; startTime: string; endTime: string };
 }
@@ -24,15 +55,21 @@ const STATUS_OPTIONS = [
   { label: "Cancelado",  value: 5, color: "bg-red-100 text-red-600"      },
 ];
 
-// Estado seguinte possível (linear, exceto Cancelado)
-const NEXT_STATUS: Record<number, { value: number; label: string } | null> = {
-  0: { value: 1, label: "Marcar Pago" },
-  1: { value: 2, label: "Marcar Em Preparo" },
-  2: { value: 3, label: "Marcar Enviado"    },
-  3: { value: 4, label: "Marcar Entregue"   },
-  4: null,
-  5: null,
-};
+// Cash orders (paymentMethod=0) skip "Pago" until after delivery
+function getNextStatus(order: Order): { value: number; label: string } | null {
+  const isCash = order.paymentMethod === 0;
+  switch (order.status) {
+    case 0: return isCash
+      ? { value: 2, label: "Marcar Em Preparo" }
+      : { value: 1, label: "Marcar Pago" };
+    case 1: return { value: 2, label: "Marcar Em Preparo" };
+    case 2: return { value: 3, label: "Marcar Enviado"    };
+    case 3: return isCash
+      ? { value: 4, label: "Marcar Entregue (e Pago)" }
+      : { value: 4, label: "Marcar Entregue"   };
+    default: return null;
+  }
+}
 
 export default function AdminOrders() {
   const [orders, setOrders]         = useState<Order[]>([]);
@@ -41,7 +78,11 @@ export default function AdminOrders() {
   const [page, setPage]             = useState(1);
   const [pageSize, setPageSize]     = useState(10);
   const [selectedStatus, setSelectedStatus] = useState(0);
-  const [updating, setUpdating]     = useState<number | null>(null);
+  const [searchInput, setSearchInput]   = useState("");
+  const [search, setSearch]             = useState("");
+  const [updating, setUpdating]         = useState<number | null>(null);
+  const [detail, setDetail]             = useState<OrderDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -49,7 +90,7 @@ export default function AdminOrders() {
       try {
         const res = await client.get(
           endpoints.admin.orders.byStatus(selectedStatus.toString()),
-          { params: { page, pageSize } }
+          { params: { page, pageSize, search: search || undefined } }
         );
         setOrders(res.data.items);
         setTotal(res.data.totalCount);
@@ -58,7 +99,7 @@ export default function AdminOrders() {
       }
     };
     load();
-  }, [selectedStatus, page, pageSize]);
+  }, [selectedStatus, page, pageSize, search]);
 
   const removeOrder = (id: number) => {
     setOrders(prev => prev.filter(o => o.id !== id));
@@ -89,16 +130,85 @@ export default function AdminOrders() {
   const handleStatusChange = (status: number) => {
     setSelectedStatus(status);
     setPage(1);
+    setSearch("");
+    setSearchInput("");
+  };
+
+  const openDetail = async (id: number) => {
+    setLoadingDetail(true);
+    setDetail(null);
+    try {
+      const res = await client.get(endpoints.orders.getById(id));
+      setDetail(res.data);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const res = await client.get(
+        endpoints.admin.orders.byStatus(selectedStatus.toString()),
+        { params: { page: 1, pageSize: 1000 } }
+      );
+      const rows: Order[] = res.data.items ?? [];
+      const header = ["#", "Cliente", "Total", "Estado", "Método pagamento", "Criada em", "Entrega", "Notas"];
+      const statusLabel = (s: number) => ["Pendente","Pago","Em preparo","Enviado","Entregue","Cancelado"][s] ?? s;
+      const payLabel = (m: number | null | undefined) => m == null ? "" : ["Pagar na entrega","Cartão","MB Way","Transferência"][m] ?? m;
+      const lines = rows.map(o => [
+        o.orderNumber,
+        o.userFullName,
+        o.totalAmount.toFixed(2),
+        statusLabel(o.status),
+        payLabel(o.paymentMethod),
+        o.createdAt,
+        o.deliverySlot ? `${o.deliverySlot.deliveryDate} ${o.deliverySlot.startTime}` : "",
+        o.notes ?? "",
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+      const csv = [header.join(","), ...lines].join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `encomendas-${STATUS_OPTIONS[selectedStatus]?.label ?? selectedStatus}-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Erro ao exportar encomendas.");
+    }
   };
 
   const totalPages = Math.ceil(total / pageSize);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Encomendas</h2>
           <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} encomendas neste estado</p>
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <form
+            onSubmit={e => { e.preventDefault(); setPage(1); setSearch(searchInput); }}
+            className="flex gap-2"
+          >
+            <input
+              value={searchInput}
+              onChange={e => { setSearchInput(e.target.value); if (e.target.value === "") { setSearch(""); setPage(1); } }}
+              placeholder="Nº encomenda ou cliente..."
+              className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <button type="submit" className="text-sm px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors">
+              Pesquisar
+            </button>
+          </form>
+          <button
+            onClick={handleExportCsv}
+            disabled={total === 0}
+            className="text-sm px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-40"
+          >
+            Exportar CSV
+          </button>
         </div>
       </div>
 
@@ -145,11 +255,21 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ) : orders.map((order) => {
-                const nextStatus = NEXT_STATUS[order.status];
+                const nextStatus = getNextStatus(order);
                 const isUpdating = updating === order.id;
                 return (
                   <tr key={order.id} className="table-row transition">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-slate-500">#{order.orderNumber}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs text-gray-500 dark:text-slate-500">#{order.orderNumber}</span>
+                      {order.notes && (
+                        <span
+                          title={order.notes}
+                          className="ml-1.5 text-amber-500 cursor-help text-xs"
+                        >
+                          📝
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-medium text-gray-800 dark:text-slate-200">{order.userFullName}</td>
                     <td className="px-4 py-3 font-semibold text-green-700 dark:text-emerald-400">{order.totalAmount.toFixed(2)}€</td>
                     <td className="px-4 py-3">
@@ -167,6 +287,12 @@ export default function AdminOrders() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => openDetail(order.id)}
+                          className="text-xs text-slate-500 hover:underline dark:text-slate-400"
+                        >
+                          Ver
+                        </button>
                         {nextStatus && (
                           <button
                             disabled={isUpdating}
@@ -202,6 +328,113 @@ export default function AdminOrders() {
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
             pageSizeOptions={[5, 10, 20, 30]}
           />
+        </div>
+      )}
+
+      {/* Order detail slide-over */}
+      {(loadingDetail || detail) && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setDetail(null)} />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 h-full shadow-2xl overflow-y-auto flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {detail ? `Encomenda ${detail.orderNumber ?? `#${detail.id}`}` : "A carregar..."}
+              </h2>
+              <button onClick={() => setDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <Icon icon={IconX} size={20} />
+              </button>
+            </div>
+
+            {loadingDetail && !detail && (
+              <p className="text-sm text-slate-400 text-center py-16">A carregar...</p>
+            )}
+
+            {detail && (
+              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                {/* Status + dates */}
+                <div className="flex items-center justify-between">
+                  <span className={orderStatusBadge[detail.status] ?? "badge badge-slate"}>
+                    {orderStatusLabel[detail.status] ?? "—"}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {parseDateTime(detail.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+
+                {/* Delivery address */}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Morada de entrega</p>
+                  <p className="text-sm text-slate-800 dark:text-slate-100">{detail.deliveryStreet}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{detail.deliveryPostalCode} {detail.deliveryCity} · {detail.deliveryCountry}</p>
+                  {detail.deliverySlot && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Slot: {parseDateOnly(detail.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT")} {detail.deliverySlot.startTime}–{detail.deliverySlot.endTime}
+                    </p>
+                  )}
+                  {!detail.deliverySlot && detail.preferredDeliveryDate && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Data preferida: {parseDateOnly(detail.preferredDeliveryDate)?.toLocaleDateString("pt-PT")}
+                    </p>
+                  )}
+                  {detail.notes && (
+                    <p className="text-xs italic text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded px-2.5 py-1.5 mt-1">
+                      📝 {detail.notes}
+                    </p>
+                  )}
+                </div>
+
+                {/* Payment */}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pagamento</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                    {detail.paymentMethod != null ? PAYMENT_LABELS[detail.paymentMethod] ?? "—" : "—"}
+                    {detail.paymentStatus != null && (
+                      <span className={`ml-2 text-xs font-semibold ${detail.paymentStatus === 1 ? "text-emerald-600" : "text-slate-400"}`}>
+                        ({PAYMENT_STATUS_LABELS[detail.paymentStatus] ?? "—"})
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Items */}
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Produtos</p>
+                  <div className="divide-y divide-slate-100 dark:divide-slate-700 border border-slate-100 dark:border-slate-700 rounded-lg overflow-hidden">
+                    {detail.items.map(item => (
+                      <div key={item.productId} className="flex justify-between items-center px-3 py-2.5">
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{item.productName}</p>
+                          <p className="text-xs text-slate-400 tabular-nums">
+                            {item.unitType === 1 ? `${item.quantity.toFixed(2)} kg` : `${item.quantity} un`}
+                            {" × "}{item.unitPrice.toFixed(2)}€
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                          {item.subtotal.toFixed(2)}€
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="bg-slate-50 dark:bg-slate-700/40 rounded-lg px-4 py-3 space-y-1.5">
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>Subtotal</span>
+                    <span className="tabular-nums">{(detail.totalAmount - detail.shippingFee).toFixed(2)}€</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>Envio</span>
+                    <span className="tabular-nums">{detail.shippingFee.toFixed(2)}€</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-slate-900 dark:text-slate-100 pt-1 border-t border-slate-200 dark:border-slate-600">
+                    <span>Total</span>
+                    <span className="tabular-nums text-emerald-700 dark:text-emerald-400">{detail.totalAmount.toFixed(2)}€</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
