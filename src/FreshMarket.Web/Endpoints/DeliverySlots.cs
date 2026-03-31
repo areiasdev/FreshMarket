@@ -14,7 +14,9 @@ public class DeliverySlots : EndpointGroupBase
     {
         app.MapGroup(this, "CustomerPolicy")
             .MapGet(GetAvailableSlots, "available")
-            .MapGet(GetSlotsByDate, "date/{date}")
+            .MapGet(GetSlotsByDate, "date/{date}");
+
+        app.MapGroup(this, "AdminPolicy")
             .MapPost(CreateSlot)
             .MapPut(UpdateSlot, "{id}")
             .MapDelete(DeleteSlot, "{id}");

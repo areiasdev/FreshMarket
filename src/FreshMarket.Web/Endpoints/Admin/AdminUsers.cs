@@ -12,8 +12,11 @@ public class AdminUsers : EndpointGroupBase
         app.MapGroup(this, "AdminPolicy")
             .MapGet(GetAll, "")
             .MapGet(GetById, "{id:int}")
-            .MapPut(UpdateRole, "{id:int}/role")
             .MapPut(ToggleActive, "{id:int}/toggle-active");
+
+        // Only SuperAdmins can change roles
+        app.MapGroup(this, "SuperAdminPolicy")
+            .MapPut(UpdateRole, "{id:int}/role");
     }
 
     public async Task<IResult> GetAll([AsParameters] GetAllUsersQuery query, ISender sender, CancellationToken ct)

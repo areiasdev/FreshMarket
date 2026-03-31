@@ -18,7 +18,7 @@ public static class EmailTemplates
                   <!-- Header -->
                   <tr>
                     <td style="background:#166534;padding:24px 32px;">
-                      <span style="color:#86efac;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Horto Píncaro</span>
+                      <span style="color:#86efac;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">FreshMarket</span>
                       <h1 style="margin:6px 0 0;color:#ffffff;font-size:20px;font-weight:700;">{title}</h1>
                     </td>
                   </tr>
@@ -32,7 +32,7 @@ public static class EmailTemplates
                   <tr>
                     <td style="background:#f5f5f0;padding:20px 32px;border-top:1px solid #e8e2d9;">
                       <p style="margin:0;font-size:12px;color:#9c8f83;line-height:1.6;">
-                        Horto Píncaro · Produtos frescos da quinta à tua porta<br/>
+                        FreshMarket · Produtos frescos da quinta à tua porta<br/>
                         Tens dúvidas? Responde a este email ou contacta-nos.
                       </p>
                     </td>

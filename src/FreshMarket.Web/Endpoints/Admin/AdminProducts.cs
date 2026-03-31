@@ -17,7 +17,7 @@ public class AdminProducts : EndpointGroupBase
             .MapGet(GetAll, "")
             .MapPost(Create, "")
             .MapPut(Update, "{id:int}")
-            .MapPut(ToggleActive, "{id:int}/toggle-active")
+            .MapPatch(ToggleActive, "{id:int}/toggle-active")
             .MapPut(BulkUpdatePrice, "bulk-price");
     }
 

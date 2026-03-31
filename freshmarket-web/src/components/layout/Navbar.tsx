@@ -1,4 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { useAuth } from "../../features/auth/useAuth";
 import { useCart } from "../../features/cart/CartContext";
 import { useTheme } from "../../features/theme/ThemeContext";
@@ -16,14 +18,22 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
+
+  const currentLang = i18n.language === "en" ? "en" : "pt";
+  const toggleLang = () => {
+    const next = currentLang === "pt" ? "en" : "pt";
+    i18n.changeLanguage(next);
+    localStorage.setItem("lang", next);
+  };
 
   const isActive = (path: string) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   const navLinks = [
-    { label: "Loja",       path: "/",       show: true },
-    { label: "Encomendas", path: "/orders", show: isAuthenticated },
-    { label: "Admin",      path: "/admin",  show: user?.role === "Admin" },
+    { label: t("nav.store"),  path: "/",       show: true },
+    { label: t("nav.orders"), path: "/orders", show: isAuthenticated },
+    { label: t("nav.admin"),  path: "/admin",  show: user?.role === "Admin" || user?.role === "SuperAdmin" },
   ];
 
   return (
@@ -37,7 +47,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
           >
             <Icon icon={IconLeaf} size={20} className="text-emerald-300" />
             <span className="font-bold text-[15px] tracking-tight">
-              Horto Píncaro
+              FreshMarket
             </span>
           </button>
 
@@ -78,7 +88,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                   onClick={() => { logout(); navigate("/"); }}
                   className="text-xs text-emerald-400 hover:text-red-300 transition-colors font-medium"
                 >
-                  Sair
+                  {t("nav.signOut")}
                 </button>
               </>
             ) : (
@@ -87,7 +97,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                   onClick={() => navigate("/auth")}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-3.5 py-1.5 rounded-md transition-colors"
                 >
-                  Entrar
+                  {t("nav.signIn")}
                 </button>
                 <button
                   onClick={toggleTheme}
@@ -97,6 +107,13 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 </button>
               </>
             )}
+
+            <button
+              onClick={toggleLang}
+              className="hidden sm:flex items-center justify-center h-8 px-2 rounded-md border border-emerald-700 text-xs font-bold text-emerald-300 hover:text-white hover:bg-emerald-800/60 transition-colors tracking-wide"
+            >
+              {currentLang === "pt" ? "EN" : "PT"}
+            </button>
 
             <button
               onClick={onCartOpen ?? (() => navigate("/cart"))}

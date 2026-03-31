@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import i18n from "../../i18n";
 
 interface Props {
   children: ReactNode;
@@ -19,22 +20,23 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    const t = (key: string) => i18n.t(key);
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">🌿</div>
           <h1 className="text-xl font-bold text-gray-800 mb-2">
-            Algo correu mal
+            {t("error.title")}
           </h1>
           <p className="text-sm text-gray-500 mb-6">
-            Ocorreu um erro inesperado. Por favor recarregue a página.
-            Se o problema persistir, contacte-nos.
+            {t("error.message")}
           </p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"
           >
-            Recarregar página
+            {t("error.reload")}
           </button>
         </div>
       </div>

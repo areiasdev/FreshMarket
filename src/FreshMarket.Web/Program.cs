@@ -40,10 +40,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPolicy", policy =>
-        policy.RequireRole("Admin"));
+        policy.RequireRole("Admin", "SuperAdmin"));
+
+    options.AddPolicy("SuperAdminPolicy", policy =>
+        policy.RequireRole("SuperAdmin"));
 
     options.AddPolicy("CustomerPolicy", policy =>
-        policy.RequireRole("Customer", "Admin"));
+        policy.RequireRole("Customer", "Admin", "SuperAdmin"));
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-﻿using FreshMarket.Application.Orders.Commands.Cancel;
+using FreshMarket.Application.Orders.Commands.Cancel;
 using FreshMarket.Application.Orders.Commands.Place;
 using FreshMarket.Application.Orders.Queries;
 using FreshMarket.Web.Infrastructure;
@@ -28,6 +28,9 @@ public class Orders : EndpointGroupBase
     public async Task<IResult> GetById(int id, ClaimsPrincipal user, ISender sender, CancellationToken ct)
     {
         var result = await sender.Send(new GetOrderByIdQuery(id), ct).ConfigureAwait(false);
+        var requestingId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var isAdmin = user.IsInRole("Admin") || user.IsInRole("SuperAdmin");
+        if (!isAdmin && result.UserId != requestingId) return Results.Forbid();
         return Results.Ok(result);
     }
 
@@ -40,6 +43,10 @@ public class Orders : EndpointGroupBase
 
     public async Task<IResult> CancelOrder(int id, ClaimsPrincipal user, ISender sender, CancellationToken ct)
     {
+        var order = await sender.Send(new GetOrderByIdQuery(id), ct).ConfigureAwait(false);
+        var requestingId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var isAdmin = user.IsInRole("Admin") || user.IsInRole("SuperAdmin");
+        if (!isAdmin && order.UserId != requestingId) return Results.Forbid();
         await sender.Send(new CancelOrderCommand(id), ct).ConfigureAwait(false);
         return Results.NoContent();
     }

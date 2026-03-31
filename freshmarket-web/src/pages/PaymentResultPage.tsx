@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import Icon from "../components/ui/Icon";
@@ -10,6 +11,7 @@ type Status = "loading" | "success" | "error";
 export default function PaymentResultPage() {
   const [params]  = useSearchParams();
   const navigate  = useNavigate();
+  const { t }     = useTranslation();
   const [status, setStatus]     = useState<Status>("loading");
   const [countdown, setCountdown] = useState(3);
 
@@ -42,8 +44,8 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5 animate-pulse">
               <Icon icon={IconCreditCard} size={22} className="text-blue-400" stroke={1.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">A confirmar pagamento</h2>
-            <p className="text-sm text-slate-400">Por favor aguarda um momento...</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t("payment.confirming")}</h2>
+            <p className="text-sm text-slate-400">{t("payment.confirmingDesc")}</p>
           </>
         )}
 
@@ -52,17 +54,15 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
               <Icon icon={IconCheck} size={22} className="text-emerald-700" stroke={2.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Pagamento confirmado</h2>
-            <p className="text-sm text-slate-400 mb-6">
-              A tua encomenda está a ser processada.
-            </p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t("payment.confirmed")}</h2>
+            <p className="text-sm text-slate-400 mb-6">{t("payment.confirmedDesc")}</p>
             <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3 mb-5 dark:bg-emerald-900/20 dark:border-emerald-800">
               <p className="text-xs text-emerald-700 font-medium tabular">
-                A redirecionar em {countdown}s...
+                {t("payment.redirecting", { countdown })}
               </p>
             </div>
             <button onClick={() => navigate("/orders")} className="btn-primary w-full justify-center bg-emerald-700 flex items-center gap-2">
-              Ver encomendas
+              {t("payment.viewOrders")}
               <Icon icon={IconArrowRight} size={14} />
             </button>
           </>
@@ -73,17 +73,15 @@ export default function PaymentResultPage() {
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
               <Icon icon={IconX} size={22} className="text-red-500" stroke={2.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Erro no pagamento</h2>
-            <p className="text-sm text-slate-400 mb-6">
-              Não conseguimos confirmar o pagamento. Tenta novamente ou contacta-nos.
-            </p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t("payment.error")}</h2>
+            <p className="text-sm text-slate-400 mb-6">{t("payment.errorDesc")}</p>
             <div className="space-y-2">
               <button onClick={() => navigate("/cart")}
                 className="btn-primary w-full justify-center bg-amber-500 hover:bg-amber-400">
-                Tentar novamente
+                {t("payment.tryAgain")}
               </button>
               <button onClick={() => navigate("/orders")} className="btn-secondary w-full justify-center">
-                Ver encomendas
+                {t("payment.viewOrders")}
               </button>
             </div>
           </>

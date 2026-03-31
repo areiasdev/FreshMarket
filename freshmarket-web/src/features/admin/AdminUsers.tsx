@@ -3,6 +3,7 @@ import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import { parseDateTime } from "../../lib/dates";
 import Pagination from "../../components/utils/Pagination";
+import { useAuth } from "../auth/useAuth";
 
 interface UserAdmin {
   id: number;
@@ -16,6 +17,9 @@ interface UserAdmin {
 }
 
 export default function AdminUsers({ dark }: { dark?: boolean }) {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === "SuperAdmin";
+
   const [users, setUsers]     = useState<UserAdmin[]>([]);
   const [total, setTotal]     = useState(0);
   const [loading, setLoading] = useState(true);
@@ -104,6 +108,7 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
             <option value="">Todos os roles</option>
             <option value="Customer">Customer</option>
             <option value="Admin">Admin</option>
+            <option value="SuperAdmin">SuperAdmin</option>
           </select>
         </div>
       </div>
@@ -145,18 +150,29 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
                     <p className={`text-xs ${d ? "text-slate-400" : "text-slate-500"}`}>{u.email}</p>
                   </td>
                   <td className={td}>
-                    <select
-                      value={u.role}
-                      onChange={e => updateRole(u.id, e.target.value)}
-                      disabled={acting === u.id}
-                      className={`text-xs px-2 py-1 rounded-lg border focus:outline-none disabled:opacity-50 ${
-                        d ? "bg-slate-700 border-slate-600 text-slate-200"
-                          : "bg-white border-slate-200 text-slate-700"
-                      } ${u.role === "Admin" ? "font-bold text-emerald-600" : ""}`}
-                    >
-                      <option value="Customer">Customer</option>
-                      <option value="Admin">Admin</option>
-                    </select>
+                    {isSuperAdmin ? (
+                      <select
+                        value={u.role}
+                        onChange={e => updateRole(u.id, e.target.value)}
+                        disabled={acting === u.id || u.role === "SuperAdmin"}
+                        className={`text-xs px-2 py-1 rounded-lg border focus:outline-none disabled:opacity-50 ${
+                          d ? "bg-slate-700 border-slate-600 text-slate-200"
+                            : "bg-white border-slate-200 text-slate-700"
+                        } ${u.role === "Admin" ? "font-bold text-emerald-600" : ""} ${u.role === "SuperAdmin" ? "font-bold text-purple-600" : ""}`}
+                      >
+                        <option value="Customer">Customer</option>
+                        <option value="Admin">Admin</option>
+                        <option value="SuperAdmin">SuperAdmin</option>
+                      </select>
+                    ) : (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                        u.role === "SuperAdmin" ? "bg-purple-100 text-purple-700" :
+                        u.role === "Admin"      ? "bg-emerald-100 text-emerald-700" :
+                                                  d ? "text-slate-300" : "text-slate-600"
+                      }`}>
+                        {u.role}
+                      </span>
+                    )}
                   </td>
                   <td className={`${td} text-center ${d ? "text-slate-300" : "text-slate-700"}`}>
                     {u.orderCount}

@@ -30,7 +30,7 @@ public class SmtpEmailService : IEmailService
         var user     = section["Smtp:Username"]!;
         var pass     = section["Smtp:Password"]!;
         var fromAddr = section["From:Address"]!;
-        var fromName = section["From:Name"] ?? "Horto Píncaro";
+        var fromName = section["From:Name"] ?? "FreshMarket";
 
         using var client = new SmtpClient(host, port)
         {

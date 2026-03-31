@@ -1,12 +1,13 @@
-﻿using FreshMarket.Application.Payments.Commands.Confirm;
-using Microsoft.AspNetCore.Mvc;
+using FreshMarket.Application.Payments.Commands.Confirm;
+using FreshMarket.Web.Infrastructure;
 using Stripe;
 
-public static class Webhooks
+public class Webhooks : EndpointGroupBase
 {
-    public static void Map(WebApplication app)
+    public override void Map(WebApplication app)
     {
-        app.MapPost("/api/webhooks/stripe", HandleStripeWebhook);
+        app.MapGroup(this)
+           .MapPost(HandleStripeWebhook, "stripe");
     }
 
     public static async Task<IResult> HandleStripeWebhook(
@@ -15,30 +16,27 @@ public static class Webhooks
         ISender sender)
     {
         var json = await new StreamReader(request.Body).ReadToEndAsync();
-
-        var endpointSecret = config["Stripe:WebhookSecret"];
+        var webhookSecret = config["Stripe:WebhookSecret"];
 
         Event stripeEvent;
-
         try
         {
             stripeEvent = EventUtility.ConstructEvent(
                 json,
                 request.Headers["Stripe-Signature"],
-                endpointSecret
+                webhookSecret
             );
         }
-        catch
+        catch (StripeException)
         {
-            return Results.BadRequest();
+            return Results.BadRequest("Invalid Stripe signature.");
         }
 
-        // 🎯 Evento importante
-        if (stripeEvent.Type == "checkout.session.completed")
+        if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
         {
             var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
 
-            if (session?.Id != null)
+            if (session?.Id != null && session.PaymentStatus == "paid")
             {
                 await sender.Send(new ConfirmPaymentCommand(session.Id));
             }

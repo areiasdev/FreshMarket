@@ -11,6 +11,8 @@ interface UseAdminListOptions {
   url: string;
   page: number;
   pageSize: number;
+  /** Params extra além de page/pageSize (ex: { search: "tomate" }) */
+  extraParams?: Record<string, string>;
   /** Dependências extra que devem forçar reload (ex: selectedStatus) */
   extraDeps?: unknown[];
 }
@@ -37,6 +39,7 @@ export function useAdminList<T>({
   url,
   page,
   pageSize,
+  extraParams,
   extraDeps = [],
 }: UseAdminListOptions): UseAdminListReturn<T> {
   const [data, setData]     = useState<T[]>([]);
@@ -47,9 +50,8 @@ export function useAdminList<T>({
     async (showLoading = true) => {
       if (showLoading) setLoading(true);
       try {
-        const res = await client.get<PagedResult<T>>(
-          `${url}?page=${page}&pageSize=${pageSize}`
-        );
+        const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), ...extraParams });
+        const res = await client.get<PagedResult<T>>(`${url}?${params}`);
         setData(res.data.items ?? (res.data as unknown as T[]));
         setTotal(res.data.totalCount ?? 0);
       } finally {

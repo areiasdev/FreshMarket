@@ -104,6 +104,7 @@ public static class MappingExtensions
     public static AddressDto ToDto(this Address a) => new()
     {
         Id = a.Id,
+        UserId = a.UserId,
         Label = a.Label,
         Street = a.Street,
         PostalCode = a.PostalCode,

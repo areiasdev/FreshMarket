@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "../pages/AuthPage";
 import HomePage from "../pages/HomePage";
+import PrivacyPage from "../pages/PrivacyPage";
+import TermsPage from "../pages/TermsPage";
 import { useAuth } from "../features/auth/useAuth";
 import AdminRoute from "./AdminRoute";
 import AdminPage from "../features/admin/AdminPage";
@@ -49,6 +51,8 @@ export default function AppRouter() {
             </AdminRoute>
           </PrivateRoute>
         } />
+        <Route path="/privacidade" element={<PrivacyPage />} />
+        <Route path="/termos" element={<TermsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
