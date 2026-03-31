@@ -14,7 +14,8 @@ public class CustomExceptionHandler : IExceptionHandler
         {
             { typeof(NotFoundException), HandleNotFoundException },
             { typeof(FluentValidation.ValidationException), HandleValidationException },
-            { typeof(ForbiddenAccessException), HandleForbiddenAccessException }
+            { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+            { typeof(BusinessException), HandleBusinessException },
         };
     }
 
@@ -37,7 +38,7 @@ public class CustomExceptionHandler : IExceptionHandler
         await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
             Status = StatusCodes.Status404NotFound,
-            Title = "Recurso não encontrado",
+            Title = "Recurso nï¿½o encontrado",
             Detail = ex.Message
         });
     }
@@ -53,7 +54,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()))
         {
             Status = StatusCodes.Status400BadRequest,
-            Title = "Erro de validação"
+            Title = "Erro de validaï¿½ï¿½o"
         });
     }
 
@@ -64,6 +65,17 @@ public class CustomExceptionHandler : IExceptionHandler
         {
             Status = StatusCodes.Status403Forbidden,
             Title = "Acesso negado"
+        });
+    }
+
+    private async Task HandleBusinessException(HttpContext context, Exception ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status422UnprocessableEntity,
+            Title = "OperaÃ§Ã£o invÃ¡lida",
+            Detail = ex.Message
         });
     }
 }

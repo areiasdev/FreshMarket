@@ -60,6 +60,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           imageUrl:     product.imageUrl,
           pricePerUnit: product.pricePerUnit,
           unitType:     product.unitType,
+          minQuantity:  product.minQuantity,
           quantity,
           subtotal: Math.round(quantity * product.pricePerUnit * 100) / 100,
         },

@@ -5,21 +5,23 @@ using Stripe.Checkout;
 
 public class StripePaymentProvider : IPaymentProvider
 {
-    private readonly string _successUrl = "https://yourapp.com/success";
-    private readonly string _cancelUrl = "https://yourapp.com/cancel";
+    private readonly string _successUrl;
+    private readonly string _cancelUrl;
+    private readonly List<string> _paymentMethodTypes;
 
-    public StripePaymentProvider(IConfiguration config)
+    public StripePaymentProvider(IConfiguration config, List<string>? paymentMethodTypes = null)
     {
         StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
-        _successUrl = config["Stripe:SuccessUrl"];
-        _cancelUrl = config["Stripe:CancelUrl"];
+        _successUrl = config["Stripe:SuccessUrl"] ?? "https://yourapp.com/success";
+        _cancelUrl = config["Stripe:CancelUrl"] ?? "https://yourapp.com/cancel";
+        _paymentMethodTypes = paymentMethodTypes ?? ["card"];
     }
 
     public async Task<PaymentProviderResult> CreateAsync(decimal amount, string currency, string description)
     {
         var options = new SessionCreateOptions
         {
-            PaymentMethodTypes = new List<string> { "card" },
+            PaymentMethodTypes = _paymentMethodTypes,
             Mode = "payment",
             SuccessUrl = _successUrl,
             CancelUrl = _cancelUrl,

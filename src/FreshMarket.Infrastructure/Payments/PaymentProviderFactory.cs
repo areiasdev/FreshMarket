@@ -1,5 +1,6 @@
 ﻿using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 public class PaymentProviderFactory : IPaymentProviderFactory
 {
@@ -13,9 +14,9 @@ public class PaymentProviderFactory : IPaymentProviderFactory
     public IPaymentProvider Get(PaymentMethodEnum method)
         => method switch
         {
-            PaymentMethodEnum.Card => _sp.GetRequiredService<StripePaymentProvider>(),
-            PaymentMethodEnum.MBWay => _sp.GetRequiredService<MbWayPaymentProvider>(),
-            PaymentMethodEnum.Cash => _sp.GetRequiredService<CashPaymentProvider>(),
+            PaymentMethodEnum.Card  => _sp.GetRequiredKeyedService<StripePaymentProvider>("card"),
+            PaymentMethodEnum.MBWay => _sp.GetRequiredKeyedService<StripePaymentProvider>("mb_way"),
+            PaymentMethodEnum.Cash  => _sp.GetRequiredService<CashPaymentProvider>(),
             _ => throw new NotSupportedException($"Método {method} não suportado")
         };
 }

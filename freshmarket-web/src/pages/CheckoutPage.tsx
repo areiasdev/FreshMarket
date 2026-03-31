@@ -134,6 +134,18 @@ export default function CheckoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]);
 
+  // Auto-select express when the chosen date is tomorrow
+  useEffect(() => {
+    if (!form.preferredDate || shippingOptions.length === 0) return;
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const tomorrow = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (form.preferredDate === tomorrow && shippingOptions.find(o => o.key === "express")) {
+      setShippingSpeed("express");
+    }
+  }, [form.preferredDate, shippingOptions]);
+
   // Fetch slots when postal code + date are ready — debounced + abortable
   const slotDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {

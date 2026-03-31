@@ -107,6 +107,7 @@ export default function AdminOrders() {
     try {
       await client.put(endpoints.admin.orders.updateStatus(id), { status: newStatus });
       removeOrder(id);
+      if (detail?.id === id) setDetail(d => d ? { ...d, status: newStatus } : null);
     } finally {
       setUpdating(null);
     }
@@ -118,6 +119,7 @@ export default function AdminOrders() {
     try {
       await client.put(endpoints.admin.orders.cancel(id));
       removeOrder(id);
+      if (detail?.id === id) setDetail(d => d ? { ...d, status: 5 } : null);
     } finally {
       setUpdating(null);
     }

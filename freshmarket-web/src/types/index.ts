@@ -60,6 +60,7 @@ export interface CartItem {
   imageUrl?: string;
   pricePerUnit: number;
   unitType: UnitType;
+  minQuantity: number;
   quantity: number;
   subtotal: number;
 }

@@ -20,21 +20,15 @@ public static class DependencyInjection
             provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<StripePaymentProvider>();
+        services.AddKeyedScoped<StripePaymentProvider>("card", (sp, _) =>
+            new StripePaymentProvider(sp.GetRequiredService<IConfiguration>(), ["card"]));
+        services.AddKeyedScoped<StripePaymentProvider>("mb_way", (sp, _) =>
+            new StripePaymentProvider(sp.GetRequiredService<IConfiguration>(), ["mb_way"]));
         services.AddScoped<MbWayPaymentProvider>();
         services.AddScoped<IPaymentProviderFactory, PaymentProviderFactory>();
         services.AddScoped<OrderCleanupService>();
         services.AddHostedService<OrderCleanupJob>();
         services.AddScoped<CashPaymentProvider>();
-
-        services.AddScoped<IPaymentProvider>(sp =>
-        {
-            var http = sp.GetRequiredService<HttpClient>();
-            var config = sp.GetRequiredService<IConfiguration>();
-
-            // escolher dinamicamente depois (melhor)
-            return new StripePaymentProvider(config);
-        });
 
         services.AddStackExchangeRedisCache(options =>
         {

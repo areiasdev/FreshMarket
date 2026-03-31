@@ -73,15 +73,15 @@ export default function CartPage() {
 
                     <div className="flex items-center justify-center gap-1.5">
                       <button
-                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.unitType === 1 ? 0.5 : 1)).toFixed(1)))}
+                        onClick={() => updateQuantity(item.productId, Math.max(0, +(item.quantity - (item.minQuantity ?? 1)).toFixed(2)))}
                         className="w-6 h-6 rounded border border-slate-200 bg-white text-slate-600 text-sm
                                    flex items-center justify-center hover:bg-slate-50 transition-colors leading-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >−</button>
                       <span className="text-xs font-semibold tabular text-slate-800 dark:text-slate-100 min-w-[32px] text-center">
-                        {item.unitType === 1 ? item.quantity.toFixed(1) : item.quantity}
+                        {(item.minQuantity ?? 1) % 1 !== 0 ? item.quantity.toFixed(1) : item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.unitType === 1 ? 0.5 : 1)).toFixed(1))}
+                        onClick={() => updateQuantity(item.productId, +(item.quantity + (item.minQuantity ?? 1)).toFixed(2))}
                         className="w-6 h-6 rounded border border-slate-200 bg-white text-slate-600 text-sm
                                    flex items-center justify-center hover:bg-slate-50 transition-colors leading-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >+</button>
