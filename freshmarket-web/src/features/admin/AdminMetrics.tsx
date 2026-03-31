@@ -80,9 +80,10 @@ function toIsoDate(d: Date) {
 }
 
 export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
-  const [data, setData]       = useState<MetricsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod]   = useState<PeriodPreset>(30);
+  const [data, setData]         = useState<MetricsDto | null>(null);
+  const [loading, setLoading]   = useState(true);   // initial load only
+  const [refreshing, setRefreshing] = useState(false); // subsequent fetches
+  const [period, setPeriod]     = useState<PeriodPreset>(30);
 
   const today    = toIsoDate(new Date());
   const [customFrom, setCustomFrom] = useState(() => toIsoDate(new Date(Date.now() - 29 * 86400000)));
@@ -96,7 +97,8 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
     : { backgroundColor: "#fff",    border: "1px solid #e2e8f0",  borderRadius: 8, fontSize: 12 };
 
   const fetchData = (p: PeriodPreset, from?: string, to?: string) => {
-    setLoading(true);
+    if (data) setRefreshing(true);
+    else setLoading(true);
     let url = endpoints.admin.metrics;
     if (p === "custom" && from && to) {
       url += `?from=${from}&to=${to}`;
@@ -107,7 +109,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
     }
     client.get(url)
       .then(res => setData(res.data))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setRefreshing(false); });
   };
 
   useEffect(() => { fetchData(30); }, []);
@@ -122,7 +124,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
     fetchData("custom", customFrom, customTo);
   };
 
-  if (loading) return (
+  if (loading && !data) return (
     <div className="flex items-center justify-center h-64 text-sm text-slate-400">
       A carregar métricas...
     </div>
@@ -140,12 +142,17 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
   const totalOrders  = revenueData.reduce((s, d) => s + d.orderCount, 0);
 
   return (
-    <div className="space-y-6 w-full">
+    <div className={`space-y-6 w-full transition-opacity duration-200 ${refreshing ? "opacity-60 pointer-events-none" : ""}`}>
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
+            {refreshing && (
+              <span className="text-xs text-slate-400 animate-pulse">a atualizar...</span>
+            )}
+          </div>
           <p className="text-sm text-slate-400 mt-0.5">Análise detalhada do desempenho da loja</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">

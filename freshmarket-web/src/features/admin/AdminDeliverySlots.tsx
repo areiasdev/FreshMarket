@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
@@ -6,6 +6,7 @@ import Pagination from "../../components/utils/Pagination";
 import { parseDateOnly } from "../../lib/dates";
 import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
 import axios from "axios";
+import { useAdminList } from "./useAdminList";
 
 interface DeliverySlotDto {
   id: number;
@@ -31,11 +32,8 @@ interface SlotOrder {
 }
 
 export default function AdminDeliverySlots() {
-  const [slots, setSlots]         = useState<DeliverySlotDto[]>([]);
-  const [total, setTotal]         = useState(0);
-  const [page, setPage]           = useState(1);
-  const [pageSize, setPageSize]   = useState(10);
-  const [loading, setLoading]       = useState(true);
+  const [page, setPage]         = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal]   = useState(false);
   const [expandedSlot, setExpandedSlot] = useState<number | null>(null);
   const [slotOrders, setSlotOrders]     = useState<Record<number, SlotOrder[] | "loading">>({});
@@ -45,29 +43,11 @@ export default function AdminDeliverySlots() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const res = await client.get(
-          endpoints.admin.slots.getAll + `?page=${page}&pageSize=${pageSize}`
-        );
-        setSlots(res.data.items ?? res.data);
-        setTotal(res.data.totalCount ?? 0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [page, pageSize]);
-
-  const reload = async () => {
-    const res = await client.get(
-      endpoints.admin.slots.getAll + `?page=${page}&pageSize=${pageSize}`
-    );
-    setSlots(res.data.items ?? res.data);
-    setTotal(res.data.totalCount ?? 0);
-  };
+  const { data: slots, total, loading, reload } = useAdminList<DeliverySlotDto>({
+    url: endpoints.admin.slots.getAll,
+    page,
+    pageSize,
+  });
 
   const handleSubmit = async () => {
     try {

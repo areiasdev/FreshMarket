@@ -69,14 +69,17 @@ public class UserAdminService : IUserAdminService
 
     public async Task<UserAdminDto> UpdateRoleAsync(int id, string role, CancellationToken ct)
     {
-        if (role != "Customer" && role != "Admin")
-            throw new ArgumentException("Role must be 'Customer' or 'Admin'.", nameof(role));
+        if (role != "Customer" && role != "Admin" && role != "SuperAdmin")
+            throw new ArgumentException("Role must be 'Customer', 'Admin' or 'SuperAdmin'.", nameof(role));
 
         var user = await _db.Users
             .Include(u => u.Orders)
             .FirstOrDefaultAsync(u => u.Id == id, ct)
             .ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"User {id} not found");
+
+        if (user.Role == "SuperAdmin" && role != "SuperAdmin")
+            throw new InvalidOperationException("Cannot demote a SuperAdmin.");
 
         user.Role = role;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);

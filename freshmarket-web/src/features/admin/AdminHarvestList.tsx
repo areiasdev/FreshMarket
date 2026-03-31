@@ -160,7 +160,7 @@ export default function AdminHarvestList() {
 
           {/* Print header */}
           <div className="hidden print:block mb-6">
-            <h1 className="text-2xl font-bold">Horto Píncaro — Lista de Colheita</h1>
+            <h1 className="text-2xl font-bold">FreshMarket — Lista de Colheita</h1>
             <p className="text-sm text-gray-600 mt-1">{rangeLabel}</p>
           </div>
 
@@ -172,7 +172,7 @@ export default function AdminHarvestList() {
                   <th className="px-4 py-3 text-left font-medium print:hidden w-10" />
                   <th className="px-4 py-3 text-left font-medium">Produto</th>
                   <th className="px-4 py-3 text-right font-medium">Quantidade</th>
-                  <th className="px-4 py-3 text-center font-medium print:hidden w-20">Estado</th>
+                  <th className="px-4 py-3 text-center font-medium print:hidden">Estado</th>
                 </tr>
               </thead>
               <tbody>

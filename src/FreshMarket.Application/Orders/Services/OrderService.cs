@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FreshMarket.Application.Common.Constants;
 using FreshMarket.Application.Common.Email;
 using FreshMarket.Application.Common.Exceptions;
@@ -94,31 +95,7 @@ public class OrderService : IOrderService
             .IgnoreQueryFilters()
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt)
-            .Select(o => new OrderSummaryDto
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                ShippingFee = o.ShippingFee,
-                CreatedAt = o.CreatedAt,
-                DeliveryCity = o.DeliveryCity,
-                DeliveryPostalCode = o.DeliveryPostalCode,
-                Notes = o.Notes,
-                PreferredDeliveryDate = o.PreferredDeliveryDate,
-                ItemCount = o.Items.Count,
-                UserFullName = o.User != null ? o.User.FullName : "—",
-                PaymentMethod = o.Payments
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => (PaymentMethodEnum?)p.Method)
-                    .FirstOrDefault(),
-                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
-                {
-                    DeliveryDate = o.DeliverySlot.DeliveryDate,
-                    StartTime = o.DeliverySlot.StartTime,
-                    EndTime = o.DeliverySlot.EndTime,
-                },
-            })
+            .Select(SummaryProjection)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -144,31 +121,7 @@ public class OrderService : IOrderService
         var items = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(o => new OrderSummaryDto
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                ShippingFee = o.ShippingFee,
-                CreatedAt = o.CreatedAt,
-                DeliveryCity = o.DeliveryCity,
-                DeliveryPostalCode = o.DeliveryPostalCode,
-                Notes = o.Notes,
-                PreferredDeliveryDate = o.PreferredDeliveryDate,
-                ItemCount = o.Items.Count,
-                UserFullName = o.User != null ? o.User.FullName : "—",
-                PaymentMethod = o.Payments
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => (PaymentMethodEnum?)p.Method)
-                    .FirstOrDefault(),
-                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
-                {
-                    DeliveryDate = o.DeliverySlot.DeliveryDate,
-                    StartTime = o.DeliverySlot.StartTime,
-                    EndTime = o.DeliverySlot.EndTime,
-                },
-            })
+            .Select(SummaryProjection)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -179,30 +132,7 @@ public class OrderService : IOrderService
         => await _db.Orders
             .IgnoreQueryFilters()
             .Where(o => o.DeliverySlotId == slotId)
-            .Select(o => new OrderSummaryDto
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                Status = o.Status,
-                TotalAmount = o.TotalAmount,
-                ShippingFee = o.ShippingFee,
-                CreatedAt = o.CreatedAt,
-                DeliveryCity = o.DeliveryCity,
-                DeliveryPostalCode = o.DeliveryPostalCode,
-                Notes = o.Notes,
-                ItemCount = o.Items.Count,
-                UserFullName = o.User != null ? o.User.FullName : "—",
-                PaymentMethod = o.Payments
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => (PaymentMethodEnum?)p.Method)
-                    .FirstOrDefault(),
-                DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
-                {
-                    DeliveryDate = o.DeliverySlot.DeliveryDate,
-                    StartTime = o.DeliverySlot.StartTime,
-                    EndTime = o.DeliverySlot.EndTime,
-                },
-            })
+            .Select(SummaryProjection)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
@@ -494,6 +424,33 @@ public class OrderService : IOrderService
             _logger.LogWarning(ex, "Failed to create status notification for order {OrderId}", orderId);
         }
     }
+
+    private static readonly Expression<Func<Order, OrderSummaryDto>> SummaryProjection =
+        o => new OrderSummaryDto
+        {
+            Id = o.Id,
+            OrderNumber = o.OrderNumber,
+            Status = o.Status,
+            TotalAmount = o.TotalAmount,
+            ShippingFee = o.ShippingFee,
+            CreatedAt = o.CreatedAt,
+            DeliveryCity = o.DeliveryCity,
+            DeliveryPostalCode = o.DeliveryPostalCode,
+            Notes = o.Notes,
+            PreferredDeliveryDate = o.PreferredDeliveryDate,
+            ItemCount = o.Items.Count,
+            UserFullName = o.User != null ? o.User.FullName : "—",
+            PaymentMethod = o.Payments
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => (PaymentMethodEnum?)p.Method)
+                .FirstOrDefault(),
+            DeliverySlot = o.DeliverySlot == null ? null : new DeliverySlotInfo
+            {
+                DeliveryDate = o.DeliverySlot.DeliveryDate,
+                StartTime = o.DeliverySlot.StartTime,
+                EndTime = o.DeliverySlot.EndTime,
+            },
+        };
 
     private static string GenerateOrderNumber()
     {

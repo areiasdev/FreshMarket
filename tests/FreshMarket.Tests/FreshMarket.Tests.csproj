@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -21,10 +22,15 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+    <Using Include="NSubstitute" />
+    <Using Include="FreshMarket.Domain.Entities" />
+    <Using Include="FreshMarket.Domain.Enums" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FreshMarket.Application\FreshMarket.Application.csproj" />
+    <ProjectReference Include="..\..\src\FreshMarket.Infrastructure\FreshMarket.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

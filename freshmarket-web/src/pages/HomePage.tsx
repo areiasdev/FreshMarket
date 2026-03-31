@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import client from "../api/client";
 import { useAuth } from "../features/auth/useAuth";
 import { useCart } from "../features/cart/CartContext";
@@ -42,66 +43,7 @@ interface Stat {
   readonly label: string;
 }
 
-// ─── Static data ──────────────────────────────────────────────────────────────
-
-const TRUST_SIGNALS: readonly TrustSignal[] = [
-  { icon: IconLeaf,    label: "100% local",       sublabel: "Região de Aveiro"       },
-  { icon: IconTruck,   label: "Entrega em 48h",   sublabel: "Horário à sua escolha"  },
-  { icon: IconStar,    label: "+500 famílias",     sublabel: "Já confiam em nós"      },
-  { icon: IconCheck,   label: "Qualidade garantida", sublabel: "Seleção manual"       },
-];
-
-const STEPS: readonly Step[] = [
-  {
-    number: "01",
-    icon: IconShoppingCart,
-    title: "Escolha os seus frescos",
-    description: "Navegue pelo catálogo, filtre por categoria e adicione ao cesto o que a sua família precisa.",
-  },
-  {
-    number: "02",
-    icon: IconClock,
-    title: "Escolha o horário de entrega",
-    description: "Selecione o dia e hora que mais lhe convenha. Pagamento seguro com cartão, MB Way ou dinheiro.",
-  },
-  {
-    number: "03",
-    icon: IconTruck,
-    title: "Receba na sua porta",
-    description: "Colhemos e enviamos no mesmo dia. Produtos frescos, diretamente da quinta para a sua mesa.",
-  },
-];
-
-const TESTIMONIALS: readonly Testimonial[] = [
-  {
-    initials: "MM",
-    name: "Maria M.",
-    location: "Aveiro",
-    quote: "Finalmente consigo ter legumes realmente frescos sem sair de casa. A qualidade é notável — muito melhor do que o supermercado.",
-    stars: 5,
-  },
-  {
-    initials: "JP",
-    name: "João P.",
-    location: "Ílhavo",
-    quote: "Uso o serviço há seis meses. A entrega é sempre pontual e os produtos chegam impecáveis. Recomendo a toda a gente.",
-    stars: 5,
-  },
-  {
-    initials: "CS",
-    name: "Catarina S.",
-    location: "Oliveira do Bairro",
-    quote: "Os tomates e as couves são simplesmente diferentes. Dá para perceber que foram colhidos frescos. Não troco por nada.",
-    stars: 5,
-  },
-];
-
-const STATS: readonly Stat[] = [
-  { value: "+500", label: "Famílias servidas"  },
-  { value: "+30",  label: "Produtos frescos"   },
-  { value: "48h",  label: "Da quinta à porta"  },
-  { value: "100%", label: "Produção local"     },
-];
+// Static data is now built inside each component using useTranslation
 
 // ─── HomePage ─────────────────────────────────────────────────────────────────
 
@@ -209,6 +151,7 @@ function HeroSection({
   onShop: () => void;
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <section className="relative overflow-hidden bg-stone-950">
@@ -225,22 +168,21 @@ function HeroSection({
             <div className="inline-flex items-center gap-2 bg-emerald-950/60 border border-emerald-700/40 rounded-full px-4 py-1.5 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-semibold text-emerald-400 tracking-wide">
-                Colhido hoje · Entregue amanhã
+                {t("home.eyebrow")}
               </span>
             </div>
 
             {/* Headline — desire-first, not product-first (Breakthrough Advertising) */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white leading-[1.0] tracking-tight mb-6">
-              Frescos da quinta<br />
+              {t("home.heroTitle")}<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
-                direto à sua mesa.
+                {t("home.heroGradient")}
               </span>
             </h1>
 
             {/* Subheadline — concrete, emotional (Made to Stick) */}
             <p className="text-stone-400 text-lg leading-relaxed mb-8 max-w-lg">
-              Frutas e legumes selecionados de produtores locais da região de Aveiro.
-              Sem intermediários, sem conservantes — só frescura real, na sua porta em 48h.
+              {t("home.heroSub")}
             </p>
 
             {/* CTAs — primary + secondary (Don't Make Me Think: one main action) */}
@@ -252,7 +194,7 @@ function HeroSection({
                            transition-colors shadow-lg shadow-emerald-900/40"
               >
                 <Icon icon={IconShoppingCart} size={15} />
-                Ver os produtos
+                {t("home.heroShop")}
               </button>
               {!isAuthenticated && (
                 <button
@@ -262,7 +204,7 @@ function HeroSection({
                              font-semibold px-7 py-3.5 rounded-xl text-sm
                              border border-white/10 transition-colors"
                 >
-                  Criar conta grátis
+                  {t("home.heroRegister")}
                   <Icon icon={IconArrowRight} size={14} />
                 </button>
               )}
@@ -287,7 +229,7 @@ function HeroSection({
                   ))}
                 </div>
                 <p className="text-xs text-stone-400">
-                  <span className="text-white font-semibold">+500 famílias</span> já confiam em nós
+                  <span className="text-white font-semibold">{t("home.heroSocialProofCount")}</span>{t("home.heroSocialProofText")}
                 </p>
               </div>
             </div>
@@ -308,8 +250,8 @@ function HeroSection({
                       <Icon icon={IconLeaf} size={16} className="text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">Horto Píncaro</p>
-                      <p className="text-[10px] text-stone-400">Aberto · A entregar hoje</p>
+                      <p className="text-xs font-bold text-white">FreshMarket</p>
+                      <p className="text-[10px] text-stone-400">{t("home.heroOpen")}</p>
                     </div>
                   </div>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
@@ -318,9 +260,9 @@ function HeroSection({
                 {/* Featured products preview */}
                 <div className="space-y-2.5 mb-5">
                   {[
-                    { name: "Tomates Cherry",      price: "2.80€/kg", tag: "Da época",     color: "bg-red-500/15 text-red-300 border-red-500/20"   },
-                    { name: "Courgette Bio",        price: "1.90€/kg", tag: "Novo",         color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20" },
-                    { name: "Alface Frisada",       price: "0.80€/un", tag: "Popular",      color: "bg-amber-500/15 text-amber-300 border-amber-500/20" },
+                    { name: "Tomates Cherry",  price: "2.80€/kg", tag: t("home.heroProdTagSeasonal"), color: "bg-red-500/15 text-red-300 border-red-500/20"            },
+                    { name: "Courgette Bio",   price: "1.90€/kg", tag: t("home.heroProdTagNew"),      color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20" },
+                    { name: "Alface Frisada",  price: "0.80€/un", tag: t("home.heroProdTagPopular"),  color: "bg-amber-500/15 text-amber-300 border-amber-500/20"       },
                   ].map(item => (
                     <div key={item.name}
                       className="flex items-center justify-between bg-white/5 rounded-xl px-3.5 py-2.5 border border-white/5">
@@ -342,7 +284,7 @@ function HeroSection({
                              bg-emerald-500 hover:bg-emerald-400 text-white
                              font-semibold text-sm py-2.5 rounded-xl transition-colors">
                   <Icon icon={IconShoppingCart} size={14} />
-                  Ver catálogo completo
+                  {t("home.heroCatalog")}
                 </button>
               </div>
 
@@ -359,8 +301,8 @@ function HeroSection({
                     <Icon key={i} icon={IconStar} size={10} className="text-amber-400" />
                   ))}
                 </div>
-                <p className="text-xs font-bold text-stone-800">+500 clientes</p>
-                <p className="text-[10px] text-stone-400">satisfeitos</p>
+                <p className="text-xs font-bold text-stone-800">{t("home.heroClientsCount")}</p>
+                <p className="text-[10px] text-stone-400">{t("home.heroClientsSub")}</p>
               </div>
             </div>
           </div>
@@ -373,6 +315,13 @@ function HeroSection({
 // ─── Trust Bar ────────────────────────────────────────────────────────────────
 
 function TrustBar() {
+  const { t } = useTranslation();
+  const TRUST_SIGNALS: readonly TrustSignal[] = [
+    { icon: IconLeaf,  label: t("home.trustLocal"),    sublabel: t("home.trustLocalSub")    },
+    { icon: IconTruck, label: t("home.trustDelivery"), sublabel: t("home.trustDeliverySub") },
+    { icon: IconStar,  label: t("home.trustFamilies"), sublabel: t("home.trustFamiliesSub") },
+    { icon: IconCheck, label: t("home.trustQuality"),  sublabel: t("home.trustQualitySub")  },
+  ];
   return (
     <section className="bg-white dark:bg-slate-900 border-b border-stone-100 dark:border-slate-800">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
@@ -398,6 +347,12 @@ function TrustBar() {
 // ─── How It Works ─────────────────────────────────────────────────────────────
 
 function HowItWorksSection() {
+  const { t } = useTranslation();
+  const STEPS: readonly Step[] = [
+    { number: "01", icon: IconShoppingCart, title: t("home.step1Title"), description: t("home.step1Desc") },
+    { number: "02", icon: IconClock,        title: t("home.step2Title"), description: t("home.step2Desc") },
+    { number: "03", icon: IconTruck,        title: t("home.step3Title"), description: t("home.step3Desc") },
+  ];
   return (
     <section id="como-funciona" className="bg-stone-50 dark:bg-slate-800">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-20">
@@ -405,13 +360,13 @@ function HowItWorksSection() {
         {/* Section header */}
         <div className="text-center max-w-xl mx-auto mb-14">
           <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">
-            Simples e rápido
+            {t("home.howEyebrow")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white tracking-tight mb-4">
-            Frescos em três passos
+            {t("home.howTitle")}
           </h2>
           <p className="text-stone-500 dark:text-slate-400 text-sm leading-relaxed">
-            Do catálogo à sua porta — sem complicações, sem filas, sem compromissos.
+            {t("home.howSub")}
           </p>
         </div>
 
@@ -470,6 +425,7 @@ function ProductsSection({
   page, totalPages, pageSize, loading,
   onCategoryChange, onSearchChange, onSeasonalToggle, onPageChange, onAdd,
 }: ProductsSectionProps) {
+  const { t } = useTranslation();
   return (
     <section id="produtos" className="bg-white dark:bg-slate-900">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-20">
@@ -478,14 +434,14 @@ function ProductsSection({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">
-              Catálogo
+              {t("home.catalogEyebrow")}
             </p>
             <h2 className="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">
-              Os nossos produtos
+              {t("home.catalogTitle")}
             </h2>
           </div>
           <p className="text-sm text-stone-400 dark:text-slate-400 tabular-nums">
-            {total} {total === 1 ? "produto disponível" : "produtos disponíveis"}
+            {total} {t("home.productAvailable", { count: total })}
           </p>
         </div>
 
@@ -498,7 +454,7 @@ function ProductsSection({
             type="search"
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Pesquisar produtos..."
+            placeholder={t("home.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-stone-800 dark:text-slate-100 placeholder-stone-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm"
           />
         </div>
@@ -506,7 +462,7 @@ function ProductsSection({
         {/* Category filter + seasonal toggle */}
         <div className="flex flex-wrap gap-2 mb-10">
           <CategoryPill
-            label="Todos"
+            label={t("home.filterAll")}
             active={activeCategory === null && !seasonalOnly}
             onClick={() => { onCategoryChange(null); if (seasonalOnly) onSeasonalToggle(); }}
           />
@@ -526,7 +482,7 @@ function ProductsSection({
                 : "border-stone-200 dark:border-slate-700 text-stone-600 dark:text-slate-300 hover:bg-stone-50 dark:hover:bg-slate-800"
             }`}
           >
-            🌱 Sazonais
+            {t("home.filterSeasonal")}
           </button>
         </div>
 
@@ -541,8 +497,8 @@ function ProductsSection({
           search ? (
             <div className="text-center py-20">
               <Icon icon={IconSearch} size={40} className="mx-auto mb-3 text-stone-300 dark:text-slate-600" />
-              <p className="text-sm font-semibold text-stone-600 dark:text-slate-300 mb-1">Sem resultados para "{search}"</p>
-              <p className="text-xs text-stone-400">Tenta pesquisar por outro nome.</p>
+              <p className="text-sm font-semibold text-stone-600 dark:text-slate-300 mb-1">{t("home.noResults", { search })}</p>
+              <p className="text-xs text-stone-400">{t("home.noResultsHint")}</p>
             </div>
           ) : (
             <EmptyProducts />
@@ -591,13 +547,14 @@ function CategoryPill({
 }
 
 function EmptyProducts() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="w-14 h-14 rounded-2xl bg-stone-100 dark:bg-slate-700 flex items-center justify-center mb-4">
         <Icon icon={IconPackage} size={24} className="text-stone-400 dark:text-slate-400" />
       </div>
-      <p className="text-sm font-semibold text-stone-600 dark:text-slate-300 mb-1">Sem produtos nesta categoria</p>
-      <p className="text-xs text-stone-400 dark:text-slate-400">Tente outra categoria ou volte mais tarde.</p>
+      <p className="text-sm font-semibold text-stone-600 dark:text-slate-300 mb-1">{t("home.noCategory")}</p>
+      <p className="text-xs text-stone-400 dark:text-slate-400">{t("home.noCategoryHint")}</p>
     </div>
   );
 }
@@ -605,6 +562,18 @@ function EmptyProducts() {
 // ─── Social Proof ─────────────────────────────────────────────────────────────
 
 function SocialProofSection() {
+  const { t } = useTranslation();
+  const STATS: readonly Stat[] = [
+    { value: "+500", label: t("home.statFamilies") },
+    { value: "+30",  label: t("home.statProducts") },
+    { value: "48h",  label: t("home.statFarm")     },
+    { value: "100%", label: t("home.statLocal")    },
+  ];
+  const TESTIMONIALS: readonly Testimonial[] = [
+    { initials: "MM", name: "Maria M.",     location: t("home.testimonialMMLocation"), quote: t("home.testimonialMM"), stars: 5 },
+    { initials: "JP", name: "João P.",      location: t("home.testimonialJPLocation"), quote: t("home.testimonialJP"), stars: 5 },
+    { initials: "CS", name: "Catarina S.",  location: t("home.testimonialCSLocation"), quote: t("home.testimonialCS"), stars: 5 },
+  ];
   return (
     <section className="bg-stone-950">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-20">
@@ -622,16 +591,16 @@ function SocialProofSection() {
         {/* Testimonials — Cialdini: Social Proof with stories */}
         <div className="text-center mb-12">
           <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3">
-            O que dizem os nossos clientes
+            {t("home.statsSection")}
           </p>
           <h2 className="text-3xl font-extrabold text-white tracking-tight">
-            Famílias satisfeitas em toda a região
+            {t("home.statsTitle")}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {TESTIMONIALS.map(t => (
-            <TestimonialCard key={t.name} testimonial={t} />
+          {TESTIMONIALS.map(testimonial => (
+            <TestimonialCard key={testimonial.name} testimonial={testimonial} />
           ))}
         </div>
       </div>
@@ -670,6 +639,7 @@ function TestimonialCard({ testimonial: t }: { testimonial: Testimonial }) {
 // ─── About Section ────────────────────────────────────────────────────────────
 
 function AboutSection() {
+  const { t } = useTranslation();
   return (
     <section id="sobre" className="bg-white dark:bg-slate-900">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-20">
@@ -678,24 +648,22 @@ function AboutSection() {
           {/* Left: story (Cialdini: Unity + Liking) */}
           <div>
             <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">
-              Quem somos
+              {t("home.aboutEyebrow")}
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white leading-snug tracking-tight mb-5">
-              Uma empresa familiar.<br />
-              <span className="text-emerald-700">Uma promessa de qualidade.</span>
+              {t("home.aboutTitle")}<br />
+              <span className="text-emerald-700">{t("home.aboutTitleGreen")}</span>
             </h2>
             <p className="text-stone-500 dark:text-slate-400 leading-relaxed mb-4 text-sm">
-              Nascemos na região de Aveiro com um objetivo simples: tornar os produtos frescos
-              e locais acessíveis a todas as famílias, sem ir ao mercado.
+              {t("home.aboutP1")}
             </p>
             <p className="text-stone-500 dark:text-slate-400 leading-relaxed mb-8 text-sm">
-              Trabalhamos diretamente com agricultores locais, eliminando intermediários para
-              que receba sempre o que há de mais fresco — ao preço justo.
+              {t("home.aboutP2")}
             </p>
             <a href="#produtos"
               className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700
                          hover:text-emerald-900 transition-colors group">
-              Ver os nossos produtos
+              {t("home.aboutCta")}
               <Icon icon={IconArrowRight} size={14}
                 className="transition-transform group-hover:translate-x-1" />
             </a>
@@ -706,32 +674,32 @@ function AboutSection() {
             {[
               {
                 icon: IconLeaf,
-                title: "Produção local",
-                desc: "Parceria direta com agricultores da região de Aveiro",
+                title: t("home.pillar1"),
+                desc: t("home.pillar1Desc"),
                 bg: "bg-emerald-50",
                 iconBg: "bg-emerald-100",
                 iconColor: "text-emerald-700",
               },
               {
                 icon: IconCheck,
-                title: "Sem intermediários",
-                desc: "Do campo à sua porta, sem perdas de frescura",
+                title: t("home.pillar2"),
+                desc: t("home.pillar2Desc"),
                 bg: "bg-stone-50",
                 iconBg: "bg-stone-200",
                 iconColor: "text-stone-700",
               },
               {
                 icon: IconTruck,
-                title: "Entrega rápida",
-                desc: "Colhemos e enviamos no mesmo dia",
+                title: t("home.pillar3"),
+                desc: t("home.pillar3Desc"),
                 bg: "bg-amber-50",
                 iconBg: "bg-amber-100",
                 iconColor: "text-amber-700",
               },
               {
                 icon: IconStar,
-                title: "Qualidade garantida",
-                desc: "Cada produto é selecionado manualmente",
+                title: t("home.pillar4"),
+                desc: t("home.pillar4Desc"),
                 bg: "bg-stone-50",
                 iconBg: "bg-stone-200",
                 iconColor: "text-stone-700",
@@ -763,17 +731,17 @@ interface GalleryPhoto {
 
 // Coloca as tuas fotos em: freshmarket-web/public/images/farm/
 // Referencia-as como /images/farm/nome-do-ficheiro.jpg
-const GALLERY_PHOTOS: readonly GalleryPhoto[] = [
-  { src: "/images/farm/foto-1.avif", alt: "Agricultor na quinta",         caption: "Os nossos agricultores"        },
-  { src: "/images/farm/foto-2.webp", alt: "Colheita de tomates",          caption: "Colhido na hora certa"          },
-  { src: "/images/farm/foto-3.avif", alt: "Produtos frescos em caixas",   caption: "Prontos para entregar"          },
-  { src: "/images/farm/foto-4.jpg",  alt: "Vista da quinta em Aveiro",    caption: "A nossa quinta em Aveiro"       },
-  { src: "/images/farm/foto-5.avif", alt: "Legumes acabados de colher",   caption: "Da terra para a sua mesa"       },
-];
-
 const PLACEHOLDER = "https://placehold.co/800x600/e7e5e4/a8a29e?text=Foto+da+Quinta";
 
 function FarmGallerySection() {
+  const { t } = useTranslation();
+  const GALLERY_PHOTOS: readonly GalleryPhoto[] = [
+    { src: "/images/farm/foto-1.avif", alt: t("home.galleryAlt1"), caption: t("home.galleryCaption1") },
+    { src: "/images/farm/foto-2.webp", alt: t("home.galleryAlt2"), caption: t("home.galleryCaption2") },
+    { src: "/images/farm/foto-3.avif", alt: t("home.galleryAlt3"), caption: t("home.galleryCaption3") },
+    { src: "/images/farm/foto-4.jpg",  alt: t("home.galleryAlt4"), caption: t("home.galleryCaption4") },
+    { src: "/images/farm/foto-5.avif", alt: t("home.galleryAlt5"), caption: t("home.galleryCaption5") },
+  ];
   return (
     <section className="bg-stone-50 dark:bg-slate-800">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-20">
@@ -781,14 +749,13 @@ function FarmGallerySection() {
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-12">
           <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">
-            A nossa quinta
+            {t("home.galleryEyebrow")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-white tracking-tight mb-4">
-            Do campo à sua porta
+            {t("home.galleryTitle")}
           </h2>
           <p className="text-stone-500 dark:text-slate-400 text-sm leading-relaxed">
-            Cada produto que recebe passou por estas mãos e por esta terra.
-            Conheça de onde vêm os seus frescos.
+            {t("home.gallerySub")}
           </p>
         </div>
 
@@ -848,6 +815,7 @@ function GalleryPhoto({
 
 function CtaSection({ isAuthenticated }: { isAuthenticated: boolean }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <section className="bg-emerald-700">
@@ -857,17 +825,17 @@ function CtaSection({ isAuthenticated }: { isAuthenticated: boolean }) {
                           px-4 py-1.5 mb-6">
             <Icon icon={IconLeaf} size={12} className="text-emerald-200" />
             <span className="text-xs font-semibold text-emerald-100 tracking-wide">
-              Frescos. Locais. Entregues.
+              {t("home.ctaEyebrow")}
             </span>
           </div>
 
-          {/* Headline — desire-first (Schwartz), urgency (Cialdini: Scarcity) */}
           <h2 className="text-4xl font-extrabold text-white tracking-tight mb-4 leading-tight">
-            A sua família merece<br />o melhor da terra.
+            {t("home.ctaTitle").split("\n").map((line, i) => (
+              <span key={i}>{i > 0 && <br />}{line}</span>
+            ))}
           </h2>
           <p className="text-emerald-200 text-base leading-relaxed mb-8">
-            Junte-se a mais de 500 famílias que já recebem os seus frescos em casa.
-            Primeira encomenda sem mínimo de compra.
+            {t("home.ctaSub")}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -877,7 +845,7 @@ function CtaSection({ isAuthenticated }: { isAuthenticated: boolean }) {
                          font-bold px-8 py-3.5 rounded-xl text-sm
                          transition-colors shadow-lg shadow-emerald-900/20">
               <Icon icon={IconShoppingCart} size={15} />
-              Ver o catálogo
+              {t("home.ctaShop")}
             </a>
             {!isAuthenticated && (
               <button
@@ -886,7 +854,7 @@ function CtaSection({ isAuthenticated }: { isAuthenticated: boolean }) {
                            bg-emerald-600 hover:bg-emerald-500 text-white
                            font-semibold px-8 py-3.5 rounded-xl text-sm
                            border border-emerald-500 transition-colors">
-                Criar conta grátis
+                {t("home.ctaRegister")}
                 <Icon icon={IconArrowRight} size={14} />
               </button>
             )}
@@ -900,6 +868,13 @@ function CtaSection({ isAuthenticated }: { isAuthenticated: boolean }) {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 function FooterSection() {
+  const { t } = useTranslation();
+  const navLinks = [
+    { label: t("home.footerViewProducts"), href: "#produtos"      },
+    { label: t("home.footerHowItWorks"),   href: "#como-funciona" },
+    { label: t("home.footerAbout"),        href: "#sobre"         },
+    { label: t("home.footerMyAccount"),    href: "/account"       },
+  ];
   return (
     <footer className="bg-stone-950 border-t border-stone-800">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-14 pb-8">
@@ -912,24 +887,19 @@ function FooterSection() {
                               flex items-center justify-center">
                 <Icon icon={IconLeaf} size={14} className="text-emerald-400" />
               </div>
-              <span className="font-extrabold text-white tracking-tight">Horto Píncaro</span>
+              <span className="font-extrabold text-white tracking-tight">FreshMarket</span>
             </div>
             <p className="text-xs text-stone-500 leading-relaxed max-w-[200px]">
-              Hortofrutícolas frescos da região de Aveiro, entregues em sua casa com cuidado e rapidez.
+              {t("home.footerDesc")}
             </p>
           </div>
 
           {/* Nav links */}
           <div>
-            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-5">Loja</p>
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-5">{t("home.footerNav")}</p>
             <ul className="space-y-3">
-              {[
-                { label: "Ver produtos",  href: "#produtos"      },
-                { label: "Como funciona", href: "#como-funciona" },
-                { label: "Sobre nós",     href: "#sobre"         },
-                { label: "A minha conta", href: "/account"       },
-              ].map(l => (
-                <li key={l.label}>
+              {navLinks.map(l => (
+                <li key={l.href}>
                   <a href={l.href}
                     className="text-sm text-stone-500 hover:text-white transition-colors">
                     {l.label}
@@ -941,16 +911,16 @@ function FooterSection() {
 
           {/* Contact */}
           <div>
-            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-5">Contacto</p>
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-5">{t("home.footerContact")}</p>
             <ul className="space-y-3 text-sm text-stone-500">
               <li className="flex items-center gap-2">
                 <Icon icon={IconLeaf} size={12} className="text-emerald-600 flex-shrink-0" />
                 Aveiro, Portugal
               </li>
               <li>
-                <a href="mailto:geral@hortopincaro.pt"
+                <a href="mailto:geral@freshmarketprod.com"
                   className="hover:text-white transition-colors">
-                  geral@hortopincaro.pt
+                  geral@freshmarketprod.com
                 </a>
               </li>
             </ul>
@@ -959,7 +929,7 @@ function FooterSection() {
             <div className="mt-6 inline-flex items-center gap-2 bg-stone-900 rounded-lg
                             px-3 py-2 border border-stone-800">
               <Icon icon={IconCheck} size={12} className="text-emerald-500" />
-              <span className="text-xs text-stone-400">Produção 100% nacional</span>
+              <span className="text-xs text-stone-400">{t("home.footerNational")}</span>
             </div>
           </div>
         </div>
@@ -967,9 +937,17 @@ function FooterSection() {
         <div className="border-t border-stone-800 pt-6 flex flex-col sm:flex-row
                         items-center justify-between gap-2">
           <p className="text-xs text-stone-600">
-            © 2026 Horto Píncaro · Todos os direitos reservados
+            {t("home.footerCopyright")}
           </p>
-          <p className="text-xs text-stone-700">Desenvolvido por AreiasDev</p>
+          <div className="flex items-center gap-4">
+            <a href="/privacidade" className="text-xs text-stone-600 hover:text-stone-400 transition-colors">
+              {t("home.footerPrivacy")}
+            </a>
+            <a href="/termos" className="text-xs text-stone-600 hover:text-stone-400 transition-colors">
+              {t("home.footerTerms")}
+            </a>
+            <p className="text-xs text-stone-700">{t("home.footerDev")}</p>
+          </div>
         </div>
       </div>
     </footer>
@@ -978,16 +956,17 @@ function FooterSection() {
 
 // ─── Marketing Carousel ───────────────────────────────────────────────────────
 
-const CAROUSEL_SLIDES = [
-  { id: "como-funciona", label: "Como funciona" },
-  { id: "depoimentos",   label: "Depoimentos"   },
-  { id: "sobre",         label: "Sobre nós"     },
-  { id: "quinta",        label: "A nossa quinta" },
-] as const;
-
-type SlideId = typeof CAROUSEL_SLIDES[number]["id"];
+const SLIDE_IDS = ["como-funciona", "depoimentos", "sobre", "quinta"] as const;
+type SlideId = typeof SLIDE_IDS[number];
 
 function MarketingCarousel() {
+  const { t } = useTranslation();
+  const CAROUSEL_SLIDES = [
+    { id: "como-funciona" as SlideId, label: t("home.carouselHow")          },
+    { id: "depoimentos"   as SlideId, label: t("home.carouselTestimonials") },
+    { id: "sobre"         as SlideId, label: t("home.carouselAbout")        },
+    { id: "quinta"        as SlideId, label: t("home.carouselFarm")         },
+  ];
   const [active, setActive] = useState<SlideId>("como-funciona");
   const containerRef        = useRef<HTMLDivElement>(null);
   const ticking             = useRef(false);
@@ -1098,6 +1077,7 @@ function ProductCard({
   product: Product;
   onAdd: (p: Product) => void;
 }) {
+  const { t } = useTranslation();
   const [added, setAdded] = useState(false);
 
   const handleClick = () => {
@@ -1126,7 +1106,7 @@ function ProductCard({
                            bg-amber-500 text-white
                            text-[10px] font-bold px-2.5 py-0.5 rounded-full
                            uppercase tracking-wide shadow-sm">
-            Da época
+            {t("home.seasonalBadge")}
           </span>
         )}
         {/* Stock scarcity signal */}
@@ -1135,8 +1115,8 @@ function ProductCard({
                            bg-red-500/90 text-white
                            text-[10px] font-bold px-2 py-0.5 rounded-full">
             {p.unitType === 1
-              ? `${p.stockQuantity % 1 === 0 ? p.stockQuantity : p.stockQuantity.toFixed(1)} kg restantes`
-              : `Últimas ${p.stockQuantity} un.`}
+              ? t("home.kgRemaining", { count: p.stockQuantity % 1 === 0 ? p.stockQuantity : p.stockQuantity.toFixed(1) })
+              : t("home.unitsRemaining", { count: p.stockQuantity })}
           </span>
         )}
       </div>
@@ -1169,7 +1149,7 @@ function ProductCard({
                 : "bg-stone-900 hover:bg-stone-700 text-white active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
             }`}
           >
-            {added ? "✓ Adicionado" : "Adicionar"}
+            {added ? t("home.added") : t("home.addToCart")}
           </button>
         </div>
       </div>

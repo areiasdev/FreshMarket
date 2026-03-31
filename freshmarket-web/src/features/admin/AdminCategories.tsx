@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
 import axios from "axios";
 import { badge } from "../../lib/color";
+import { useAdminList } from "./useAdminList";
 
 interface CategoryDto {
   id: number;
@@ -14,38 +15,17 @@ interface CategoryDto {
 }
 
 export default function AdminCategories() {
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
-  const [total, setTotal]           = useState(0);
-  const [page, setPage]             = useState(1);
-  const [pageSize, setPageSize]     = useState(10);
-  const [loading, setLoading]       = useState(true);
+  const [page, setPage]         = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal]   = useState(false);
   const [editItem, setEditItem] = useState<CategoryDto | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", isActive: true });
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const res = await client.get(
-          endpoints.admin.categories.getAll + `?page=${page}&pageSize=${pageSize}`
-        );
-        setCategories(res.data.items ?? res.data);
-        setTotal(res.data.totalCount ?? 0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [page, pageSize]);
-
-  const reload = async () => {
-    const res = await client.get(
-      endpoints.admin.categories.getAll + `?page=${page}&pageSize=${pageSize}`
-    );
-    setCategories(res.data.items ?? res.data);
-    setTotal(res.data.totalCount ?? 0);
-  };
+  const { data: categories, total, loading, reload } = useAdminList<CategoryDto>({
+    url: endpoints.admin.categories.getAll,
+    page,
+    pageSize,
+  });
 
   const handleSubmit = async () => {
   try {

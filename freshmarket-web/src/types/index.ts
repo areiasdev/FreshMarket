@@ -6,7 +6,7 @@ export interface User {
   phone: string | null;
   address: string | null;
   postalCode: string | null;
-  role: "Customer" | "Admin";
+  role: "Customer" | "Admin" | "SuperAdmin";
 }
 
 export interface AuthResponse {

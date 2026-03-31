@@ -1,16 +1,26 @@
-O que falta fazer
+O que falta fazer (Lista)
 
-Em encomendas do cliente, a data também aparece invalida e o estado quando entregue aparece "-"
-No checkou um dos botões não selecionado tem border e outro não
-Continua a vir invalide date em todo o lado tanto admin como user
-Voltar a rever state e cache do carrinho de compras, pode estar a aparecer os produtos de outra conta
+"ver todas" button in dashboard its not working
+Na pagina das métricas quando da refresh ou muda de intervalo de tempo devia so dar refresh nos gráficos em si, a maneira como da refresh à pagina toda é estranho
+Se faz sentido o cliente ver as slots de entrega e escolher ou se é mais fácil so ser o admin ou se faz sentido de todo 
 
-Próximas Feautures:
-Criar pagina de métricas em grafico para admin:
-	- Ver por produto a que preço que mais compras teve esse mesmo produto
-	- Numero de vendas por dia, semana, mês e ano
-	- Mais ideias que possas ter
 
-Pagina do cliente:
-	- Pode ver tudo sobre a sua conta, encomendas, pedidos e assim
-Modo Light & Dark
+IMPORTANTE FAZER NO FINAL:
+ EMAIL
+ STRIPE
+ MBWAY
+ Tempos de resposta de queries gets
+ Passo de passar factura e tal para empresas que queiram comprar
+
+
+  ---
+  O que está bem feito para produção
+
+  - Arquitetura limpa e separação de concerns ✅
+  - Autenticação JWT com refresh tokens ✅
+  - Logging com Serilog (ficheiros com rotação diária) ✅
+  - Cache Redis implementado ✅
+  - Global exception handler com ProblemDetails ✅
+  - Transações nas ordens (race condition nos slots já tratada) ✅
+  - Queries otimizadas (que acabámos de corrigir) ✅
+  - Email infrastructure pronta (só falta config SMTP) ✅

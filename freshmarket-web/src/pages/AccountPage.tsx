@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Navbar from "../components/layout/Navbar";
 import StatusBadge from "../components/layout/StatusBadge";
 import { useAuth } from "../features/auth/useAuth";
@@ -53,6 +54,7 @@ const inputReadCls = "w-full border border-slate-100 rounded-lg px-3 py-2 text-s
 
 function ProfileTab() {
   const { user, updateUser } = useAuth();
+  const { t } = useTranslation();
 
   const [fullName, setFullName]     = useState(user?.fullName ?? "");
   const [phone, setPhone]           = useState(user?.phone ?? "");
@@ -71,9 +73,9 @@ function ProfileTab() {
     try {
       const res = await client.put(endpoints.users.me, { fullName, phone: phone || null, newPassword: null });
       updateUser({ fullName: res.data.fullName, phone: res.data.phone });
-      setMsg({ ok: true, text: "Perfil atualizado com sucesso." });
+      setMsg({ ok: true, text: t("account.profileSaved") });
     } catch {
-      setMsg({ ok: false, text: "Erro ao atualizar o perfil." });
+      setMsg({ ok: false, text: t("account.profileError") });
     } finally {
       setSaving(false);
     }
@@ -81,11 +83,11 @@ function ProfileTab() {
 
   const savePassword = async () => {
     if (!newPw || newPw !== confirmPw) {
-      setPwMsg({ ok: false, text: "As palavras-passe não coincidem." });
+      setPwMsg({ ok: false, text: t("account.passwordMismatch") });
       return;
     }
     if (newPw.length < 6) {
-      setPwMsg({ ok: false, text: "A palavra-passe deve ter pelo menos 6 caracteres." });
+      setPwMsg({ ok: false, text: t("account.passwordShort") });
       return;
     }
     setSavingPw(true);
@@ -97,9 +99,9 @@ function ProfileTab() {
         newPassword: newPw,
       });
       setNewPw(""); setConfirmPw("");
-      setPwMsg({ ok: true, text: "Palavra-passe alterada com sucesso." });
+      setPwMsg({ ok: true, text: t("account.passwordChanged") });
     } catch {
-      setPwMsg({ ok: false, text: "Erro ao alterar a palavra-passe." });
+      setPwMsg({ ok: false, text: t("account.passwordError") });
     } finally {
       setSavingPw(false);
     }
@@ -107,15 +109,15 @@ function ProfileTab() {
 
   return (
     <div className="space-y-5">
-      <SectionCard title="Informação pessoal">
+      <SectionCard title={t("account.personalInfo")}>
         <div className="space-y-4">
-          <Field label="Nome completo">
+          <Field label={t("account.fullName")}>
             <input className={inputCls} value={fullName} onChange={e => setFullName(e.target.value)} />
           </Field>
-          <Field label="Email">
+          <Field label={t("account.email")}>
             <input className={inputReadCls} value={user?.email ?? ""} readOnly />
           </Field>
-          <Field label="Telefone">
+          <Field label={t("account.phone")}>
             <input className={inputCls} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+351 9xx xxx xxx" />
           </Field>
 
@@ -128,24 +130,24 @@ function ProfileTab() {
             disabled={saving}
             className="btn-primary bg-emerald-700 disabled:opacity-50"
           >
-            {saving ? "A guardar..." : "Guardar alterações"}
+            {saving ? t("account.saving") : t("account.saveChanges")}
           </button>
         </div>
       </SectionCard>
 
-      <SectionCard title="Alterar palavra-passe">
+      <SectionCard title={t("account.changePassword")}>
         <div className="space-y-4">
-          <Field label="Nova palavra-passe">
+          <Field label={t("account.newPassword")}>
             <div className="relative">
               <input className={inputCls + " pr-10"} type={showNewPw ? "text" : "password"}
-                value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mínimo 6 caracteres" />
+                value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={t("account.passwordMin")} />
               <button type="button" onClick={() => setShowNewPw(v => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                 <Icon icon={showNewPw ? IconEyeOff : IconEye} size={15} />
               </button>
             </div>
           </Field>
-          <Field label="Confirmar nova palavra-passe">
+          <Field label={t("account.confirmPassword")}>
             <div className="relative">
               <input className={inputCls + " pr-10"} type={showConfirmPw ? "text" : "password"}
                 value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
@@ -165,7 +167,7 @@ function ProfileTab() {
             disabled={savingPw}
             className="btn-primary bg-emerald-700 disabled:opacity-50"
           >
-            {savingPw ? "A alterar..." : "Alterar palavra-passe"}
+            {savingPw ? t("account.changing") : t("account.changePasswordBtn")}
           </button>
         </div>
       </SectionCard>
@@ -179,6 +181,7 @@ const EMPTY_FORM = { label: "", street: "", postalCode: "", city: "", country: "
 
 function AddressesTab() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [addresses, setAddresses] = useState<AddressDto[]>([]);
   const [loading, setLoading]     = useState(true);
   const [editing, setEditing]     = useState<AddressDto | null>(null);
@@ -249,43 +252,43 @@ function AddressesTab() {
     await load();
   };
 
-  if (loading) return <p className="text-sm text-slate-400 py-8 text-center">A carregar moradas...</p>;
+  if (loading) return <p className="text-sm text-slate-400 py-8 text-center">{t("account.loadingAddresses")}</p>;
 
   return (
     <div className="space-y-4">
       {!adding && (
         <div className="flex justify-end">
-          <button onClick={openAdd} className="btn-primary bg-emerald-700 text-sm">+ Nova morada</button>
+          <button onClick={openAdd} className="btn-primary bg-emerald-700 text-sm">{t("account.newAddress")}</button>
         </div>
       )}
 
       {adding && (
-        <SectionCard title={editing ? "Editar morada" : "Nova morada"}>
+        <SectionCard title={editing ? t("account.editAddress") : t("account.addAddressTitle")}>
           <div className="space-y-3">
-            <Field label="Etiqueta (ex: Casa, Trabalho)">
+            <Field label={t("account.addressLabel")}>
               <input className={inputCls} value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="Casa" />
             </Field>
-            <Field label="Rua / Morada">
+            <Field label={t("account.street")}>
               <input className={inputCls} value={form.street} onChange={e => setForm(f => ({ ...f, street: e.target.value }))} placeholder="Rua das Flores, 12" />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Código postal">
+              <Field label={t("account.postalCode")}>
                 <input className={inputCls} value={form.postalCode} onChange={e => setForm(f => ({ ...f, postalCode: e.target.value }))} placeholder="3750-000" />
               </Field>
-              <Field label="Cidade">
+              <Field label={t("account.city")}>
                 <input className={inputCls} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Aveiro" />
               </Field>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
               <input type="checkbox" checked={form.isDefault} onChange={e => setForm(f => ({ ...f, isDefault: e.target.checked }))} className="rounded" />
-              Definir como morada predefinida
+              {t("account.setDefault")}
             </label>
             <div className="flex gap-2 pt-1">
               <button onClick={save} disabled={saving} className="btn-primary bg-emerald-700 disabled:opacity-50">
-                {saving ? "A guardar..." : "Guardar"}
+                {saving ? t("account.saving") : t("account.save")}
               </button>
               <button onClick={closeForm} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-lg transition-colors dark:text-slate-400 dark:border-slate-600 dark:hover:text-slate-200">
-                Cancelar
+                {t("account.cancel")}
               </button>
             </div>
           </div>
@@ -294,8 +297,8 @@ function AddressesTab() {
 
       {addresses.length === 0 && !adding ? (
         <div className="card py-14 text-center">
-          <p className="text-sm text-slate-400">Ainda não tens moradas guardadas.</p>
-          <button onClick={openAdd} className="mt-4 btn-primary bg-emerald-700 text-sm">Adicionar morada</button>
+          <p className="text-sm text-slate-400">{t("account.noAddresses")}</p>
+          <button onClick={openAdd} className="mt-4 btn-primary bg-emerald-700 text-sm">{t("account.addAddressBtn")}</button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -303,8 +306,8 @@ function AddressesTab() {
             <div key={a.id} className={`card p-4 flex items-start justify-between gap-4 dark:border-slate-700 ${a.isDefault ? "ring-1 ring-emerald-500" : ""}`}>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{a.label || "Sem etiqueta"}</p>
-                  {a.isDefault && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">Predefinida</span>}
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{a.label || t("account.noLabel")}</p>
+                  {a.isDefault && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">{t("account.default")}</span>}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{a.street}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{a.postalCode} {a.city} · {a.country}</p>
@@ -312,34 +315,34 @@ function AddressesTab() {
               <div className="flex gap-2 flex-shrink-0 items-center">
                 {confirmDelete === a.id ? (
                   <>
-                    <span className="text-xs text-slate-500">Tens a certeza?</span>
+                    <span className="text-xs text-slate-500">{t("account.confirmDelete")}</span>
                     <button
                       onClick={() => remove(a.id)}
                       disabled={deleting === a.id}
                       className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors disabled:opacity-50"
                     >
-                      {deleting === a.id ? "..." : "Sim"}
+                      {deleting === a.id ? "..." : t("account.yes")}
                     </button>
                     <button
                       onClick={() => setConfirmDelete(null)}
                       className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
                     >
-                      Não
+                      {t("account.no")}
                     </button>
                   </>
                 ) : (
                   <>
                     {!a.isDefault && (
                       <button onClick={() => setDefault(a.id)} className="text-xs text-slate-400 hover:text-emerald-700 transition-colors">
-                        Predefinir
+                        {t("account.makeDefault")}
                       </button>
                     )}
-                    <button onClick={() => openEdit(a)} className="text-xs text-blue-500 hover:text-blue-700 transition-colors">Editar</button>
+                    <button onClick={() => openEdit(a)} className="text-xs text-blue-500 hover:text-blue-700 transition-colors">{t("account.edit")}</button>
                     <button
                       onClick={() => setConfirmDelete(a.id)}
                       className="text-xs text-red-400 hover:text-red-600 transition-colors"
                     >
-                      Remover
+                      {t("account.remove")}
                     </button>
                   </>
                 )}
@@ -358,6 +361,8 @@ function OrdersTab() {
   const [orders, setOrders] = useState<OrderSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
 
   useEffect(() => {
     client.get(endpoints.orders.my)
@@ -365,12 +370,12 @@ function OrdersTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-slate-400 py-8 text-center">A carregar encomendas...</p>;
+  if (loading) return <p className="text-sm text-slate-400 py-8 text-center">{t("account.loadingOrders")}</p>;
 
   if (orders.length === 0) return (
     <div className="card py-14 text-center">
-      <p className="text-sm text-slate-400">Ainda não fizeste nenhuma encomenda.</p>
-      <button onClick={() => navigate("/")} className="mt-4 btn-primary bg-emerald-700 text-sm">Ir para a loja</button>
+      <p className="text-sm text-slate-400">{t("account.noOrdersYet")}</p>
+      <button onClick={() => navigate("/")} className="mt-4 btn-primary bg-emerald-700 text-sm">{t("orders.goToStore")}</button>
     </div>
   );
 
@@ -378,10 +383,10 @@ function OrdersTab() {
     <div className="card overflow-hidden">
       <div className="grid grid-cols-[56px_1fr_88px_100px_72px] gap-3 px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-50 border-b border-slate-100 dark:bg-slate-800 dark:border-slate-700">
         <span>#</span>
-        <span>Data</span>
-        <span className="text-right">Total</span>
-        <span>Estado</span>
-        <span className="text-right">Entrega</span>
+        <span>{t("orders.date")}</span>
+        <span className="text-right">{t("orders.total")}</span>
+        <span>{t("orders.status")}</span>
+        <span className="text-right">{t("orders.delivery")}</span>
       </div>
       <div className="divide-y divide-slate-50 dark:divide-slate-700">
         {orders.map(o => (
@@ -393,17 +398,17 @@ function OrdersTab() {
             <span className="text-xs font-mono text-slate-400">#{o.id}</span>
             <div>
               <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                {parseDateTime(o.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {parseDateTime(o.createdAt)?.toLocaleString(locale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">{o.itemCount} {o.itemCount === 1 ? "produto" : "produtos"}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{o.itemCount} {t("account.product", { count: o.itemCount })}</p>
             </div>
             <span className="text-sm font-bold text-emerald-700 text-right tabular">{o.totalAmount.toFixed(2)}€</span>
             <StatusBadge status={o.status} />
             <span className="text-xs text-slate-400 text-right tabular">
               {o.deliverySlot?.deliveryDate
-                ? parseDateOnly(o.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
+                ? parseDateOnly(o.deliverySlot.deliveryDate)?.toLocaleDateString(locale, { day: "numeric", month: "short" })
                 : o.preferredDeliveryDate
-                ? parseDateOnly(o.preferredDeliveryDate)?.toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
+                ? parseDateOnly(o.preferredDeliveryDate)?.toLocaleDateString(locale, { day: "numeric", month: "short" })
                 : "—"}
             </span>
           </button>
@@ -415,16 +420,17 @@ function OrdersTab() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "profile",   label: "Perfil"     },
-  { key: "addresses", label: "Moradas"    },
-  { key: "orders",    label: "Encomendas" },
-];
-
 export default function AccountPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("profile");
+  const { t } = useTranslation();
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "profile",   label: t("account.tabProfile")   },
+    { key: "addresses", label: t("account.tabAddresses") },
+    { key: "orders",    label: t("account.tabOrders")    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -435,30 +441,30 @@ export default function AccountPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">A minha conta</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{t("account.title")}</h1>
             <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
           </div>
           <button
             onClick={() => { logout(); navigate("/"); }}
             className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors border border-red-100 hover:border-red-200 px-3 py-1.5 rounded-lg dark:border-red-900/40"
           >
-            Terminar sessão
+            {t("account.signOut")}
           </button>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-0.5 border-b border-slate-200 dark:border-slate-700 mb-6">
-          {TABS.map(t => (
+          {TABS.map(t2 => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={t2.key}
+              onClick={() => setTab(t2.key)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                tab === t.key
+                tab === t2.key
                   ? "border-emerald-700 text-emerald-700"
                   : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
               }`}
             >
-              {t.label}
+              {t2.label}
             </button>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import type { OrderDto } from "../types";
@@ -39,6 +40,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
 interface ProductReview { productId: number; rating: number; comment: string; submitted: boolean; }
 
 function ReviewSection({ items }: { items: OrderDto["items"] }) {
+  const { t } = useTranslation();
   const [reviews, setReviews] = useState<Record<number, ProductReview>>(() =>
     Object.fromEntries(items.map(i => [i.productId, { productId: i.productId, rating: 0, comment: "", submitted: false }]))
   );
@@ -60,7 +62,7 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
 
   return (
     <div className="card overflow-hidden">
-      <div className="card-header">Avaliar produtos</div>
+      <div className="card-header">{t("orderDetail.reviewTitle")}</div>
       <div className="divide-y divide-slate-100 dark:divide-slate-700">
         {items.map(item => {
           const r = reviews[item.productId];
@@ -69,7 +71,7 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
               <p className="text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">{item.productName}</p>
               {r.submitted ? (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <Icon icon={IconCheck} size={13} /> Obrigado pela tua avaliação!
+                  <Icon icon={IconCheck} size={13} /> {t("orderDetail.reviewThankYou")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -78,7 +80,7 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
                     <>
                       <textarea
                         rows={2}
-                        placeholder="Comentário opcional..."
+                        placeholder={t("orderDetail.reviewPlaceholder")}
                         value={r.comment}
                         onChange={e => setReviews(prev => ({ ...prev, [item.productId]: { ...prev[item.productId], comment: e.target.value } }))}
                         className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400"
@@ -88,7 +90,7 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
                         disabled={saving === item.productId}
                         className="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                       >
-                        {saving === item.productId ? "A guardar..." : "Enviar avaliação"}
+                        {saving === item.productId ? t("orderDetail.reviewSaving") : t("orderDetail.reviewSubmit")}
                       </button>
                     </>
                   )}
@@ -104,24 +106,6 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Upfront-payment orders: Paid is second (normal progression)
-const TIMELINE_UPFRONT = [
-  { status: 0, label: "Pendente"   },
-  { status: 1, label: "Pago"       },
-  { status: 2, label: "Em preparo" },
-  { status: 3, label: "Enviado"    },
-  { status: 4, label: "Entregue"   },
-];
-
-// Cash-on-delivery orders: Paid happens last, after delivery
-const TIMELINE_CASH = [
-  { status: 0, label: "Pendente"   },
-  { status: 2, label: "Em preparo" },
-  { status: 3, label: "Enviado"    },
-  { status: 4, label: "Entregue"   },
-  { status: 1, label: "Pago"       },
-];
-
 export default function OrderDetailPage() {
   const { id }    = useParams<{ id: string }>();
   const [order, setOrder]         = useState<OrderDto | null>(null);
@@ -131,6 +115,13 @@ export default function OrderDetailPage() {
   const paymentFailed = searchParams.get("payment") === "failed";
   const orderConfirmed = searchParams.get("confirmed") === "true";
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
+
+  // Timelines built here so labels react to language changes
+  const statusLabel = (s: number) => t(`orderStatus.${s}`);
+  const TIMELINE_UPFRONT = [0, 1, 2, 3, 4].map(s => ({ status: s, label: statusLabel(s) }));
+  const TIMELINE_CASH    = [0, 2, 3, 4, 1].map(s => ({ status: s, label: statusLabel(s) }));
 
   useEffect(() => {
     client.get(endpoints.orders.getById(Number(id)))
@@ -139,7 +130,7 @@ export default function OrderDetailPage() {
   }, [id]);
 
   const handleCancel = async () => {
-    if (!order || !confirm("Tens a certeza?")) return;
+    if (!order || !confirm(t("orderDetail.cancelConfirm"))) return;
     setCancelling(true);
     try {
       await client.put(endpoints.orders.cancel(order.id));
@@ -150,14 +141,14 @@ export default function OrderDetailPage() {
   if (loading) return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
-      <p className="text-center py-20 text-sm text-slate-400">A carregar...</p>
+      <p className="text-center py-20 text-sm text-slate-400">{t("orderDetail.loading")}</p>
     </div>
   );
 
   if (!order) return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
-      <p className="text-center py-20 text-sm text-slate-400">Encomenda não encontrada.</p>
+      <p className="text-center py-20 text-sm text-slate-400">{t("orderDetail.notFound")}</p>
     </div>
   );
 
@@ -173,8 +164,8 @@ export default function OrderDetailPage() {
 
       <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8">
         <Breadcrumb items={[
-          { label: "Encomendas", path: "/orders" },
-          { label: `Encomenda #${order.id}` },
+          { label: t("orderDetail.breadcrumbOrders"), path: "/orders" },
+          { label: t("orderDetail.breadcrumbOrder", { id: order.id }) },
         ]} />
 
         {orderConfirmed && (
@@ -183,8 +174,8 @@ export default function OrderDetailPage() {
               <Icon icon={IconCheck} size={14} className="text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Encomenda realizada com sucesso!</p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Obrigado pela tua compra. Receberás uma confirmação em breve.</p>
+              <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{t("orderDetail.confirmedTitle")}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">{t("orderDetail.confirmedDesc")}</p>
             </div>
           </div>
         )}
@@ -192,10 +183,10 @@ export default function OrderDetailPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-1">
-              Encomenda #{order.id}
+              {t("orderDetail.title", { id: order.id })}
             </h1>
             <p className="text-xs text-slate-400">
-              {parseDateTime(order.createdAt)?.toLocaleDateString("pt-PT", {
+              {parseDateTime(order.createdAt)?.toLocaleDateString(locale, {
                 day: "numeric", month: "long", year: "numeric",
                 hour: "2-digit", minute: "2-digit",
               })}
@@ -209,7 +200,7 @@ export default function OrderDetailPage() {
 
             {order.status !== 5 && (
               <div className="card overflow-hidden">
-                <div className="card-header">Estado</div>
+                <div className="card-header">{t("orderDetail.sectionStatus")}</div>
                 <div className="px-5 py-5">
                   <div className="flex items-start gap-0">
                     {timeline.map((t, idx) => {
@@ -244,7 +235,7 @@ export default function OrderDetailPage() {
             )}
 
             <div className="card overflow-hidden">
-              <div className="card-header">Produtos</div>
+              <div className="card-header">{t("orderDetail.sectionProducts")}</div>
               <div className="divide-y divide-slate-50 dark:divide-slate-700">
                 {order.items.map(item => (
                   <div key={item.productId} className="flex justify-between items-center px-5 py-3.5">
@@ -264,15 +255,15 @@ export default function OrderDetailPage() {
 
               <div className="px-5 py-4 space-y-2 bg-slate-50 border-t border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Subtotal</span>
+                  <span>{t("orderDetail.subtotal")}</span>
                   <span className="tabular">{(order.totalAmount - order.shippingFee).toFixed(2)}€</span>
                 </div>
                 <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Envio</span>
+                  <span>{t("orderDetail.shipping")}</span>
                   <span className="tabular">{order.shippingFee.toFixed(2)}€</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-600">
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Total</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{t("orderDetail.total")}</span>
                   <span className="text-sm font-bold text-emerald-700 tabular">{order.totalAmount.toFixed(2)}€</span>
                 </div>
               </div>
@@ -281,7 +272,7 @@ export default function OrderDetailPage() {
 
           <div className="space-y-4 md:sticky md:top-20">
             <div className="card overflow-hidden">
-              <div className="card-header">Entrega</div>
+              <div className="card-header">{t("orderDetail.sectionDelivery")}</div>
               <div className="px-5 py-4 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <p className="font-medium text-slate-800 dark:text-slate-100">{order.deliveryStreet}, {order.deliveryCity}</p>
                 <p className="text-xs text-slate-400 font-mono">{order.deliveryPostalCode}</p>
@@ -289,7 +280,7 @@ export default function OrderDetailPage() {
                   <>
                     <p className="text-xs text-slate-500 flex items-center gap-1.5">
                       <Icon icon={IconCalendar} size={12} />
-                      {parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT", {
+                      {parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString(locale, {
                         weekday: "long", day: "numeric", month: "long",
                       })}
                     </p>
@@ -303,7 +294,7 @@ export default function OrderDetailPage() {
                   <div className="border-t border-slate-100 dark:border-slate-700 pt-2 mt-2">
                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 flex items-start gap-1.5 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
                       <Icon icon={IconCalendar} size={12} className="mt-0.5 flex-shrink-0" />
-                      <span>Entrega estimada até <strong>{format72hEstimate()}</strong>. Entraremos em contacto para confirmar.</span>
+                      <span dangerouslySetInnerHTML={{ __html: t("orderDetail.estimatedDelivery", { date: format72hEstimate() }) }} />
                     </p>
                   </div>
                 )}
@@ -318,10 +309,10 @@ export default function OrderDetailPage() {
 
             {order.paymentMethod != null && (
               <div className="card overflow-hidden">
-                <div className="card-header">Pagamento</div>
+                <div className="card-header">{t("orderDetail.sectionPayment")}</div>
                 <div className="px-5 py-4">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {({ 0: "Pagar na entrega", 1: "Cartão de crédito", 2: "MB Way", 3: "Transferência bancária" } as Record<number, string>)[Number(order.paymentMethod)] ?? "—"}
+                    {order.paymentMethod != null ? (t(`paymentMethod.${order.paymentMethod}`) ?? "—") : "—"}
                   </p>
                 </div>
               </div>
@@ -329,9 +320,9 @@ export default function OrderDetailPage() {
 
             {paymentFailed && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
-                ⚠️ O pagamento não foi processado. A encomenda está pendente — tenta pagar novamente ou escolhe outro método.
+                ⚠️ {t("orderDetail.paymentFailed")}
                 <button onClick={() => navigate("/checkout")} className="ml-2 font-semibold underline">
-                  Tentar novamente
+                  {t("orderDetail.retryPayment")}
                 </button>
               </div>
             )}
@@ -339,7 +330,7 @@ export default function OrderDetailPage() {
             {canCancel && (
               <button onClick={handleCancel} disabled={cancelling}
                 className="btn-danger w-full justify-center disabled:opacity-50">
-                {cancelling ? "A cancelar..." : "Cancelar encomenda"}
+                {cancelling ? t("orderDetail.cancelling") : t("orderDetail.cancelOrder")}
               </button>
             )}
           </div>

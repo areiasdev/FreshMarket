@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../auth/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminProducts from "./AdminProducts";
 import AdminCategories from "./AdminCategories";
 import AdminOrders from "./AdminOrders";
@@ -33,9 +33,14 @@ const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
 ];
 
 export default function AdminPage() {
-  const [active, setActive] = useState<Section>("metrics");
-  const { user, logout }    = useAuth();
-  const navigate            = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user, logout } = useAuth();
+  const navigate         = useNavigate();
+
+  const [active, setActive] = useState<Section>(() => {
+    const s = searchParams.get("section") as Section;
+    return NAV_ITEMS.some(n => n.key === s) ? s : "dashboard";
+  });
 
   const [dark, setDark] = useState<boolean>(() => {
     return localStorage.getItem("admin-theme") === "dark";
@@ -44,6 +49,11 @@ export default function AdminPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const s = searchParams.get("section") as Section;
+    if (s && NAV_ITEMS.some(n => n.key === s)) setActive(s);
+  }, [searchParams]);
 
   useEffect(() => {
     localStorage.setItem("admin-theme", dark ? "dark" : "light");
@@ -94,7 +104,7 @@ export default function AdminPage() {
         <div className={`p-5 border-b ${dark ? "border-slate-700" : "border-gray-200"}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <IconLeaf size={20} className={dark ? "text-green-400" : "text-green-600"} />
-            <span className={`font-bold text-lg ${dark ? "text-green-400" : "text-green-700"}`}>Horto Píncaro</span>
+            <span className={`font-bold text-lg ${dark ? "text-green-400" : "text-green-700"}`}>FreshMarket</span>
           </div>
           <p className={`text-xs mt-1 ${dark ? "text-slate-500" : "text-gray-400"}`}>Painel de Administração</p>
         </div>

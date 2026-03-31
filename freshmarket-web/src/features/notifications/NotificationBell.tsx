@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Icon from "../../components/ui/Icon";
 import {
   IconBell,
@@ -37,6 +38,8 @@ function NotificationItem({
   onRead: (id: number) => void;
 }) {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
   const meta = TYPE_META[notification.type] ?? { icon: IconBell, bg: "bg-slate-100", iconColor: "text-slate-500" };
 
   const handleClick = () => {
@@ -62,7 +65,7 @@ function NotificationItem({
           {notification.message}
         </p>
         <p className="text-[10px] text-slate-400 mt-1">
-          {parseDateTime(notification.createdAt)?.toLocaleString("pt-PT", {
+          {parseDateTime(notification.createdAt)?.toLocaleString(locale, {
             day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
           })}
         </p>
@@ -79,6 +82,7 @@ export default function NotificationBell() {
     notifications, unreadCount, open, loading,
     setOpen, handleOpen, markAsRead, markAllAsRead,
   } = useNotifications();
+  const { t } = useTranslation();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -98,7 +102,7 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={open ? () => setOpen(false) : handleOpen}
-        aria-label="Notificações"
+        aria-label={t("notifications.ariaLabel")}
         className="relative flex items-center justify-center w-9 h-9 rounded-md text-emerald-300 hover:bg-emerald-800/60 hover:text-white transition-colors"
       >
         <Icon icon={IconBell} size={18} />
@@ -113,13 +117,13 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-800">Notificações</h3>
+            <h3 className="text-sm font-semibold text-slate-800">{t("notifications.title")}</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 className="text-xs text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
               >
-                Marcar todas como lidas
+                {t("notifications.markAllRead")}
               </button>
             )}
           </div>
@@ -127,11 +131,11 @@ export default function NotificationBell() {
           {/* Lista */}
           <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-50">
             {loading ? (
-              <p className="text-sm text-slate-400 text-center py-8">A carregar...</p>
+              <p className="text-sm text-slate-400 text-center py-8">{t("notifications.loading")}</p>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
                 <Icon icon={IconBell} size={28} className="text-slate-300" />
-                <p className="text-sm text-slate-400">Sem notificações</p>
+                <p className="text-sm text-slate-400">{t("notifications.empty")}</p>
               </div>
             ) : (
               notifications.map(n => (

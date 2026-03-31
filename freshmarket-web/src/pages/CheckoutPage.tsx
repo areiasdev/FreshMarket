@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
@@ -43,12 +44,14 @@ interface AvailableSlot {
 
 type Step = "address" | "payment";
 
-const STEPS = [
-  { key: "address" as Step, label: "Morada" },
-  { key: "payment" as Step, label: "Pagamento" },
-];
+const STEP_KEYS: Step[] = ["address", "payment"];
 
 function StepIndicator({ current }: { current: Step }) {
+  const { t } = useTranslation();
+  const STEPS = [
+    { key: "address" as Step, label: t("checkout.stepAddress") },
+    { key: "payment" as Step, label: t("checkout.stepPayment") },
+  ];
   const idx = STEPS.findIndex(s => s.key === current);
   return (
     <div className="flex items-center gap-2 mb-7">
@@ -69,7 +72,7 @@ function StepIndicator({ current }: { current: Step }) {
                 {s.label}
               </span>
             </div>
-            {i < STEPS.length - 1 && (
+            {i < STEP_KEYS.length - 1 && (
               <div className={`w-10 h-px ${done ? "bg-emerald-400" : "bg-slate-200"}`} />
             )}
           </div>
@@ -83,6 +86,8 @@ export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
 
   const [step, setStep]   = useState<Step>("address");
   const [form, setForm]   = useState({ deliveryAddress: "", deliveryPostalCode: "", preferredDate: "", notes: "" });
@@ -172,10 +177,10 @@ export default function CheckoutPage() {
 
   const validateAddress = async () => {
     setAddressError(""); setPostalWarning("");
-    if (!form.deliveryAddress.trim()) { setAddressError("Insere a morada."); return; }
-    if (!form.deliveryPostalCode.trim()) { setAddressError("Insere o código postal."); return; }
+    if (!form.deliveryAddress.trim()) { setAddressError(t("checkout.addressError")); return; }
+    if (!form.deliveryPostalCode.trim()) { setAddressError(t("checkout.postalError")); return; }
     if (!/^\d{4}-\d{3}$/.test(form.deliveryPostalCode)) {
-      setAddressError("Código postal inválido (ex: 3750-123)");
+      setAddressError(t("checkout.postalInvalid"));
       return;
     }
     try {
@@ -225,7 +230,7 @@ export default function CheckoutPage() {
       if (payRes.data.redirectUrl) { window.location.href = payRes.data.redirectUrl; return; }
       navigate(`/orders/${order.id}?confirmed=true`);
     } catch {
-      setOrderError("Erro ao finalizar encomenda. Por favor tenta novamente.");
+      setOrderError(t("checkout.orderError"));
     } finally { setSubmitting(false); }
   };
 
@@ -235,9 +240,9 @@ export default function CheckoutPage() {
 
       <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8">
         <Breadcrumb items={[
-          { label: "Loja", path: "/" },
-          { label: "Carrinho", path: "/cart" },
-          { label: "Checkout" },
+          { label: t("checkout.breadcrumbStore"), path: "/" },
+          { label: t("checkout.breadcrumbCart"), path: "/cart" },
+          { label: t("checkout.breadcrumbCheckout") },
         ]} />
 
         <StepIndicator current={step} />
@@ -246,12 +251,12 @@ export default function CheckoutPage() {
           <div className="space-y-4">
             {step === "address" && (
               <div className="card overflow-hidden">
-                <div className="card-header">Morada de entrega</div>
+                <div className="card-header">{t("checkout.deliveryAddress")}</div>
                 <div className="p-5 space-y-4">
 
                   {savedAddresses.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">As tuas moradas guardadas</p>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{t("account.savedAddresses")}</p>
                       <div className="space-y-2">
                         {savedAddresses.map(a => (
                           <button
@@ -266,7 +271,7 @@ export default function CheckoutPage() {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-medium">{a.label || a.street}</span>
-                              {a.isDefault && <span className="text-[10px] font-bold uppercase text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Predefinida</span>}
+                              {a.isDefault && <span className="text-[10px] font-bold uppercase text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">{t("checkout.defaultAddr")}</span>}
                             </div>
                             <p className="text-xs text-slate-400 mt-0.5">{a.street} · {a.postalCode} {a.city}</p>
                           </button>
@@ -274,30 +279,30 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex items-center gap-2 my-4">
                         <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
-                        <span className="text-xs text-slate-400">ou introduz manualmente</span>
+                        <span className="text-xs text-slate-400">{t("account.orManual")}</span>
                         <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
                       </div>
                     </div>
                   )}
 
                   <div>
-                    <label className="label">Morada</label>
-                    <input className="input" placeholder="Rua, número, andar..."
+                    <label className="label">{t("checkout.address")}</label>
+                    <input className="input" placeholder={t("checkout.addressPlaceholder")}
                       value={form.deliveryAddress}
                       onChange={e => setForm({ ...form, deliveryAddress: e.target.value })} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="label">Código Postal</label>
+                      <label className="label">{t("checkout.postalCode")}</label>
                       <input className="input font-mono" placeholder="3750-123" maxLength={8}
                         value={form.deliveryPostalCode}
                         onChange={e => setForm({ ...form, deliveryPostalCode: e.target.value })} />
                     </div>
                     <div>
                       <label className="label">
-                        Data preferida
-                        <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">— opcional</span>
+                        {t("checkout.preferredDate")}
+                        <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">{t("checkout.optional")}</span>
                       </label>
                       <input type="date" className="input"
                         min={new Date().toISOString().split("T")[0]}
@@ -309,7 +314,7 @@ export default function CheckoutPage() {
                   {/* Shipping speed selector */}
                   <div>
                     <label className="label flex items-center gap-1.5">
-                      <Icon icon={IconTruck} size={12} /> Velocidade de entrega
+                      <Icon icon={IconTruck} size={12} /> {t("checkout.deliverySpeed")}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {shippingOptions.map(s => (
@@ -334,12 +339,12 @@ export default function CheckoutPage() {
                   {/* Delivery slot picker */}
                   {loadingSlots && (
                     <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                      <Icon icon={IconClock} size={12} /> A carregar horários disponíveis...
+                      <Icon icon={IconClock} size={12} /> {t("checkout.loadingSlots")}
                     </p>
                   )}
                   {!loadingSlots && availableSlots.length > 0 && (
                     <div>
-                      <label className="label">Horário de entrega</label>
+                      <label className="label">{t("checkout.deliverySlot")}</label>
                       <div className="space-y-2">
                         {availableSlots.map(s => (
                           <button
@@ -354,12 +359,12 @@ export default function CheckoutPage() {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-medium">
-                                {parseDateOnly(s.deliveryDate)?.toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" })}
+                                {parseDateOnly(s.deliveryDate)?.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" })}
                                 {" · "}{s.startTime}–{s.endTime}
                               </span>
                             </div>
                             {s.availableSpots !== undefined && (
-                              <p className="text-xs text-slate-400 mt-0.5">{s.availableSpots} vagas disponíveis</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{t("checkout.spots", { n: s.availableSpots })}</p>
                             )}
                           </button>
                         ))}
@@ -368,17 +373,17 @@ export default function CheckoutPage() {
                   )}
                   {!loadingSlots && form.preferredDate && /^\d{4}-\d{3}$/.test(form.deliveryPostalCode) && availableSlots.length === 0 && (
                     <p className="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700">
-                      Sem horários disponíveis para esta data. Escolhe outra data ou prossegue sem horário específico.
+                      {t("checkout.noSlots")}
                     </p>
                   )}
 
                   <div>
                     <label className="label">
-                      Notas
-                      <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">— opcional</span>
+                      {t("checkout.notes")}
+                      <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">{t("checkout.optional")}</span>
                     </label>
                     <textarea className="input resize-none" rows={2}
-                      placeholder="Ex: deixar na portaria, campainha avariada..."
+                      placeholder={t("checkout.notesPlaceholder")}
                       value={form.notes}
                       onChange={e => setForm({ ...form, notes: e.target.value })} />
                   </div>
@@ -397,10 +402,10 @@ export default function CheckoutPage() {
 
                   <div className="flex justify-end gap-2 pt-1">
                     <button onClick={() => navigate("/cart")} className="btn-secondary flex items-center gap-1.5">
-                      <Icon icon={IconArrowLeft} size={14} /> Voltar
+                      <Icon icon={IconArrowLeft} size={14} /> {t("checkout.back")}
                     </button>
                     <button onClick={validateAddress} className="btn-primary bg-emerald-700 flex items-center gap-1.5">
-                      Continuar <Icon icon={IconArrowRight} size={14} />
+                      {t("checkout.continue")} <Icon icon={IconArrowRight} size={14} />
                     </button>
                   </div>
                 </div>
@@ -411,10 +416,10 @@ export default function CheckoutPage() {
               <>
                 <div className="card overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entrega</span>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("checkout.delivery")}</span>
                     <button onClick={() => setStep("address")}
                       className="text-xs text-emerald-700 hover:text-emerald-900 font-medium transition-colors">
-                      Editar
+                      {t("checkout.edit")}
                     </button>
                   </div>
                   <div className="px-5 py-4 text-sm text-slate-600 dark:text-slate-400 space-y-1">
@@ -423,22 +428,20 @@ export default function CheckoutPage() {
                     {selectedSlot && (
                       <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
                         <Icon icon={IconCalendar} size={12} />
-                        {parseDateOnly(selectedSlot.deliveryDate)?.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
+                        {parseDateOnly(selectedSlot.deliveryDate)?.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" })}
                         {" · "}{selectedSlot.startTime}–{selectedSlot.endTime}
                       </p>
                     )}
                     {!selectedSlot && form.preferredDate && (
                       <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1.5">
                         <Icon icon={IconCalendar} size={12} />
-                        Data preferida: {parseDateOnly(form.preferredDate)?.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
+                        {t("checkout.preferredDateLabel", { date: parseDateOnly(form.preferredDate)?.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" }) })}
                       </p>
                     )}
                     {!selectedSlot && !form.preferredDate && (
                       <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-start gap-1.5 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400">
                         <Icon icon={IconCalendar} size={12} className="mt-0.5 flex-shrink-0" />
-                        <span>
-                          Sem data de entrega escolhida. Estimamos a entrega até <strong>{format72hEstimate()}</strong> (72h úteis).
-                        </span>
+                        <span dangerouslySetInnerHTML={{ __html: t("checkout.noDate", { date: format72hEstimate() }) }} />
                       </div>
                     )}
                     {form.notes && (
@@ -451,7 +454,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="card overflow-hidden">
-                  <div className="card-header">Método de Pagamento</div>
+                  <div className="card-header">{t("checkout.paymentMethod")}</div>
                   <div className="p-5">
                     <PaymentSelector value={paymentMethod} onChange={setPaymentMethod} />
                   </div>
@@ -461,7 +464,7 @@ export default function CheckoutPage() {
                   <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 dark:bg-red-900/20 dark:border-red-800">
                     <Icon icon={IconAlertTriangle} size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-red-700">Não foi possível concluir</p>
+                      <p className="text-sm font-semibold text-red-700">{t("checkout.couldNotComplete")}</p>
                       <p className="text-xs text-red-500 mt-0.5">{orderError}</p>
                     </div>
                     <button
@@ -475,11 +478,11 @@ export default function CheckoutPage() {
 
                 <div className="flex gap-2">
                   <button onClick={() => setStep("address")} className="btn-secondary flex-1 justify-center flex items-center gap-1.5">
-                    <Icon icon={IconArrowLeft} size={14} /> Voltar
+                    <Icon icon={IconArrowLeft} size={14} /> {t("checkout.back")}
                   </button>
                   <button onClick={handlePlaceOrder} disabled={submitting}
                     className="btn-primary flex-[2] justify-center bg-amber-500 hover:bg-amber-400 font-bold disabled:opacity-50">
-                    {submitting ? "A processar..." : `Pagar ${total.toFixed(2)}€`}
+                    {submitting ? t("checkout.processing") : t("checkout.pay", { amount: total.toFixed(2) })}
                   </button>
                 </div>
               </>
@@ -488,7 +491,7 @@ export default function CheckoutPage() {
 
           <div className="card overflow-hidden md:sticky md:top-20">
             <div className="card-header">
-              Resumo · <span className="tabular">{items.length} {items.length === 1 ? "produto" : "produtos"}</span>
+              {t("checkout.summary")} · <span className="tabular">{items.length} {t("checkout.product", { count: items.length })}</span>
             </div>
             <div className="divide-y divide-slate-50 dark:divide-slate-700">
               {items.map(item => (
@@ -507,15 +510,15 @@ export default function CheckoutPage() {
             </div>
             <div className="px-4 py-4 space-y-2 border-t border-slate-100 dark:border-slate-700">
               <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Subtotal</span>
+                <span>{t("checkout.subtotal")}</span>
                 <span className="tabular">{totalAmount.toFixed(2)}€</span>
               </div>
               <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Envio{selectedSlot && <span className="ml-1 text-slate-400">({selectedSlot.startTime}–{selectedSlot.endTime})</span>}</span>
+                <span>{t("checkout.shippingFee")}{selectedSlot && <span className="ml-1 text-slate-400">({selectedSlot.startTime}–{selectedSlot.endTime})</span>}</span>
                 <span className="tabular">{shippingFee.toFixed(2)}€</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
-                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Total</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{t("checkout.total")}</span>
                 <span className="text-sm font-bold text-emerald-700 tabular">{total.toFixed(2)}€</span>
               </div>
             </div>

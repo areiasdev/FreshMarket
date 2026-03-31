@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import {
@@ -98,7 +98,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export default function DashboardOverview() {
   const [stats, setStats]   = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate            = useNavigate();
+  const [, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     client.get(endpoints.admin.dashboard)
@@ -164,7 +164,7 @@ export default function DashboardOverview() {
           </div>
           {stats.productsLowStock > 0 && (
             <button
-              onClick={() => navigate("/admin?section=products")}
+              onClick={() => setSearchParams({ section: "products" })}
               className="mt-2 text-xs text-amber-600 hover:text-amber-800 font-medium transition-colors"
             >
               Ver produtos com stock baixo →
@@ -187,7 +187,7 @@ export default function DashboardOverview() {
         <div className="flex items-center justify-between mb-3">
           <SectionTitle>Últimas encomendas</SectionTitle>
           <button
-            onClick={() => navigate("/admin?section=orders")}
+            onClick={() => setSearchParams({ section: "orders" })}
             className="text-xs text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
           >
             Ver todas →

@@ -4,6 +4,12 @@ import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
 import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
 import { parseDateOnly, parseDateTime } from "../../lib/dates";
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_PILL_CLASS,
+  PAYMENT_METHOD_LABELS,
+  PAYMENT_STATUS_LABELS,
+} from "../../lib/labels";
 import Icon from "../../components/ui/Icon";
 import { IconX } from "../../components/ui/icons";
 
@@ -27,13 +33,6 @@ interface OrderDetail {
   items: { productId: number; productName: string; quantity: number; unitType: number; unitPrice: number; subtotal: number }[];
 }
 
-const PAYMENT_LABELS: Record<number, string> = {
-  0: "Pagar na entrega", 1: "Cartão de crédito", 2: "MB Way", 3: "Transferência bancária",
-};
-const PAYMENT_STATUS_LABELS: Record<number, string> = {
-  0: "Pendente", 1: "Pago", 2: "Falhou", 3: "Reembolsado",
-};
-
 interface Order {
   id: number;
   orderNumber: string;
@@ -46,14 +45,11 @@ interface Order {
   deliverySlot?: { deliveryDate: string; startTime: string; endTime: string };
 }
 
-const STATUS_OPTIONS = [
-  { label: "Pendente",   value: 0, color: "bg-yellow-100 text-yellow-700" },
-  { label: "Pago",       value: 1, color: "bg-blue-100 text-blue-700"    },
-  { label: "Em preparo", value: 2, color: "bg-purple-100 text-purple-700" },
-  { label: "Enviado",    value: 3, color: "bg-indigo-100 text-indigo-700" },
-  { label: "Entregue",   value: 4, color: "bg-green-100 text-green-700"  },
-  { label: "Cancelado",  value: 5, color: "bg-red-100 text-red-600"      },
-];
+const STATUS_OPTIONS = Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => ({
+  value: Number(value),
+  label,
+  color: ORDER_STATUS_PILL_CLASS[Number(value)] ?? "",
+}));
 
 // Cash orders (paymentMethod=0) skip "Pago" until after delivery
 function getNextStatus(order: Order): { value: number; label: string } | null {
@@ -153,8 +149,8 @@ export default function AdminOrders() {
       );
       const rows: Order[] = res.data.items ?? [];
       const header = ["#", "Cliente", "Total", "Estado", "Método pagamento", "Criada em", "Entrega", "Notas"];
-      const statusLabel = (s: number) => ["Pendente","Pago","Em preparo","Enviado","Entregue","Cancelado"][s] ?? s;
-      const payLabel = (m: number | null | undefined) => m == null ? "" : ["Pagar na entrega","Cartão","MB Way","Transferência"][m] ?? m;
+      const statusLabel = (s: number) => ORDER_STATUS_LABELS[s] ?? String(s);
+      const payLabel = (m: number | null | undefined) => m == null ? "" : (PAYMENT_METHOD_LABELS[m] ?? String(m));
       const lines = rows.map(o => [
         o.orderNumber,
         o.userFullName,
@@ -387,7 +383,7 @@ export default function AdminOrders() {
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pagamento</p>
                   <p className="text-sm text-slate-700 dark:text-slate-300">
-                    {detail.paymentMethod != null ? PAYMENT_LABELS[detail.paymentMethod] ?? "—" : "—"}
+                    {detail.paymentMethod != null ? PAYMENT_METHOD_LABELS[detail.paymentMethod] ?? "—" : "—"}
                     {detail.paymentStatus != null && (
                       <span className={`ml-2 text-xs font-semibold ${detail.paymentStatus === 1 ? "text-emerald-600" : "text-slate-400"}`}>
                         ({PAYMENT_STATUS_LABELS[detail.paymentStatus] ?? "—"})

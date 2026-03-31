@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useCart } from "../../features/cart/CartContext";
 import Icon from "../ui/Icon";
 import { IconShoppingCart, IconX, IconArrowRight } from "../ui/icons";
@@ -11,6 +12,7 @@ interface Props {
 export default function CartDrawer({ open, onClose }: Props) {
   const { items, removeItem, updateQuantity, totalAmount } = useCart();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -28,7 +30,7 @@ export default function CartDrawer({ open, onClose }: Props) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <h2 className="text-base font-bold text-stone-900 dark:text-slate-100 flex items-center gap-2">
             <Icon icon={IconShoppingCart} size={17} className="text-emerald-700" />
-            Carrinho
+            {t("cart.title")}
             {items.length > 0 && (
               <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                 {items.length}
@@ -50,8 +52,8 @@ export default function CartDrawer({ open, onClose }: Props) {
               <div className="w-16 h-16 rounded-2xl bg-stone-100 dark:bg-slate-700 flex items-center justify-center">
                 <Icon icon={IconShoppingCart} size={28} stroke={1.5} />
               </div>
-              <p className="text-sm font-medium">O carrinho está vazio</p>
-              <p className="text-xs text-stone-400 dark:text-slate-400 text-center">Adiciona produtos da nossa loja para começar</p>
+              <p className="text-sm font-medium">{t("cart.empty")}</p>
+              <p className="text-xs text-stone-400 dark:text-slate-400 text-center">{t("cart.emptyDrawerDesc")}</p>
             </div>
           ) : (
             <div className="divide-y divide-stone-100 dark:divide-slate-700 px-4">
@@ -101,15 +103,15 @@ export default function CartDrawer({ open, onClose }: Props) {
         {items.length > 0 && (
           <div className="border-t border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-4 space-y-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-sm text-stone-500 dark:text-slate-400">Subtotal</span>
+              <span className="text-sm text-stone-500 dark:text-slate-400">{t("cart.subtotal")}</span>
               <span className="text-lg font-bold text-stone-900 dark:text-slate-100">{totalAmount.toFixed(2)}€</span>
             </div>
-            <p className="text-xs text-stone-400 dark:text-slate-400">Portes de envio calculados no checkout</p>
+            <p className="text-xs text-stone-400 dark:text-slate-400">{t("cart.shippingNote")}</p>
             <button
               onClick={() => { onClose(); navigate("/checkout"); }}
               className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
             >
-              Finalizar encomenda
+              {t("cart.checkout")}
               <Icon icon={IconArrowRight} size={15} />
             </button>
           </div>

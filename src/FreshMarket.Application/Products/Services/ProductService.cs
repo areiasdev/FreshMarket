@@ -165,16 +165,15 @@ public class ProductService : IProductService
 
     public async Task BulkUpdatePriceAsync(IEnumerable<(int ProductId, decimal NewPrice)> items, CancellationToken ct)
     {
-        var itemList = items.ToList();
-        var ids = itemList.Select(i => i.ProductId).ToList();
+        var priceMap = items.ToDictionary(i => i.ProductId, i => i.NewPrice);
         var products = await _db.Products
-            .Where(p => ids.Contains(p.Id))
+            .Where(p => priceMap.Keys.Contains(p.Id))
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
         foreach (var product in products)
         {
-            product.PricePerUnit = itemList.First(i => i.ProductId == product.Id).NewPrice;
+            product.PricePerUnit = priceMap[product.Id];
             product.UpdatedAt = DateTime.UtcNow;
         }
 

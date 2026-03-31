@@ -85,14 +85,15 @@ public class PaymentService : IPaymentService
         if (providerStatus.Status is not ("paid" or "succeeded"))
             throw new Exception("Pagamento não concluído");
 
-        payment.Status  = PaymentStatusEnum.Succeeded;
-        payment.PaidAt  = DateTime.UtcNow;
+        payment.Status = PaymentStatusEnum.Succeeded;
+        payment.PaidAt = DateTime.UtcNow;
 
         var order = payment.Order;
+        var needsStatusUpdate = order.Status != OrderStatus.Paid;
 
-        if (order.Status != OrderStatus.Paid)
+        if (needsStatusUpdate)
         {
-            order.Status = OrderStatus.Paid;
+            order.PaidAt = DateTime.UtcNow;
 
             foreach (var item in order.Items.Where(i => i.Product.TrackStock))
             {
@@ -100,10 +101,16 @@ public class PaymentService : IPaymentService
                     throw new Exception($"Stock inconsistente para {item.Product.Name}");
 
                 item.Product.StockQuantity -= item.Quantity;
+                item.Product.ReservedStock  = Math.Max(0, item.Product.ReservedStock - item.Quantity);
             }
         }
 
         await _db.SaveChangesAsync(ct);
+
+        // Trigger the full status pipeline: cache invalidation + email + in-app notification
+        if (needsStatusUpdate)
+            await _orders.UpdateStatusAsync(order.Id, OrderStatus.Paid, ct);
+
         return Map(payment);
     }
 

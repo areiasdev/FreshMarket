@@ -1,15 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../features/auth/useAuth";
+import { useTheme } from "../features/theme/ThemeContext";
 import client from "../api/client";
 import type { AuthResponse } from "../types";
 import { endpoints } from "../lib/endpoints";
 import Icon from "../components/ui/Icon";
-import { IconLeaf, IconTruck, IconStar, IconEye, IconEyeOff } from "../components/ui/icons";
+import { IconLeaf, IconTruck, IconStar, IconEye, IconEyeOff, IconSun, IconMoon } from "../components/ui/icons";
+import i18n from "../i18n";
 
 export default function AuthPage() {
   const { login } = useAuth();
   const navigate  = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [tab, setTab]     = useState<"login" | "register">("login");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,13 +23,20 @@ export default function AuthPage() {
   const [showLoginPw,    setShowLoginPw]    = useState(false);
   const [showRegisterPw, setShowRegisterPw] = useState(false);
 
+  const currentLang = i18n.language === "en" ? "en" : "pt";
+  const toggleLang = () => {
+    const next = currentLang === "pt" ? "en" : "pt";
+    i18n.changeLanguage(next);
+    localStorage.setItem("lang", next);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setError("");
     try {
       const { data } = await client.post<AuthResponse>(endpoints.auth.login, loginForm);
       login(data); navigate("/");
-    } catch { setError("Email ou password incorretos."); }
+    } catch { setError(t("auth.invalidCredentials")); }
     finally { setLoading(false); }
   };
 
@@ -34,9 +46,15 @@ export default function AuthPage() {
     try {
       const { data } = await client.post<AuthResponse>(endpoints.auth.register, registerForm);
       login(data); navigate("/");
-    } catch { setError("Erro ao criar conta. Tenta novamente."); }
+    } catch { setError(t("auth.registerError")); }
     finally { setLoading(false); }
   };
+
+  const features = [
+    { icon: IconLeaf,  title: t("auth.featureFresh"),     desc: t("auth.featureFreshDesc") },
+    { icon: IconTruck, title: t("auth.featureDelivery"),  desc: t("auth.featureDeliveryDesc") },
+    { icon: IconStar,  title: t("auth.featureCustomers"), desc: t("auth.featureCustomersDesc") },
+  ];
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
@@ -44,25 +62,21 @@ export default function AuthPage() {
       <div className="hidden lg:flex flex-col justify-between bg-emerald-900 p-12">
         <div className="flex items-center gap-2.5 text-white">
           <Icon icon={IconLeaf} size={22} className="text-emerald-300" />
-          <span className="font-bold text-lg tracking-tight">Horto Píncaro</span>
+          <span className="font-bold text-lg tracking-tight">FreshMarket</span>
         </div>
 
         <div>
           <blockquote className="mb-12">
             <p className="text-2xl font-bold text-white leading-snug tracking-tight mb-2">
-              "Frescos da quinta<br />à sua porta."
+              {t("auth.tagline")}
             </p>
             <p className="text-emerald-400 text-sm leading-relaxed max-w-sm">
-              Hortofrutícolas de produção local, colhidos e entregues com qualidade garantida em cada encomenda.
+              {t("auth.taglineSub")}
             </p>
           </blockquote>
 
           <ul className="space-y-5">
-            {[
-              { icon: IconLeaf, title: "Produtos frescos",        desc: "Diretamente de produtores locais" },
-              { icon: IconTruck, title: "Entrega em 48h",         desc: "Processado e enviado rapidamente" },
-              { icon: IconStar, title: "+500 clientes satisfeitos", desc: "Qualidade reconhecida pela comunidade" },
-            ].map(f => (
+            {features.map(f => (
               <li key={f.title} className="flex items-start gap-3">
                 <Icon icon={f.icon} size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                 <div>
@@ -74,38 +88,54 @@ export default function AuthPage() {
           </ul>
         </div>
 
-        <p className="text-xs text-emerald-600">© 2026 Horto Píncaro</p>
+        <p className="text-xs text-emerald-600">© 2026 FreshMarket</p>
       </div>
 
-      <div className="auth-light flex min-h-screen items-center justify-center bg-white px-8 py-12">
+      <div className="auth-light flex min-h-screen items-center justify-center bg-white dark:bg-slate-900 px-8 py-12 relative">
+
+        {/* Top-left controls: dark/light + language */}
+        <div className="absolute top-4 left-4 flex items-center gap-1.5">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            <Icon icon={theme === "dark" ? IconSun : IconMoon} size={15} />
+          </button>
+          <button
+            onClick={toggleLang}
+            className="flex items-center justify-center h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors tracking-wide"
+          >
+            {currentLang === "pt" ? "EN" : "PT"}
+          </button>
+        </div>
+
         <div className="w-full max-w-sm">
 
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <Icon icon={IconLeaf} size={20} className="text-emerald-700" />
-            <span className="font-bold text-slate-900">Horto Píncaro</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">FreshMarket</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
-            {tab === "login" ? "Bem-vindo de volta" : "Criar conta"}
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-1">
+            {tab === "login" ? t("auth.welcome") : t("auth.createAccount")}
           </h1>
-          <p className="text-sm text-slate-500 mb-8">
-            {tab === "login"
-              ? "Entra para ver as tuas encomendas."
-              : "Regista-te para começar a encomendar."}
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
+            {tab === "login" ? t("auth.signInDesc") : t("auth.registerDesc")}
           </p>
 
-          <div className="flex border-b border-slate-200 mb-7">
-            {(["login", "register"] as const).map(t => (
+          <div className="flex border-b border-slate-200 dark:border-slate-700 mb-7">
+            {(["login", "register"] as const).map(t2 => (
               <button
-                key={t}
-                onClick={() => { setTab(t); setError(""); }}
+                key={t2}
+                onClick={() => { setTab(t2); setError(""); }}
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
-                  tab === t
+                  tab === t2
                     ? "border-emerald-700 text-emerald-700"
-                    : "border-transparent text-slate-400 hover:text-slate-600"
+                    : "border-transparent text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 }`}
               >
-                {t === "login" ? "Entrar" : "Criar Conta"}
+                {t2 === "login" ? t("auth.tabSignIn") : t("auth.tabRegister")}
               </button>
             ))}
           </div>
@@ -113,13 +143,13 @@ export default function AuthPage() {
           {tab === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="label">Email</label>
+                <label className="label">{t("auth.email")}</label>
                 <input type="email" className="input" required
                   value={loginForm.email}
                   onChange={e => setLoginForm({ ...loginForm, email: e.target.value })} />
               </div>
               <div>
-                <label className="label">Password</label>
+                <label className="label">{t("auth.password")}</label>
                 <div className="relative">
                   <input type={showLoginPw ? "text" : "password"} className="input pr-10" required
                     value={loginForm.password}
@@ -143,7 +173,7 @@ export default function AuthPage() {
               <button type="submit" disabled={loading}
                 className="btn-primary w-full justify-center bg-emerald-700 mt-2"
               >
-                {loading ? "A entrar..." : "Entrar"}
+                {loading ? t("auth.signingIn") : t("auth.tabSignIn")}
               </button>
             </form>
           )}
@@ -151,19 +181,19 @@ export default function AuthPage() {
           {tab === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="label">Nome completo</label>
+                <label className="label">{t("auth.fullName")}</label>
                 <input type="text" className="input" required
                   value={registerForm.fullName}
                   onChange={e => setRegisterForm({ ...registerForm, fullName: e.target.value })} />
               </div>
               <div>
-                <label className="label">Email</label>
+                <label className="label">{t("auth.email")}</label>
                 <input type="email" className="input" required
                   value={registerForm.email}
                   onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} />
               </div>
               <div>
-                <label className="label">Password</label>
+                <label className="label">{t("auth.password")}</label>
                 <div className="relative">
                   <input type={showRegisterPw ? "text" : "password"} className="input pr-10" required
                     value={registerForm.password}
@@ -179,8 +209,8 @@ export default function AuthPage() {
               </div>
               <div>
                 <label className="label">
-                  Telefone
-                  <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">— opcional</span>
+                  {t("auth.phone")}
+                  <span className="ml-1 normal-case tracking-normal font-normal text-slate-400">{t("auth.optional")}</span>
                 </label>
                 <input type="tel" className="input"
                   value={registerForm.phone}
@@ -196,13 +226,13 @@ export default function AuthPage() {
               <button type="submit" disabled={loading}
                 className="btn-primary w-full justify-center bg-emerald-700 mt-2"
               >
-                {loading ? "A criar conta..." : "Criar Conta"}
+                {loading ? t("auth.creatingAccount") : t("auth.tabRegister")}
               </button>
             </form>
           )}
 
           <p className="text-xs text-slate-400 text-center mt-6">
-            Ao continuar aceitas os nossos termos e política de privacidade.
+            {t("auth.terms")}
           </p>
         </div>
       </div>
