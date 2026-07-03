@@ -1,17 +1,14 @@
 O que falta fazer (Lista)
 
-"ver todas" button in dashboard its not working
-Na pagina das métricas quando da refresh ou muda de intervalo de tempo devia so dar refresh nos gráficos em si, a maneira como da refresh à pagina toda é estranho
-Se faz sentido o cliente ver as slots de entrega e escolher ou se é mais fácil so ser o admin ou se faz sentido de todo 
+Ver tudo o que é incrementos de quantidades (ver entre kg e unity) e produtos que comecem com 0.1 e não possam
+Em encomendas, quando atualizo o estado de uma encomenda, vou para a outra coluna de estado e fica a carregar, tenho que sair e voltar a entrar na mesma coluna para aparecer (so esta a funcionar bem em entregue) ve todos as colunas de estados
+
 
 
 IMPORTANTE FAZER NO FINAL:
  EMAIL
- STRIPE
- MBWAY
- Tempos de resposta de queries gets
- Passo de passar factura e tal para empresas que queiram comprar
-
+ STRIPE ✅
+ MBWAY ✅
 
   ---
   O que está bem feito para produção
