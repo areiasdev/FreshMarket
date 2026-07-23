@@ -7,6 +7,7 @@ export const endpoints = {
     login:    `${BASE}/auth/login`,
     register: `${BASE}/auth/register`,
     refresh:  `${BASE}/auth/refresh-token`,
+    logout:   `${BASE}/auth/logout`,
   },
 
   // ─── Public ─────────────────────────────────────

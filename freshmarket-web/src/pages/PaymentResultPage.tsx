@@ -5,6 +5,7 @@ import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import Icon from "../components/ui/Icon";
 import { IconCreditCard, IconCheck, IconX, IconArrowRight } from "../components/ui/icons";
+import { useCart } from "../features/cart/CartContext";
 
 type Status = "loading" | "success" | "error";
 
@@ -12,6 +13,7 @@ export default function PaymentResultPage() {
   const [params]  = useSearchParams();
   const navigate  = useNavigate();
   const { t }     = useTranslation();
+  const { clearCart } = useCart();
   const [status, setStatus]     = useState<Status>("loading");
   const [countdown, setCountdown] = useState(3);
 
@@ -21,6 +23,7 @@ export default function PaymentResultPage() {
       if (!sessionId) { setStatus("error"); return; }
       try {
         await client.post(endpoints.payments.confirm, { externalTransactionId: sessionId });
+        clearCart();
         setStatus("success");
       } catch { setStatus("error"); }
     };

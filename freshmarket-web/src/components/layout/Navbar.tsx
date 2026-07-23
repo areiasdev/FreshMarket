@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import { useAuth } from "../../features/auth/useAuth";
 import { useCart } from "../../features/cart/CartContext";
-import { useTheme } from "../../features/theme/ThemeContext";
+import { useTheme } from "../../features/theme/useTheme";
 import NotificationBell from "../../features/notifications/NotificationBell";
 import Icon from "../ui/Icon";
 import { IconLeaf, IconShoppingCart, IconSun, IconMoon } from "../ui/icons";

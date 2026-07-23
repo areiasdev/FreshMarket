@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import StatusBadge from "../components/layout/StatusBadge";
 import { useAuth } from "../features/auth/useAuth";
 import client from "../api/client";
@@ -191,7 +192,7 @@ function AddressesTab() {
   const [deleting, setDeleting]     = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -200,9 +201,9 @@ function AddressesTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { load(); }, [user?.id]);
+  useEffect(() => { load(); }, [load]);
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
@@ -474,6 +475,8 @@ export default function AccountPage() {
         {tab === "addresses" && <AddressesTab />}
         {tab === "orders"    && <OrdersTab />}
       </div>
+
+      <Footer />
     </div>
   );
 }

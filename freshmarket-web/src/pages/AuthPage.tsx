@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../features/auth/useAuth";
-import { useTheme } from "../features/theme/ThemeContext";
+import { useTheme } from "../features/theme/useTheme";
 import client from "../api/client";
 import type { AuthResponse } from "../types";
 import { endpoints } from "../lib/endpoints";

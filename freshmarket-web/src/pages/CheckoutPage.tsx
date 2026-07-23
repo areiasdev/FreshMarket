@@ -9,6 +9,7 @@ import { useAuth } from "../features/auth/useAuth";
 import PaymentSelector from "../features/payments/PaymentSelector";
 import { PaymentMethod } from "../types/payment";
 import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
 import { IconCheck, IconArrowLeft, IconArrowRight, IconCalendar, IconNotes, IconAlertTriangle, IconX, IconClock, IconTruck } from "../components/ui/icons";
@@ -116,7 +117,7 @@ export default function CheckoutPage() {
       const def = addrs.find(a => a.isDefault) ?? addrs[0];
       if (def) applyAddress(def);
     }).catch(() => {});
-  }, [user?.id]);
+  }, [user]);
 
   // Fetch shipping options from backend (source of truth for fees)
   const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
@@ -238,8 +239,10 @@ export default function CheckoutPage() {
       });
       const order = orderRes.data;
       const payRes = await client.post(endpoints.payments.create, { orderId: order.id, method: paymentMethod });
-      clearCart();
+      // Redirect flows (Stripe/MB WAY): don't clear the cart yet — the payment isn't
+      // confirmed until PaymentResultPage sees a success. Cash confirms immediately, so clear now.
       if (payRes.data.redirectUrl) { window.location.href = payRes.data.redirectUrl; return; }
+      clearCart();
       navigate(`/orders/${order.id}?confirmed=true`);
     } catch {
       setOrderError(t("checkout.orderError"));
@@ -493,7 +496,7 @@ export default function CheckoutPage() {
                     <Icon icon={IconArrowLeft} size={14} /> {t("checkout.back")}
                   </button>
                   <button onClick={handlePlaceOrder} disabled={submitting}
-                    className="btn-primary flex-[2] justify-center bg-amber-500 hover:bg-amber-400 font-bold disabled:opacity-50">
+                    className="btn-primary flex-[2] justify-center font-bold disabled:opacity-50">
                     {submitting ? t("checkout.processing") : t("checkout.pay", { amount: total.toFixed(2) })}
                   </button>
                 </div>
@@ -537,6 +540,8 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

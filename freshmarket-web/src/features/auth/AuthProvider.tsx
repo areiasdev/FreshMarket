@@ -1,8 +1,12 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
+import axios from "axios";
 import type { AuthResponse, User } from "../../types";
 import { AuthContext } from "./authContext";
 import { clearCartStorage } from "../cart/CartStorage";
+import { endpoints } from "../../lib/endpoints";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5045";
 
 function dispatchUserChanged() {
   window.dispatchEvent(new Event("auth:userChanged"));
@@ -44,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+      axios.post(`${API_URL}${endpoints.auth.logout}`, { refreshToken }).catch(() => { /* best-effort */ });
+    }
+
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
