@@ -1,3 +1,4 @@
+using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Reviews.Models;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +72,17 @@ public class ReviewService : IReviewService
 
         if (exists)
             throw new InvalidOperationException("You have already reviewed this product.");
+
+        // Only allow reviewing products from a delivered order — the frontend already
+        // gates this, but the API must not trust the client for it.
+        var hasDeliveredPurchase = await _db.Orders
+            .Where(o => o.UserId == userId && o.Status == OrderStatus.Delivered)
+            .SelectMany(o => o.Items)
+            .AnyAsync(i => i.ProductId == productId, ct)
+            .ConfigureAwait(false);
+
+        if (!hasDeliveredPurchase)
+            throw new BusinessException("Só podes avaliar produtos de encomendas já entregues.");
 
         var review = new Review
         {

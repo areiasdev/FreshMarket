@@ -41,6 +41,8 @@ export interface Product {
   isActive: boolean;
   categoryId: number;
   categoryName: string;
+  averageRating: number;
+  reviewCount: number;
 }
 
 export type UnitType = 0 | 1; // 0 = Unidade, 1 = Kg (por peso)

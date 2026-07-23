@@ -338,6 +338,7 @@
     "cancelOrder": "Cancel order",
     "cancelConfirm": "Are you sure?",
     "reviewTitle": "Rate products",
+    "reviewError": "Couldn't save your review. Please try again.",
     "reviewThankYou": "Thank you for your review!",
     "reviewPlaceholder": "Optional comment...",
     "reviewSaving": "Saving...",

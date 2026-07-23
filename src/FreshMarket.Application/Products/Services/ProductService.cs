@@ -51,7 +51,24 @@ public class ProductService : IProductService
 
         var result = await query
             .OrderBy(p => p.Name)
-            .Select(p => p.ToListDto())
+            .Select(p => new ProductListDto
+            {
+                Id = p.Id,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category != null ? p.Category.Name : string.Empty,
+                Name = p.Name,
+                Slug = p.Slug,
+                PricePerUnit = p.PricePerUnit,
+                MinQuantity = p.MinQuantity,
+                UnitType = p.UnitType,
+                StockQuantity = p.StockQuantity,
+                TrackStock = p.TrackStock,
+                ImageUrl = p.ImageUrl,
+                IsSeasonal = p.IsSeasonal,
+                IsActive = p.IsActive,
+                ReviewCount = p.Reviews.Count,
+                AverageRating = p.Reviews.Any() ? p.Reviews.Average(r => (double)r.Rating) : 0,
+            })
             .ToPagedResultAsync(page, pageSize, ct)
             .ConfigureAwait(false);
 

@@ -879,9 +879,23 @@ function ProductCard({
         <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
           {p.categoryName}
         </p>
-        <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug flex-1 mb-3">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug flex-1 mb-1">
           {p.name}
         </p>
+
+        <div className="flex items-center gap-1 h-4 mb-2">
+          {p.reviewCount > 0 && (
+            <>
+              <Icon icon={IconStar} size={11} className="text-amber-400" />
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+                {p.averageRating.toFixed(1)}
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                ({p.reviewCount})
+              </span>
+            </>
+          )}
+        </div>
 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-baseline gap-0.5">
@@ -895,6 +909,7 @@ function ProductCard({
 
           <button
             onClick={handleClick}
+            data-testid="add-to-cart"
             className={`flex-shrink-0 w-[92px] text-center text-xs font-bold px-3 py-1.5 rounded-lg
                         whitespace-nowrap transition-all duration-200 ${
               added

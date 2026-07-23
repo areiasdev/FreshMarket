@@ -338,6 +338,7 @@
     "cancelOrder": "Cancelar encomenda",
     "cancelConfirm": "Tens a certeza?",
     "reviewTitle": "Avaliar produtos",
+    "reviewError": "Não foi possível guardar a avaliação. Tenta novamente.",
     "reviewThankYou": "Obrigado pela tua avaliação!",
     "reviewPlaceholder": "Comentário opcional...",
     "reviewSaving": "A guardar...",

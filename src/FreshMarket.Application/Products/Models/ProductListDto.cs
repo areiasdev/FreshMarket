@@ -19,6 +19,9 @@ public class ProductListDto
     // Stock info — só exposto se necessário
     public bool TrackStock { get; set; }
     public decimal StockQuantity { get; set; }
+
+    public double AverageRating { get; set; }
+    public int ReviewCount { get; set; }
 }
 
 public class ProductDetailDto : ProductListDto
