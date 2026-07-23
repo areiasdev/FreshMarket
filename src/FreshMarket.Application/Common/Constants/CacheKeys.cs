@@ -31,5 +31,8 @@ namespace FreshMarket.Application.Common.Constants
 
         // Users
         public static string UserById(int id) => $"users:{id}";
+
+        // Refresh tokens
+        public static string RefreshToken(string token) => $"refresh-token:{token}";
     }
 }

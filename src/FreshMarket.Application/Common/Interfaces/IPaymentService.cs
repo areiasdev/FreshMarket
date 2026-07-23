@@ -6,5 +6,7 @@ public interface IPaymentService
 
     Task<PaymentDto> ConfirmPaymentAsync(string externalTransactionId, CancellationToken ct);
 
+    Task MarkFailedAsync(string externalTransactionId, CancellationToken ct);
+
     Task<PaymentDto?> GetByOrderIdAsync(int orderId, CancellationToken ct);
 }

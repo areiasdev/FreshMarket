@@ -1,4 +1,5 @@
 using FreshMarket.Application.Payments.Commands.Confirm;
+using FreshMarket.Application.Payments.Commands.Fail;
 using FreshMarket.Web.Infrastructure;
 using Stripe;
 
@@ -45,6 +46,14 @@ public class Webhooks : EndpointGroupBase
             var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
             if (session?.Id != null)
                 await sender.Send(new ConfirmPaymentCommand(session.Id));
+        }
+        else if (stripeEvent.Type is EventTypes.CheckoutSessionAsyncPaymentFailed or EventTypes.CheckoutSessionExpired)
+        {
+            // MB WAY declined/timed-out, or the checkout session simply expired unused —
+            // mark the payment failed now instead of leaving it Pending until the 15-minute cleanup job.
+            var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+            if (session?.Id != null)
+                await sender.Send(new MarkPaymentFailedCommand(session.Id));
         }
 
         return Results.Ok();

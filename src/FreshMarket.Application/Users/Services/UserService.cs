@@ -10,6 +10,8 @@ namespace FreshMarket.Application.Users.Services;
 
 public class UserService : IUserService
 {
+    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
+
     private readonly IApplicationDbContext _db;
     private readonly ITokenService _tokenService;
     private readonly ICacheService _cache;
@@ -30,7 +32,7 @@ public class UserService : IUserService
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return null;
 
-        return GenerateAuthResponse(user);
+        return await GenerateAuthResponseAsync(user, ct).ConfigureAwait(false);
     }
 
     public async Task<AuthResponseDto> RegisterAsync(string fullName, string email, string password, string? phone, CancellationToken ct)
@@ -46,14 +48,27 @@ public class UserService : IUserService
         _db.Users.Add(user);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        return GenerateAuthResponse(user);
+        return await GenerateAuthResponseAsync(user, ct).ConfigureAwait(false);
     }
 
     public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, CancellationToken ct)
     {
-        await Task.CompletedTask.ConfigureAwait(false);
-        return null;
+        var userId = await _cache.GetAsync<int?>(CacheKeys.RefreshToken(refreshToken), ct).ConfigureAwait(false);
+        if (userId is null) return null;
+
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Id == userId.Value, ct)
+            .ConfigureAwait(false);
+        if (user == null) return null;
+
+        // Rotate: invalidate the used refresh token before issuing a new one.
+        await _cache.RemoveAsync(CacheKeys.RefreshToken(refreshToken), ct).ConfigureAwait(false);
+
+        return await GenerateAuthResponseAsync(user, ct).ConfigureAwait(false);
     }
+
+    public async Task LogoutAsync(string refreshToken, CancellationToken ct)
+        => await _cache.RemoveAsync(CacheKeys.RefreshToken(refreshToken), ct).ConfigureAwait(false);
 
     public async Task<UserDto?> GetByIdAsync(int id, CancellationToken ct)
     {
@@ -92,10 +107,17 @@ public class UserService : IUserService
         return result;
     }
 
-    private AuthResponseDto GenerateAuthResponse(User user) => new()
+    private async Task<AuthResponseDto> GenerateAuthResponseAsync(User user, CancellationToken ct)
     {
-        AccessToken = _tokenService.GenerateAccessToken(user),
-        RefreshToken = _tokenService.GenerateRefreshToken(),
-        User = user.ToDto()
-    };
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        await _cache.SetAsync(CacheKeys.RefreshToken(refreshToken), user.Id, RefreshTokenLifetime, ct)
+            .ConfigureAwait(false);
+
+        return new AuthResponseDto
+        {
+            AccessToken = _tokenService.GenerateAccessToken(user),
+            RefreshToken = refreshToken,
+            User = user.ToDto()
+        };
+    }
 }

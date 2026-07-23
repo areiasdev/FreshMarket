@@ -88,8 +88,6 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-builder.Services.AddHttpClient<MbWayPaymentProvider>();
-
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblyContaining<GetUserAddressesQueryHandler>();

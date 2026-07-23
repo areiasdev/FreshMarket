@@ -69,7 +69,7 @@ tests/
 
 **Auth:** JWT Bearer tokens. Roles: `Customer`, `Admin`, `SuperAdmin`. Authorization policies are `CustomerPolicy`, `AdminPolicy`, `SuperAdminPolicy` defined in `Program.cs`. Auth endpoints are rate-limited (10 req/min fixed window).
 
-**Payment providers:** `IPaymentProvider` / `IPaymentProviderFactory` factory pattern in Infrastructure. Three providers: `StripePaymentProvider`, `MbWayPaymentProvider`, `CashPaymentProvider`. Webhook handling in `Endpoints/Webhooks.cs`.
+**Payment providers:** `IPaymentProvider` / `IPaymentProviderFactory` factory pattern in Infrastructure. `StripePaymentProvider` is keyed by `"card"` and `"mb_way"` (Stripe's native MB WAY payment method), plus `CashPaymentProvider`. Webhook handling in `Endpoints/Webhooks.cs`.
 
 **Soft deletes:** `BaseEntity` has `DeletedAt`. Global EF query filter excludes soft-deleted records.
 
@@ -103,7 +103,7 @@ freshmarket-web/src/
 
 **Frontend** – Copy `.env.example` to `.env` and set `VITE_API_URL`.
 
-**Secrets/env vars needed:** `ConnectionStrings__DefaultConnection`, `Jwt__Secret`, `Stripe__SecretKey`, `Stripe__WebhookSecret`, `MbWay__Key`, `Redis__ConnectionString`, `Email__Smtp__*`.
+**Secrets/env vars needed:** `ConnectionStrings__DefaultConnection`, `Jwt__Secret`, `Stripe__SecretKey`, `Stripe__WebhookSecret`, `Stripe__SuccessUrl`, `Stripe__CancelUrl`, `Redis__ConnectionString`, `Email__Smtp__*`.
 
 ## Key Conventions
 

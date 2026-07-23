@@ -12,5 +12,9 @@ namespace FreshMarket.Application.Common.Interfaces
         Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken ct = default);
         Task RemoveAsync(string key, CancellationToken ct = default);
         Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default);
+
+        /// <summary>Atomically acquires a short-lived lock; returns false if already held (e.g. a concurrent duplicate webhook delivery).</summary>
+        Task<bool> AcquireLockAsync(string key, TimeSpan expiry, CancellationToken ct = default);
+        Task ReleaseLockAsync(string key, CancellationToken ct = default);
     }
 }

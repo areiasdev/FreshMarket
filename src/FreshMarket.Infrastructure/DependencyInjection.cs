@@ -24,9 +24,7 @@ public static class DependencyInjection
             new StripePaymentProvider(sp.GetRequiredService<IConfiguration>(), ["card"]));
         services.AddKeyedScoped<StripePaymentProvider>("mb_way", (sp, _) =>
             new StripePaymentProvider(sp.GetRequiredService<IConfiguration>(), ["mb_way"]));
-        services.AddScoped<MbWayPaymentProvider>();
         services.AddScoped<IPaymentProviderFactory, PaymentProviderFactory>();
-        services.AddScoped<OrderCleanupService>();
         services.AddHostedService<OrderCleanupJob>();
         services.AddScoped<CashPaymentProvider>();
 

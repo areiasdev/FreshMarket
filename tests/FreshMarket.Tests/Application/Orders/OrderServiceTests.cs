@@ -223,5 +223,134 @@ public class OrderServiceTests : IDisposable
         updatedSlot.CurrentOrders.Should().Be(1); // decremented from 2
     }
 
+    [Fact]
+    public async Task Cancel_PaidOrder_RestoresStockQuantityInsteadOfReservedStock()
+    {
+        var catId   = _factory.SeedCategory();
+        // Stock already deducted at payment time (ReservedStock already cleared), as ConfirmPaymentAsync would leave it.
+        var product = _factory.SeedProduct(catId, stock: 7m, reserved: 0m);
+
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Paid,
+            TotalAmount = 9.00m,
+            ShippingFee = 5.00m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-0003",
+            Items =
+            [
+                new OrderItem { ProductId = product.Id, Quantity = 3m, UnitPrice = 3m, Subtotal = 9m }
+            ]
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        await _sut.CancelAsync(order.Id, CancellationToken.None);
+
+        var updated = _factory.Context.Products.Find(product.Id)!;
+        updated.StockQuantity.Should().Be(10m); // 7 + 3 given back
+        updated.ReservedStock.Should().Be(0m);  // untouched — already cleared at payment time
+    }
+
+    [Fact]
+    public async Task Cancel_AlreadyCancelledOrder_ThrowsBusinessException()
+    {
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Cancelled,
+            TotalAmount = 9.00m,
+            ShippingFee = 5.00m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-0004",
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        var act = () => _sut.CancelAsync(order.Id, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    [Fact]
+    public async Task Cancel_ShippedOrder_ThrowsBusinessException()
+    {
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Shipped,
+            TotalAmount = 9.00m,
+            ShippingFee = 5.00m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-0005",
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        var act = () => _sut.CancelAsync(order.Id, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    // ── UpdateStatusAsync ────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateStatus_SkippingAStep_ThrowsBusinessException()
+    {
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Pending,
+            TotalAmount = 9.00m,
+            ShippingFee = 5.00m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-0006",
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        // Pending -> Delivered would silently mark an uncollected cash payment as succeeded — must be rejected.
+        var act = () => _sut.UpdateStatusAsync(order.Id, OrderStatus.Delivered, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ValidTransition_Succeeds()
+    {
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Paid,
+            TotalAmount = 9.00m,
+            ShippingFee = 5.00m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-0007",
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        await _sut.UpdateStatusAsync(order.Id, OrderStatus.Preparing, CancellationToken.None);
+
+        var updated = _factory.Context.Orders.Find(order.Id)!;
+        updated.Status.Should().Be(OrderStatus.Preparing);
+    }
+
     public void Dispose() => _factory.Dispose();
 }

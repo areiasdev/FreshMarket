@@ -30,6 +30,7 @@ public class OrderCleanupJob : BackgroundService
 
                 var expiredOrders = await db.Orders
                     .Include(o => o.DeliverySlot)
+                    .Include(o => o.Items).ThenInclude(i => i.Product)
                     .Where(o =>
                         o.Status == OrderStatus.Pending &&
                         o.CreatedAt < expirationTime)
@@ -42,6 +43,11 @@ public class OrderCleanupJob : BackgroundService
 
                     if (order.DeliverySlot != null && order.DeliverySlot.CurrentOrders > 0)
                         order.DeliverySlot.CurrentOrders--;
+
+                    // Pending orders reserved stock at placement time (never deducted StockQuantity
+                    // yet) — release that reservation or available stock permanently shrinks.
+                    foreach (var item in order.Items.Where(i => i.Product.TrackStock))
+                        item.Product.ReservedStock = Math.Max(0, item.Product.ReservedStock - item.Quantity);
                 }
 
                 if (expiredOrders.Any())

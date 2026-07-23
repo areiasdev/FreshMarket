@@ -304,6 +304,16 @@ public class OrderService : IOrderService
         }
     }
 
+    private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
+    {
+        [OrderStatus.Pending]   = [OrderStatus.Paid, OrderStatus.Preparing, OrderStatus.Cancelled],
+        [OrderStatus.Paid]      = [OrderStatus.Preparing, OrderStatus.Cancelled],
+        [OrderStatus.Preparing] = [OrderStatus.Shipped, OrderStatus.Cancelled],
+        [OrderStatus.Shipped]   = [OrderStatus.Delivered],
+        [OrderStatus.Delivered] = [],
+        [OrderStatus.Cancelled] = [],
+    };
+
     public async Task UpdateStatusAsync(int orderId, OrderStatus status, CancellationToken ct)
     {
         var order = await _db.Orders
@@ -313,6 +323,11 @@ public class OrderService : IOrderService
             .FirstOrDefaultAsync(o => o.Id == orderId, ct)
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Order), orderId);
+
+        if (order.Status == status) return;
+
+        if (!AllowedTransitions[order.Status].Contains(status))
+            throw new BusinessException($"Não é possível mudar o estado de '{order.Status}' para '{status}'.");
 
         order.Status = status;
         order.UpdatedAt = DateTime.UtcNow;
@@ -366,11 +381,26 @@ public class OrderService : IOrderService
             .ConfigureAwait(false)
             ?? throw new NotFoundException(nameof(Order), orderId);
 
+        if (order.Status == OrderStatus.Cancelled)
+            throw new BusinessException("Encomenda já está cancelada.");
+        if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered)
+            throw new BusinessException("Não é possível cancelar uma encomenda já enviada ou entregue.");
+
+        // Paid/Preparing orders already had StockQuantity deducted (and ReservedStock cleared)
+        // when the payment was confirmed — cancelling them must give the stock back instead of
+        // touching ReservedStock again, or stock silently disappears.
+        var stockWasDeducted = order.Status != OrderStatus.Pending;
+
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTime.UtcNow;
 
         foreach (var item in order.Items.Where(i => i.Product.TrackStock))
-            item.Product.ReservedStock -= item.Quantity;
+        {
+            if (stockWasDeducted)
+                item.Product.StockQuantity += item.Quantity;
+            else
+                item.Product.ReservedStock = Math.Max(0, item.Product.ReservedStock - item.Quantity);
+        }
 
         if (order.DeliverySlot != null && order.DeliverySlot.CurrentOrders > 0)
             order.DeliverySlot.CurrentOrders--;

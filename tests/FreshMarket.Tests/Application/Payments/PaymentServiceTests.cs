@@ -9,12 +9,15 @@ public class PaymentServiceTests : IDisposable
     private readonly DbContextFactory _factory;
     private readonly IPaymentProviderFactory _providerFactory = Substitute.For<IPaymentProviderFactory>();
     private readonly IOrderService _orderService             = Substitute.For<IOrderService>();
+    private readonly ICacheService _cache                    = Substitute.For<ICacheService>();
     private readonly PaymentService _sut;
 
     public PaymentServiceTests()
     {
         _factory = new DbContextFactory();
-        _sut = new PaymentService(_factory.Context, _providerFactory, _orderService);
+        _cache.AcquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+              .Returns(true);
+        _sut = new PaymentService(_factory.Context, _providerFactory, _orderService, _cache);
 
         // Default provider stub: always returns "paid"
         var provider = Substitute.For<IPaymentProvider>();

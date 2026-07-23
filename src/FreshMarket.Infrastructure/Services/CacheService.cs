@@ -42,4 +42,16 @@ public class CacheService : ICacheService
         if (keys.Length > 0)
             await db.KeyDeleteAsync(keys).ConfigureAwait(false);
     }
+
+    public async Task<bool> AcquireLockAsync(string key, TimeSpan expiry, CancellationToken ct = default)
+    {
+        var db = _redis.GetDatabase();
+        return await db.StringSetAsync(key, "1", expiry, When.NotExists).ConfigureAwait(false);
+    }
+
+    public async Task ReleaseLockAsync(string key, CancellationToken ct = default)
+    {
+        var db = _redis.GetDatabase();
+        await db.KeyDeleteAsync(key).ConfigureAwait(false);
+    }
 }

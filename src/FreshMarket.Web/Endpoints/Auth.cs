@@ -1,4 +1,5 @@
 using FreshMarket.Application.Users.Command.Login;
+using FreshMarket.Application.Users.Command.Logout;
 using FreshMarket.Application.Users.Command.Token;
 using FreshMarket.Web.Infrastructure;
 using MediatR;
@@ -14,7 +15,8 @@ public class Auth : EndpointGroupBase
             .RequireRateLimiting("auth")
             .MapPost(Login, "login")
             .MapPost(Register, "register")
-            .MapPost(RefreshToken, "refresh-token");
+            .MapPost(RefreshToken, "refresh-token")
+            .MapPost(Logout, "logout");
     }
 
     public async Task<IResult> Login(LoginCommand command, ISender sender)
@@ -33,5 +35,11 @@ public class Auth : EndpointGroupBase
     {
         var result = await sender.Send(command).ConfigureAwait(false);
         return result == null ? Results.Unauthorized() : Results.Ok(result);
+    }
+
+    public async Task<IResult> Logout(LogoutCommand command, ISender sender)
+    {
+        await sender.Send(command).ConfigureAwait(false);
+        return Results.NoContent();
     }
 }
