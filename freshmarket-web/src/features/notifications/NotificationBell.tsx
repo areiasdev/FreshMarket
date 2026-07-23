@@ -50,21 +50,21 @@ function NotificationItem({
   return (
     <button
       onClick={handleClick}
-      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 ${
-        !notification.isRead ? "bg-emerald-50/60" : ""
+      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50 ${
+        !notification.isRead ? "bg-emerald-50/60 dark:bg-emerald-900/20" : ""
       }`}
     >
       <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${meta.bg}`}>
         <Icon icon={meta.icon} size={15} className={meta.iconColor} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm leading-snug truncate ${!notification.isRead ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>
+        <p className={`text-sm leading-snug truncate ${!notification.isRead ? "font-semibold text-slate-900 dark:text-slate-100" : "font-medium text-slate-700 dark:text-slate-300"}`}>
           {notification.title}
         </p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-snug line-clamp-2">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug line-clamp-2">
           {notification.message}
         </p>
-        <p className="text-[10px] text-slate-400 mt-1">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
           {parseDateTime(notification.createdAt)?.toLocaleString(locale, {
             day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
           })}
@@ -114,14 +114,14 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
+        <div className="absolute right-0 top-11 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-800">{t("notifications.title")}</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t("notifications.title")}</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
+                className="text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 font-medium transition-colors"
               >
                 {t("notifications.markAllRead")}
               </button>
@@ -129,13 +129,13 @@ export default function NotificationBell() {
           </div>
 
           {/* Lista */}
-          <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-50">
+          <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700">
             {loading ? (
-              <p className="text-sm text-slate-400 text-center py-8">{t("notifications.loading")}</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">{t("notifications.loading")}</p>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
-                <Icon icon={IconBell} size={28} className="text-slate-300" />
-                <p className="text-sm text-slate-400">{t("notifications.empty")}</p>
+                <Icon icon={IconBell} size={28} className="text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-400 dark:text-slate-500">{t("notifications.empty")}</p>
               </div>
             ) : (
               notifications.map(n => (

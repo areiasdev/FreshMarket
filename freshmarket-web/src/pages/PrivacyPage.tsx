@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
 
         <div className="mb-10">
@@ -11,17 +11,17 @@ export default function PrivacyPage() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-stone-900 dark:text-stone-50 mb-2">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-50 mb-2">
           Política de Privacidade
         </h1>
-        <p className="text-sm text-stone-500 dark:text-stone-400 mb-10">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-10">
           Última atualização: março de 2026
         </p>
 
-        <div className="space-y-10 text-stone-700 dark:text-stone-300 leading-relaxed">
+        <div className="space-y-10 text-slate-700 dark:text-slate-300 leading-relaxed">
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               1. Responsável pelo Tratamento
             </h2>
             <p>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               2. Dados Recolhidos
             </h2>
             <p className="mb-3">Recolhemos os seguintes dados pessoais:</p>
@@ -55,31 +55,31 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               3. Finalidade e Base Legal
             </h2>
             <div className="space-y-4 text-sm">
-              <div className="bg-stone-100 dark:bg-stone-900 rounded-lg p-4">
+              <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4">
                 <p className="font-semibold mb-1">Processamento de encomendas</p>
-                <p className="text-stone-500 dark:text-stone-400">
+                <p className="text-slate-500 dark:text-slate-400">
                   Base legal: execução do contrato (Art.º 6.º n.º 1 b) RGPD)
                 </p>
               </div>
-              <div className="bg-stone-100 dark:bg-stone-900 rounded-lg p-4">
+              <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4">
                 <p className="font-semibold mb-1">Envio de notificações transacionais por e-mail</p>
-                <p className="text-stone-500 dark:text-stone-400">
+                <p className="text-slate-500 dark:text-slate-400">
                   Base legal: execução do contrato (Art.º 6.º n.º 1 b) RGPD)
                 </p>
               </div>
-              <div className="bg-stone-100 dark:bg-stone-900 rounded-lg p-4">
+              <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4">
                 <p className="font-semibold mb-1">Obrigações legais e fiscais</p>
-                <p className="text-stone-500 dark:text-stone-400">
+                <p className="text-slate-500 dark:text-slate-400">
                   Base legal: obrigação legal (Art.º 6.º n.º 1 c) RGPD)
                 </p>
               </div>
-              <div className="bg-stone-100 dark:bg-stone-900 rounded-lg p-4">
+              <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4">
                 <p className="font-semibold mb-1">Melhoria do serviço e segurança</p>
-                <p className="text-stone-500 dark:text-stone-400">
+                <p className="text-slate-500 dark:text-slate-400">
                   Base legal: interesse legítimo (Art.º 6.º n.º 1 f) RGPD)
                 </p>
               </div>
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               4. Partilha de Dados
             </h2>
             <p className="mb-3 text-sm">
@@ -107,7 +107,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               5. Conservação dos Dados
             </h2>
             <p className="text-sm">
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               6. Os Seus Direitos (RGPD)
             </h2>
             <p className="mb-3 text-sm">Ao abrigo do Regulamento Geral de Proteção de Dados, tem direito a:</p>
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               7. Cookies
             </h2>
             <p className="text-sm">
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               8. Segurança
             </h2>
             <p className="text-sm">
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               9. Alterações a Esta Política
             </h2>
             <p className="text-sm">
@@ -183,11 +183,11 @@ export default function PrivacyPage() {
 
         </div>
 
-        <div className="mt-14 pt-8 border-t border-stone-200 dark:border-stone-800 flex gap-6 text-sm">
+        <div className="mt-14 pt-8 border-t border-slate-200 dark:border-slate-800 flex gap-6 text-sm">
           <Link to="/termos" className="text-emerald-600 dark:text-emerald-400 hover:underline">
             Termos e Condições
           </Link>
-          <Link to="/" className="text-stone-500 hover:text-stone-700 dark:hover:text-stone-300">
+          <Link to="/" className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
             Voltar à loja
           </Link>
         </div>

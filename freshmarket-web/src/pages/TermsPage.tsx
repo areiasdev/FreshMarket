@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
 
         <div className="mb-10">
@@ -11,17 +11,17 @@ export default function TermsPage() {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-stone-900 dark:text-stone-50 mb-2">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-50 mb-2">
           Termos e Condições
         </h1>
-        <p className="text-sm text-stone-500 dark:text-stone-400 mb-10">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-10">
           Última atualização: março de 2026
         </p>
 
-        <div className="space-y-10 text-stone-700 dark:text-stone-300 leading-relaxed">
+        <div className="space-y-10 text-slate-700 dark:text-slate-300 leading-relaxed">
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               1. Identificação
             </h2>
             <p className="text-sm">
@@ -36,7 +36,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               2. Objeto
             </h2>
             <p className="text-sm">
@@ -47,7 +47,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               3. Registo e Conta
             </h2>
             <ul className="list-disc list-inside space-y-1.5 text-sm">
@@ -65,7 +65,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               4. Encomendas
             </h2>
             <ul className="list-disc list-inside space-y-1.5 text-sm">
@@ -88,7 +88,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               5. Preços e Pagamento
             </h2>
             <ul className="list-disc list-inside space-y-1.5 text-sm">
@@ -110,7 +110,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               6. Entregas
             </h2>
             <ul className="list-disc list-inside space-y-1.5 text-sm">
@@ -135,7 +135,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               7. Direito de Arrependimento e Devoluções
             </h2>
             <p className="mb-3 text-sm">
@@ -160,7 +160,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               8. Cancelamento de Encomendas
             </h2>
             <p className="text-sm">
@@ -173,7 +173,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               9. Responsabilidade
             </h2>
             <p className="text-sm">
@@ -185,7 +185,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               10. Propriedade Intelectual
             </h2>
             <p className="text-sm">
@@ -196,7 +196,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               11. Alterações
             </h2>
             <p className="text-sm">
@@ -207,7 +207,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
               12. Lei Aplicável e Foro
             </h2>
             <p className="text-sm">
@@ -223,11 +223,11 @@ export default function TermsPage() {
 
         </div>
 
-        <div className="mt-14 pt-8 border-t border-stone-200 dark:border-stone-800 flex gap-6 text-sm">
+        <div className="mt-14 pt-8 border-t border-slate-200 dark:border-slate-800 flex gap-6 text-sm">
           <Link to="/privacidade" className="text-emerald-600 dark:text-emerald-400 hover:underline">
             Política de Privacidade
           </Link>
-          <Link to="/" className="text-stone-500 hover:text-stone-700 dark:hover:text-stone-300">
+          <Link to="/" className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
             Voltar à loja
           </Link>
         </div>

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../features/cart/CartContext";
 import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
 import { IconShoppingCart, IconX, IconArrowRight } from "../components/ui/icons";
@@ -61,7 +62,7 @@ export default function CartPage() {
                       <img
                         src={item.imageUrl} alt={item.name}
                         className="w-11 h-11 rounded-lg object-cover border border-slate-100 dark:border-slate-700 flex-shrink-0"
-                        onError={e => (e.currentTarget.src = "https://placehold.co/44/f1f5f9/94a3b8?text=—")}
+                        onError={e => (e.currentTarget.src = "/images/placeholder.svg")}
                       />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{item.name}</p>
@@ -123,7 +124,7 @@ export default function CartPage() {
 
               <div className="px-5 pb-5 space-y-2">
                 <button onClick={() => navigate("/checkout")}
-                  className="btn-primary w-full justify-center bg-amber-500 hover:bg-amber-400 font-bold flex items-center gap-2">
+                  className="btn-primary w-full justify-center font-bold flex items-center gap-2">
                   {t("cart.checkout")}
                   <Icon icon={IconArrowRight} size={14} />
                 </button>
@@ -136,6 +137,8 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

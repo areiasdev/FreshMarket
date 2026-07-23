@@ -5,6 +5,7 @@ import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import type { OrderSummaryDto } from "../types";
 import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import StatusBadge from "../components/layout/StatusBadge";
 import Icon from "../components/ui/Icon";
 import { IconPackage } from "../components/ui/icons";
@@ -95,6 +96,8 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

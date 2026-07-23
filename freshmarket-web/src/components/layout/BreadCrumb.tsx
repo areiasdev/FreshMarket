@@ -13,16 +13,16 @@ export default function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
             {item.path && !isLast ? (
               <button
                 onClick={() => navigate(item.path!)}
-                className="text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
+                className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 font-medium transition-colors"
               >
                 {item.label}
               </button>
             ) : (
-              <span className={isLast ? "text-slate-900 font-semibold" : "text-slate-400"}>
+              <span className={isLast ? "text-slate-900 dark:text-slate-100 font-semibold" : "text-slate-400 dark:text-slate-500"}>
                 {item.label}
               </span>
             )}
-            {!isLast && <span className="text-slate-300 select-none">/</span>}
+            {!isLast && <span className="text-slate-300 dark:text-slate-600 select-none">/</span>}
           </span>
         );
       })}

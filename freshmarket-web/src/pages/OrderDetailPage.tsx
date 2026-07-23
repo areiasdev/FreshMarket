@@ -5,6 +5,7 @@ import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
 import type { OrderDto } from "../types";
 import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import StatusBadge from "../components/layout/StatusBadge";
 import Breadcrumb from "../components/layout/BreadCrumb";
 import Icon from "../components/ui/Icon";
@@ -342,6 +343,8 @@ export default function OrderDetailPage() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }
