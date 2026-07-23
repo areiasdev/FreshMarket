@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import { parseDateTime } from "../../lib/dates";
 import Pagination from "../../components/utils/Pagination";
 import { useAuth } from "../auth/useAuth";
+import { badge as badgeClass, roleBadge } from "../../lib/color";
 
 interface UserAdmin {
   id: number;
@@ -29,20 +30,27 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
   const [roleFilter, setRoleFilter] = useState("");
   const [acting, setActing]   = useState<number | null>(null);
 
-  const load = async () => {
+  // Search is applied only on explicit submit, not live-as-you-type — read it via a
+  // ref so `load` doesn't need `search` as a reactive dependency.
+  const searchRef = useRef(search);
+  searchRef.current = search;
+
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await client.get(endpoints.admin.users.getAll, {
-        params: { search: search || undefined, role: roleFilter || undefined, page, pageSize },
+        params: { search: searchRef.current || undefined, role: roleFilter || undefined, page, pageSize },
       });
       setUsers(res.data.items);
       setTotal(res.data.totalCount);
+    } catch {
+      alert("Erro ao carregar utilizadores.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [roleFilter, page, pageSize]);
 
-  useEffect(() => { load(); }, [page, roleFilter]);
+  useEffect(() => { load(); }, [load]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +63,8 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
     try {
       const res = await client.put(endpoints.admin.users.toggleActive(id));
       setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: res.data.isActive } : u));
+    } catch {
+      alert("Erro ao atualizar estado do utilizador.");
     } finally {
       setActing(null);
     }
@@ -65,6 +75,8 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
     try {
       const res = await client.put(endpoints.admin.users.updateRole(id), { role });
       setUsers(prev => prev.map(u => u.id === id ? { ...u, role: res.data.role } : u));
+    } catch {
+      alert("Erro ao atualizar o role do utilizador.");
     } finally {
       setActing(null);
     }
@@ -78,8 +90,8 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
     <div>
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6`}>
         <div>
-          <h2 className={`text-lg font-bold ${d ? "text-slate-100" : "text-slate-800"}`}>Utilizadores</h2>
-          <p className={`text-xs mt-0.5 ${d ? "text-slate-400" : "text-slate-500"}`}>{total} registados</p>
+          <h2 className={`text-2xl font-bold ${d ? "text-slate-100" : "text-slate-800"}`}>Utilizadores</h2>
+          <p className={`text-sm mt-0.5 ${d ? "text-slate-400" : "text-slate-500"}`}>{total} registados</p>
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -165,11 +177,7 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
                         <option value="SuperAdmin">SuperAdmin</option>
                       </select>
                     ) : (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                        u.role === "SuperAdmin" ? "bg-purple-100 text-purple-700" :
-                        u.role === "Admin"      ? "bg-emerald-100 text-emerald-700" :
-                                                  d ? "text-slate-300" : "text-slate-600"
-                      }`}>
+                      <span className={roleBadge[u.role] ?? "badge badge-slate"}>
                         {u.role}
                       </span>
                     )}
@@ -181,11 +189,7 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
                     {parseDateTime(u.createdAt)?.toLocaleDateString("pt-PT")}
                   </td>
                   <td className={`${td} text-center`}>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      u.isActive
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-red-100 text-red-600"
-                    }`}>
+                    <span className={u.isActive ? badgeClass.active : badgeClass.inactive}>
                       {u.isActive ? "Ativo" : "Inativo"}
                     </span>
                   </td>

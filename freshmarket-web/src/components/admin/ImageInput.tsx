@@ -47,13 +47,13 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
     <div>
       {/* Toggle URL / Upload */}
       <div className="flex gap-3 mb-2">
-        <span className="text-sm text-slate-600 font-medium">Imagem</span>
-        <div className="flex rounded-md border border-slate-200 overflow-hidden text-xs">
+        <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">Imagem</span>
+        <div className="flex rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden text-xs">
           <button
             type="button"
             onClick={() => setMode("url")}
             className={`px-2.5 py-1 font-medium transition-colors ${
-              mode === "url" ? "bg-emerald-700 text-white" : "text-slate-500 hover:bg-slate-50"
+              mode === "url" ? "bg-emerald-700 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
             }`}
           >
             URL
@@ -61,8 +61,8 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
           <button
             type="button"
             onClick={() => setMode("upload")}
-            className={`px-2.5 py-1 font-medium transition-colors border-l border-slate-200 ${
-              mode === "upload" ? "bg-emerald-700 text-white" : "text-slate-500 hover:bg-slate-50"
+            className={`px-2.5 py-1 font-medium transition-colors border-l border-slate-200 dark:border-slate-600 ${
+              mode === "upload" ? "bg-emerald-700 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
             }`}
           >
             Ficheiro
@@ -72,7 +72,7 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
 
       {mode === "url" ? (
         <input
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+          className="input"
           placeholder="https://..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -80,7 +80,7 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
       ) : (
         <div
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-slate-200 rounded-lg px-3 py-4 text-sm text-center text-slate-400 cursor-pointer hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+          className="w-full border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-lg px-3 py-4 text-sm text-center text-slate-400 dark:text-slate-500 cursor-pointer hover:border-emerald-400 hover:text-emerald-600 transition-colors"
         >
           {uploading ? "A fazer upload..." : "Clica para escolher imagem (JPG, PNG, WebP · máx 5MB)"}
           <input
@@ -98,13 +98,13 @@ export default function ImageInput({ value, onChange }: ImageInputProps) {
         <img
           src={value}
           alt="preview"
-          className="mt-2 h-20 w-20 rounded-lg object-cover border border-slate-100"
+          className="mt-2 h-20 w-20 rounded-lg object-cover border border-slate-100 dark:border-slate-700"
           onError={(e) => (e.currentTarget.style.display = "none")}
         />
       )}
 
       {error && (
-        <p className="mt-1 text-xs text-red-600">{error}</p>
+        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
   );

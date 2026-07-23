@@ -49,7 +49,8 @@ export default function AdminHarvestList() {
   const togglePicked = (id: number) => {
     setPicked(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -71,8 +72,8 @@ export default function AdminHarvestList() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Lista de Colheita</h2>
-        <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Lista de Colheita</h2>
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
           Produtos a colher para as encomendas de um dia ou intervalo
         </p>
       </div>
@@ -80,7 +81,7 @@ export default function AdminHarvestList() {
       {/* Controls */}
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             De
           </label>
           <input
@@ -88,11 +89,11 @@ export default function AdminHarvestList() {
             value={dateFrom}
             max={dateTo}
             onChange={e => setDateFrom(e.target.value)}
-            className="border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             Até
           </label>
           <input
@@ -100,13 +101,13 @@ export default function AdminHarvestList() {
             value={dateTo}
             min={dateFrom}
             onChange={e => setDateTo(e.target.value)}
-            className="border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
         {items != null && items.length > 0 && (
           <button
             onClick={handlePrint}
-            className="border border-gray-200 dark:border-slate-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-700 dark:text-slate-300 print:hidden"
+            className="border border-slate-200 dark:border-slate-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-300 print:hidden"
           >
             Imprimir
           </button>
@@ -115,14 +116,14 @@ export default function AdminHarvestList() {
 
       {/* Loading */}
       {loading && (
-        <div className="card p-12 text-center text-gray-400 dark:text-slate-500 text-sm">
+        <div className="card p-12 text-center text-slate-400 dark:text-slate-500 text-sm">
           A carregar...
         </div>
       )}
 
       {/* Empty */}
       {!loading && items !== null && items.length === 0 && (
-        <div className="card p-12 text-center text-gray-400 dark:text-slate-500 text-sm">
+        <div className="card p-12 text-center text-slate-400 dark:text-slate-500 text-sm">
           Sem encomendas para {isRange ? "este intervalo" : "esta data"}.
         </div>
       )}
@@ -134,25 +135,25 @@ export default function AdminHarvestList() {
             <div className="card px-4 py-3 flex items-center gap-2 flex-1 min-w-[120px]">
               <Icon icon={IconPackage} size={18} className="text-emerald-600" />
               <div>
-                <p className="text-xs text-gray-400 dark:text-slate-500">Produtos</p>
-                <p className="text-lg font-bold text-gray-800 dark:text-slate-100">{items.length}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Produtos</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{items.length}</p>
               </div>
             </div>
             {totalWeight > 0 && (
               <div className="card px-4 py-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-gray-400 dark:text-slate-500">Total peso</p>
-                <p className="text-lg font-bold text-gray-800 dark:text-slate-100">{totalWeight.toFixed(2)} kg</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Total peso</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{totalWeight.toFixed(2)} kg</p>
               </div>
             )}
             {totalUnits > 0 && (
               <div className="card px-4 py-3 flex-1 min-w-[120px]">
-                <p className="text-xs text-gray-400 dark:text-slate-500">Total unidades</p>
-                <p className="text-lg font-bold text-gray-800 dark:text-slate-100">{totalUnits} un</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Total unidades</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{totalUnits} un</p>
               </div>
             )}
             <div className="card px-4 py-3 flex-1 min-w-[120px]">
-              <p className="text-xs text-gray-400 dark:text-slate-500">Colhidos</p>
-              <p className={`text-lg font-bold ${doneAll ? "text-emerald-600" : "text-gray-800 dark:text-slate-100"}`}>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Colhidos</p>
+              <p className={`text-lg font-bold ${doneAll ? "text-emerald-600" : "text-slate-800 dark:text-slate-100"}`}>
                 {pickedCount} / {items.length}
               </p>
             </div>
@@ -161,13 +162,13 @@ export default function AdminHarvestList() {
           {/* Print header */}
           <div className="hidden print:block mb-6">
             <h1 className="text-2xl font-bold">FreshMarket — Lista de Colheita</h1>
-            <p className="text-sm text-gray-600 mt-1">{rangeLabel}</p>
+            <p className="text-sm text-slate-600 mt-1">{rangeLabel}</p>
           </div>
 
           {/* Item list */}
           <div className="card overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="table-header print:bg-gray-100">
+              <thead className="table-header print:bg-slate-100">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium print:hidden w-10" />
                   <th className="px-4 py-3 text-left font-medium">Produto</th>
@@ -190,12 +191,12 @@ export default function AdminHarvestList() {
                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                           isDone
                             ? "bg-emerald-600 border-emerald-600"
-                            : "border-gray-300 dark:border-slate-600"
+                            : "border-slate-300 dark:border-slate-600"
                         }`}>
                           {isDone && <Icon icon={IconCheck} size={11} className="text-white" />}
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-slate-100">
+                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">
                         {item.productName}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-emerald-700 dark:text-emerald-400 tabular-nums text-base">

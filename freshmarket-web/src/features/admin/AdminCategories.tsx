@@ -45,8 +45,12 @@ export default function AdminCategories() {
 };
 
   const toggleActive = async (id: number) => {
-    await client.patch(endpoints.admin.categories.toggleActive(id));
-    await reload();
+    try {
+      await client.patch(endpoints.admin.categories.toggleActive(id));
+      await reload();
+    } catch {
+      alert("Erro ao atualizar o estado da categoria.");
+    }
   };
 
   const openCreate = () => {
@@ -67,8 +71,8 @@ export default function AdminCategories() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Categorias</h1>
-          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} categorias no total</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Categorias</h1>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{total} categorias no total</p>
         </div>
         <button
           onClick={openCreate}
@@ -91,12 +95,16 @@ export default function AdminCategories() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-gray-400">A carregar...</td>
+                <td colSpan={4} className="text-center py-8 text-slate-400">A carregar...</td>
+              </tr>
+            ) : categories.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-10 text-slate-400 dark:text-slate-500">Nenhuma categoria encontrada</td>
               </tr>
             ) : categories.map((c) => (
               <tr key={c.id} className="table-row">
                 <td className="px-4 py-3 font-medium dark:text-slate-200">{c.name}</td>
-                <td className="px-4 py-3 text-gray-400 dark:text-slate-500 font-mono text-xs">{c.slug}</td>
+                <td className="px-4 py-3 text-slate-400 dark:text-slate-500 font-mono text-xs">{c.slug}</td>
                 <td className="px-4 py-3">
                   <span className={c.isActive ? badge.active : badge.inactive}>
                     {c.isActive ? "Ativa" : "Inativa"}
@@ -106,7 +114,7 @@ export default function AdminCategories() {
                   <button onClick={() => openEdit(c)} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                     Editar
                   </button>
-                  <button onClick={() => toggleActive(c.id)} className="text-xs text-gray-500 dark:text-slate-400 hover:underline">
+                  <button onClick={() => toggleActive(c.id)} className="text-xs text-slate-500 dark:text-slate-400 hover:underline">
                     {c.isActive ? "Desativar" : "Ativar"}
                   </button>
                 </td>
@@ -133,7 +141,7 @@ export default function AdminCategories() {
           onSubmit={handleSubmit}
         >
           <label className="block mb-4">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Nome</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Nome</span>
             <input
               className="input mt-1"
               value={form.name}
@@ -145,7 +153,7 @@ export default function AdminCategories() {
             />
           </label>
           <label className="block mb-4">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Slug</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Slug</span>
             <input
               className="input mt-1 font-mono"
               value={form.slug}
@@ -155,7 +163,7 @@ export default function AdminCategories() {
           <label className="flex items-center gap-2 mt-3">
             <input type="checkbox" checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-            <span className="text-sm text-gray-600 dark:text-slate-300">Ativa</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Ativa</span>
           </label>
         </Modal>
       )}

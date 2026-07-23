@@ -47,7 +47,7 @@ export default function ProductBulkPriceModal({ products, onClose, reload }: Pro
       submitLabel={saving ? "A guardar..." : "Guardar preços"}
       submitDisabled={saving}
     >
-      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
         Altera os preços dos produtos desta página. Deixa o valor igual para não alterar.
       </p>
       <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -56,10 +56,10 @@ export default function ProductBulkPriceModal({ products, onClose, reload }: Pro
             <img
               src={p.imageUrl} alt={p.name}
               className="w-8 h-8 rounded object-cover flex-shrink-0"
-              onError={e => (e.currentTarget.src = "https://placehold.co/32?text=P")}
+              onError={e => (e.currentTarget.src = "/images/placeholder.svg")}
             />
-            <span className="flex-1 text-sm text-gray-800 dark:text-slate-200 truncate">{p.name}</span>
-            <span className="text-xs text-gray-400">{p.unitType === 1 ? "€/kg" : "€/un"}</span>
+            <span className="flex-1 text-sm text-slate-800 dark:text-slate-200 truncate">{p.name}</span>
+            <span className="text-xs text-slate-400">{p.unitType === 1 ? "€/kg" : "€/un"}</span>
             <input
               type="text"
               inputMode="decimal"

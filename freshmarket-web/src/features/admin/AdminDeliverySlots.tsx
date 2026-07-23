@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import client from "../../api/client";
 import Modal from "../../components/admin/Modal";
 import { endpoints } from "../../lib/endpoints";
@@ -69,8 +69,12 @@ export default function AdminDeliverySlots() {
   };
 
   const toggleActive = async (id: number) => {
-    await client.patch(endpoints.admin.slots.toggleActive(id));
-    await reload();
+    try {
+      await client.patch(endpoints.admin.slots.toggleActive(id));
+      await reload();
+    } catch {
+      alert("Erro ao atualizar o estado do slot.");
+    }
   };
 
   const openCreate = () => {
@@ -97,7 +101,7 @@ export default function AdminDeliverySlots() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Janelas de Entrega</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Janelas de Entrega</h1>
           <p className="text-sm text-slate-400 mt-0.5">
             Janelas horárias para organização interna das entregas
           </p>
@@ -142,8 +146,8 @@ export default function AdminDeliverySlots() {
               const isExpanded = expandedSlot === s.id;
               const orders = slotOrders[s.id];
               return (
-                <>
-                  <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors dark:border-slate-700/40 dark:hover:bg-slate-700/30">
+                <Fragment key={s.id}>
+                  <tr className="border-b border-slate-50 hover:bg-slate-50 transition-colors dark:border-slate-700/40 dark:hover:bg-slate-700/30">
                     <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
                       {dateLabel}
                     </td>
@@ -235,7 +239,7 @@ export default function AdminDeliverySlots() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>

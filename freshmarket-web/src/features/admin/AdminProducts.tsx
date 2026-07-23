@@ -44,8 +44,12 @@ export default function AdminProducts() {
   };
 
   const toggleActive = async (id: number) => {
-    await client.patch(endpoints.admin.products.toggleActive(id));
-    await reload();
+    try {
+      await client.patch(endpoints.admin.products.toggleActive(id));
+      await reload();
+    } catch {
+      alert("Erro ao atualizar o estado do produto.");
+    }
   };
 
   const totalPages = Math.ceil(total / pageSize);
@@ -54,8 +58,8 @@ export default function AdminProducts() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Produtos</h1>
-          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} produtos no total</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Produtos</h1>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{total} produtos no total</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <form
@@ -75,7 +79,7 @@ export default function AdminProducts() {
           <button
             onClick={() => setShowBulkModal(true)}
             disabled={products.length === 0}
-            className="border border-gray-200 dark:border-slate-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-700 dark:text-slate-300 disabled:opacity-40"
+            className="border border-slate-200 dark:border-slate-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-300 disabled:opacity-40"
           >
             Atualizar Preços
           </button>
@@ -103,7 +107,11 @@ export default function AdminProducts() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-400 dark:text-slate-500">A carregar...</td>
+                <td colSpan={6} className="text-center py-8 text-slate-400 dark:text-slate-500">A carregar...</td>
+              </tr>
+            ) : products.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-10 text-slate-400 dark:text-slate-500">Nenhum produto encontrado</td>
               </tr>
             ) : products.map((p) => (
               <tr key={p.id} className="table-row transition">
@@ -111,16 +119,16 @@ export default function AdminProducts() {
                   <img
                     src={p.imageUrl} alt={p.name}
                     className="w-10 h-10 rounded-lg object-cover"
-                    onError={(e) => (e.currentTarget.src = "https://placehold.co/40?text=P")}
+                    onError={(e) => (e.currentTarget.src = "/images/placeholder.svg")}
                   />
-                  <span className="font-medium text-gray-800 dark:text-slate-200">{p.name}</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">{p.name}</span>
                 </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{p.categoryName}</td>
-                <td className="px-4 py-3 font-semibold text-green-700 dark:text-emerald-400">
+                <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{p.categoryName}</td>
+                <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400">
                   {p.pricePerUnit.toFixed(2)}€{p.unitType === 1 ? "/kg" : "/un"}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-gray-600 dark:text-slate-400 tabular-nums">{p.stockQuantity}</span>
+                  <span className="text-slate-600 dark:text-slate-400 tabular-nums">{p.stockQuantity}</span>
                   {p.trackStock && (p.lowStockAlert ?? 0) > 0 && p.stockQuantity <= (p.lowStockAlert ?? 0) && (
                     <span className="ml-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
                       baixo
@@ -139,7 +147,7 @@ export default function AdminProducts() {
                   <button onClick={() => setStockItem(p)} className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
                     Stock
                   </button>
-                  <button onClick={() => toggleActive(p.id)} className="text-xs text-gray-500 dark:text-slate-400 hover:underline">
+                  <button onClick={() => toggleActive(p.id)} className="text-xs text-slate-500 dark:text-slate-400 hover:underline">
                     {p.isActive ? "Desativar" : "Ativar"}
                   </button>
                 </td>

@@ -55,14 +55,28 @@ function ChartCard({ title, children, full = false }: {
 
 // ─── Custom tooltip ───────────────────────────────────────────────────────────
 
-function RevenueTooltip({ active, payload, label, dark }: any) {
+interface RevenueTooltipPayloadEntry {
+  dataKey: string;
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface RevenueTooltipProps {
+  active?: boolean;
+  payload?: RevenueTooltipPayloadEntry[];
+  label?: string;
+  dark: boolean;
+}
+
+function RevenueTooltip({ active, payload, label, dark }: RevenueTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className={`rounded-lg shadow-md px-3 py-2 text-xs border ${
       dark ? "bg-slate-800 border-slate-600 text-slate-200" : "bg-white border-slate-200 text-slate-700"
     }`}>
       <p className="font-semibold mb-1">{label}</p>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color }}>
           {p.name}: {p.dataKey === "revenue" ? `${fmt(p.value)}€` : p.value}
         </p>
@@ -77,6 +91,18 @@ type PeriodPreset = 7 | 30 | "custom";
 
 function toIsoDate(d: Date) {
   return d.toISOString().slice(0, 10);
+}
+
+function buildMetricsUrl(p: PeriodPreset, from?: string, to?: string) {
+  let url = endpoints.admin.metrics;
+  if (p === "custom" && from && to) {
+    url += `?from=${from}&to=${to}`;
+  } else if (p !== "custom") {
+    const d = new Date();
+    const f = toIsoDate(new Date(d.getTime() - (p - 1) * 86400000));
+    url += `?from=${f}&to=${toIsoDate(d)}`;
+  }
+  return url;
 }
 
 export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
@@ -99,20 +125,18 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
   const fetchData = (p: PeriodPreset, from?: string, to?: string) => {
     if (data) setRefreshing(true);
     else setLoading(true);
-    let url = endpoints.admin.metrics;
-    if (p === "custom" && from && to) {
-      url += `?from=${from}&to=${to}`;
-    } else if (p !== "custom") {
-      const d = new Date();
-      const f = toIsoDate(new Date(d.getTime() - (p - 1) * 86400000));
-      url += `?from=${f}&to=${toIsoDate(d)}`;
-    }
-    client.get(url)
+    client.get(buildMetricsUrl(p, from, to))
       .then(res => setData(res.data))
       .finally(() => { setLoading(false); setRefreshing(false); });
   };
 
-  useEffect(() => { fetchData(30); }, []);
+  // Initial load: state already starts as loading=true, so this only needs to fetch —
+  // no synchronous setState calls here, keeping the effect body itself side-effect-free.
+  useEffect(() => {
+    client.get(buildMetricsUrl(30))
+      .then(res => setData(res.data))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handlePreset = (p: 7 | 30) => {
     setPeriod(p);
@@ -148,7 +172,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
       <div className="flex items-end justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
             {refreshing && (
               <span className="text-xs text-slate-400 animate-pulse">a atualizar...</span>
             )}
@@ -217,7 +241,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
       </div>
 
       {/* ── KPI strip ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="card p-4">
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
             Receita {period === "custom" ? `(${customFrom} → ${customTo})` : `(${period}d)`}
@@ -288,7 +312,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
       </ChartCard>
 
       {/* ── Row 2: Status pie + Customers bar ───────────────────────── */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
         <ChartCard title="Encomendas por estado (total)">
           <ResponsiveContainer width="100%" height={220}>
@@ -385,7 +409,7 @@ export default function AdminMetrics({ dark = false }: { dark?: boolean }) {
       </ChartCard>
 
       {/* ── Row 4: Peak hours + Price stats ─────────────────────────── */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
         <ChartCard title="Pico de encomendas por hora">
           <ResponsiveContainer width="100%" height={220}>

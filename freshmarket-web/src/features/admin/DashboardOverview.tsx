@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import {
@@ -9,6 +10,40 @@ import {
 } from "../../components/ui/icons";
 import Icon from "../../components/ui/Icon";
 import { orderStatusBadge, orderStatusLabel } from "../../lib/color";
+
+function toIsoDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function RevenueSparkline() {
+  const [data, setData] = useState<{ date: string; revenue: number }[] | null>(null);
+
+  useEffect(() => {
+    const to = new Date();
+    const from = new Date(to.getTime() - 13 * 86400000);
+    client.get(endpoints.admin.metrics, { params: { from: toIsoDate(from), to: toIsoDate(to) } })
+      .then(res => setData(res.data.revenueByDay ?? []))
+      .catch(() => setData([]));
+  }, []);
+
+  if (!data || data.length < 2) return null;
+
+  return (
+    <div className="h-12 w-28 sm:w-36">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="dashboardRevenueTrend" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+              <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={2} fill="url(#dashboardRevenueTrend)" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface DashboardStats {
@@ -123,7 +158,7 @@ export default function DashboardOverview() {
 
       {/* ── Cabeçalho ──────────────────────────────────────────── */}
       <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
         <p className="text-sm text-slate-400 mt-0.5">
           {new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })}
         </p>
@@ -131,7 +166,10 @@ export default function DashboardOverview() {
 
       {/* ── Receita ────────────────────────────────────────────── */}
       <div>
-        <SectionTitle>Receita</SectionTitle>
+        <div className="flex items-start justify-between">
+          <SectionTitle>Receita (últimos 14 dias)</SectionTitle>
+          <RevenueSparkline />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard label="Hoje"       value={`${fmt(stats.revenueToday)}€`}     icon={IconCurrencyEuro} accent sub={`${stats.ordersToday} encomenda${stats.ordersToday !== 1 ? "s" : ""}`} />
           <StatCard label="Esta semana" value={`${fmt(stats.revenueThisWeek)}€`}  icon={IconTrendingUpDown}   sub={`${stats.ordersThisWeek} encomendas`} />

@@ -65,6 +65,13 @@ export const orderStatusLabel: Record<number, string> = {
   5: "Cancelada",
 };
 
+// ─── Mapeamento role de utilizador ────────────────────────────────────────────
+export const roleBadge: Record<string, string> = {
+  SuperAdmin: "badge badge-purple",
+  Admin:      "badge badge-green",
+  Customer:   "badge badge-slate",
+};
+
 // ─── Botões ───────────────────────────────────────────────────────────────────
 export const btn = {
   primary:   "btn-primary",

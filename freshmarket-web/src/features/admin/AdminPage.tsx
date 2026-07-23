@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../auth/useAuth";
+import { useTheme } from "../theme/useTheme";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminProducts from "./AdminProducts";
 import AdminCategories from "./AdminCategories";
@@ -35,29 +36,27 @@ const NAV_ITEMS: { key: Section; label: string; icon: TablerIcon }[] = [
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate         = useNavigate();
+  const dark = theme === "dark";
 
   const [active, setActive] = useState<Section>(() => {
     const s = searchParams.get("section") as Section;
     return NAV_ITEMS.some(n => n.key === s) ? s : "dashboard";
   });
 
-  const [dark, setDark] = useState<boolean>(() => {
-    return localStorage.getItem("admin-theme") === "dark";
-  });
+  // Keep `active` in sync with ?section= without an effect: adjust state during
+  // render (React's documented pattern) instead of setState-in-effect.
+  const [syncedSection, setSyncedSection] = useState<string | null>(searchParams.get("section"));
+  const urlSection = searchParams.get("section");
+  if (urlSection !== syncedSection) {
+    setSyncedSection(urlSection);
+    if (urlSection && NAV_ITEMS.some(n => n.key === urlSection)) setActive(urlSection as Section);
+  }
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    const s = searchParams.get("section") as Section;
-    if (s && NAV_ITEMS.some(n => n.key === s)) setActive(s);
-  }, [searchParams]);
-
-  useEffect(() => {
-    localStorage.setItem("admin-theme", dark ? "dark" : "light");
-  }, [dark]);
 
   useEffect(() => {
     const fetchPending = async () => {
@@ -85,7 +84,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans ${dark ? "dark bg-slate-900" : "bg-gray-100"}`}>
+    <div className={`flex min-h-screen font-sans ${dark ? "dark bg-slate-900" : "bg-slate-100"}`}>
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -97,16 +96,16 @@ export default function AdminPage() {
 
       {/* ── Sidebar ────────────────────────────────────────────────── */}
       <aside className={`w-64 flex flex-col fixed h-full z-20 border-r shadow-sm transition-all duration-300
-        ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}
+        ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
 
         {/* Logo */}
-        <div className={`p-5 border-b ${dark ? "border-slate-700" : "border-gray-200"}`}>
+        <div className={`p-5 border-b ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <IconLeaf size={20} className={dark ? "text-green-400" : "text-green-600"} />
-            <span className={`font-bold text-lg ${dark ? "text-green-400" : "text-green-700"}`}>FreshMarket</span>
+            <IconLeaf size={20} className={dark ? "text-emerald-400" : "text-emerald-600"} />
+            <span className={`font-bold text-lg ${dark ? "text-emerald-400" : "text-emerald-700"}`}>FreshMarket</span>
           </div>
-          <p className={`text-xs mt-1 ${dark ? "text-slate-500" : "text-gray-400"}`}>Painel de Administração</p>
+          <p className={`text-xs mt-1 ${dark ? "text-slate-500" : "text-slate-400"}`}>Painel de Administração</p>
         </div>
 
         {/* Nav */}
@@ -121,12 +120,12 @@ export default function AdminPage() {
                   setActive(item.key);
                   if (item.key === "orders") setPendingCount(0);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   active === item.key
-                    ? "bg-green-600 text-white"
+                    ? "bg-emerald-700 text-white font-semibold shadow-sm shadow-emerald-900/20"
                     : dark
                       ? "text-slate-300 hover:bg-slate-700"
-                      : "text-gray-600 hover:bg-gray-100"
+                      : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 <I size={16} stroke={2} />
@@ -142,14 +141,14 @@ export default function AdminPage() {
         </nav>
 
         {/* Footer */}
-        <div className={`p-4 border-t space-y-2 ${dark ? "border-slate-700" : "border-gray-200"}`}>
+        <div className={`p-4 border-t space-y-2 ${dark ? "border-slate-700" : "border-slate-200"}`}>
           {/* Dark / Light toggle */}
           <button
-            onClick={() => setDark(d => !d)}
+            onClick={toggleTheme}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
               ${dark
                 ? "text-slate-300 hover:bg-slate-700"
-                : "text-gray-600 hover:bg-gray-100"}`}
+                : "text-slate-600 hover:bg-slate-100"}`}
           >
             {dark
               ? <IconSun size={16} stroke={2} className="text-amber-400" />
@@ -157,7 +156,7 @@ export default function AdminPage() {
             {dark ? "Modo claro" : "Modo escuro"}
           </button>
 
-          <p className={`text-xs truncate px-1 ${dark ? "text-slate-500" : "text-gray-500"}`}>{user?.fullName}</p>
+          <p className={`text-xs truncate px-1 ${dark ? "text-slate-500" : "text-slate-500"}`}>{user?.fullName}</p>
           <button
             onClick={() => { logout(); navigate("/"); }}
             className={`w-full text-sm py-2 rounded-lg transition-colors
@@ -172,15 +171,15 @@ export default function AdminPage() {
       <main className={`ml-0 md:ml-64 flex-1 min-h-screen transition-colors ${dark ? "text-slate-100" : ""}`}>
         {/* Mobile top bar */}
         <div className={`flex items-center gap-3 px-4 py-3 border-b md:hidden
-          ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+          ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
           <button
             onClick={() => setMobileOpen(o => !o)}
             className={`p-1.5 rounded-lg transition-colors
-              ${dark ? "text-slate-300 hover:bg-slate-700" : "text-gray-600 hover:bg-gray-100"}`}
+              ${dark ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-100"}`}
           >
             <IconMenu2 size={20} stroke={2} />
           </button>
-          <span className={`font-semibold text-sm ${dark ? "text-slate-200" : "text-gray-700"}`}>
+          <span className={`font-semibold text-sm ${dark ? "text-slate-200" : "text-slate-700"}`}>
             Painel de Administração
           </span>
         </div>

@@ -86,13 +86,13 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="text-sm text-gray-600 dark:text-slate-300">Nome</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Nome</span>
           <input className="input mt-1"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") })} />
         </label>
         <label className="block">
-          <span className="text-sm text-gray-600 dark:text-slate-300">Descrição</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Descrição</span>
           <textarea
             className="input mt-1 resize-none"
             rows={3}
@@ -102,7 +102,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
           />
         </label>
         <label className="block">
-          <span className="text-sm text-gray-600 dark:text-slate-300">Categoria</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Categoria</span>
           <select className="input mt-1"
             value={form.categoryId}
             onChange={(e) => setForm({ ...form, categoryId: +e.target.value })}>
@@ -111,7 +111,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Preço (€)</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Preço (€)</span>
             <input type="text" className="input mt-1"
               value={form.pricePerUnit}
               onChange={(e) => {
@@ -120,7 +120,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
               }} />
           </label>
           <label className="block">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Stock</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Stock</span>
             <input type="text" inputMode="decimal" className="input mt-1"
               value={form.stockQuantity}
               onChange={(e) => {
@@ -131,7 +131,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Qtd. mínima</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Qtd. mínima</span>
             <input type="text" inputMode="decimal" className="input mt-1"
               value={form.minQuantity}
               onChange={(e) => {
@@ -140,7 +140,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
               }} />
           </label>
           <label className="block">
-            <span className="text-sm text-gray-600 dark:text-slate-300">Alerta stock baixo</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">Alerta stock baixo</span>
             <input type="text" className="input mt-1"
               value={form.lowStockAlert}
               onChange={(e) => {
@@ -150,7 +150,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
           </label>
         </div>
         <label className="block">
-          <span className="text-sm text-gray-600 dark:text-slate-300">Tipo</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Tipo</span>
           <select className="input mt-1"
             value={form.unitType}
             onChange={(e) => setForm({ ...form, unitType: +e.target.value })}>
@@ -163,7 +163,7 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
           onChange={(url) => setForm({ ...form, imageUrl: url })}
         />
         <label className="block">
-          <span className="text-sm text-gray-600 dark:text-slate-300">Slug</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Slug</span>
           <input className="input mt-1 font-mono"
             value={form.slug}
             onChange={(e) => setForm({ ...form, slug: e.target.value })} />
@@ -171,12 +171,12 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={form.trackStock}
             onChange={(e) => setForm({ ...form, trackStock: e.target.checked })} />
-          <span className="text-sm text-gray-600 dark:text-slate-300">Controlar stock</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Controlar stock</span>
         </label>
         <label className="flex items-center gap-2 mt-1">
           <input type="checkbox" checked={form.isSeasonal}
             onChange={(e) => setForm({ ...form, isSeasonal: e.target.checked })} />
-          <span className="text-sm text-gray-600 dark:text-slate-300">Produto Sazonal</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Produto Sazonal</span>
         </label>
       </div>
     </Modal>

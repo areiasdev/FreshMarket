@@ -57,7 +57,7 @@ export default function ProductStockAdjustModal({ product, onClose, reload }: Pr
           <img
             src={product.imageUrl} alt={product.name}
             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-            onError={e => (e.currentTarget.src = "https://placehold.co/40?text=P")}
+            onError={e => (e.currentTarget.src = "/images/placeholder.svg")}
           />
           <div>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{product.name}</p>

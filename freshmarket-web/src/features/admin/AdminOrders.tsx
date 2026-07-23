@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
@@ -11,7 +11,7 @@ import {
   PAYMENT_STATUS_LABELS,
 } from "../../lib/labels";
 import Icon from "../../components/ui/Icon";
-import { IconX } from "../../components/ui/icons";
+import { IconX, IconNotes } from "../../components/ui/icons";
 
 interface OrderDetail {
   id: number;
@@ -80,34 +80,30 @@ export default function AdminOrders() {
   const [detail, setDetail]             = useState<OrderDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const res = await client.get(
-          endpoints.admin.orders.byStatus(selectedStatus.toString()),
-          { params: { page, pageSize, search: search || undefined } }
-        );
-        setOrders(res.data.items);
-        setTotal(res.data.totalCount);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await client.get(
+        endpoints.admin.orders.byStatus(selectedStatus.toString()),
+        { params: { page, pageSize, search: search || undefined } }
+      );
+      setOrders(res.data.items);
+      setTotal(res.data.totalCount);
+    } finally {
+      setLoading(false);
+    }
   }, [selectedStatus, page, pageSize, search]);
 
-  const removeOrder = (id: number) => {
-    setOrders(prev => prev.filter(o => o.id !== id));
-    setTotal(t => t - 1);
-  };
+  useEffect(() => { load(); }, [load]);
 
   const handleUpdateStatus = async (id: number, newStatus: number) => {
     setUpdating(id);
     try {
       await client.put(endpoints.admin.orders.updateStatus(id), { status: newStatus });
-      removeOrder(id);
+      await load();
       if (detail?.id === id) setDetail(d => d ? { ...d, status: newStatus } : null);
+    } catch {
+      alert("Erro ao atualizar o estado da encomenda.");
     } finally {
       setUpdating(null);
     }
@@ -118,8 +114,10 @@ export default function AdminOrders() {
     setUpdating(id);
     try {
       await client.put(endpoints.admin.orders.cancel(id));
-      removeOrder(id);
+      await load();
       if (detail?.id === id) setDetail(d => d ? { ...d, status: 5 } : null);
+    } catch {
+      alert("Erro ao cancelar a encomenda.");
     } finally {
       setUpdating(null);
     }
@@ -138,6 +136,8 @@ export default function AdminOrders() {
     try {
       const res = await client.get(endpoints.orders.getById(id));
       setDetail(res.data);
+    } catch {
+      alert("Erro ao carregar detalhe da encomenda.");
     } finally {
       setLoadingDetail(false);
     }
@@ -182,8 +182,8 @@ export default function AdminOrders() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Encomendas</h2>
-          <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{total} encomendas neste estado</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Encomendas</h2>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{total} encomendas neste estado</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <form
@@ -211,7 +211,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Tabs de status */}
-      <div className="flex gap-1 border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
+      <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
         {STATUS_OPTIONS.map((s) => (
           <button
             key={s.value}
@@ -219,7 +219,7 @@ export default function AdminOrders() {
             className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
               selectedStatus === s.value
                 ? "border-emerald-700 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400"
-                : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             }`}
           >
             {s.label}
@@ -228,7 +228,7 @@ export default function AdminOrders() {
       </div>
 
       {loading ? (
-        <div className="card p-12 text-center text-gray-400 text-sm">
+        <div className="card p-12 text-center text-slate-400 text-sm">
           A carregar encomendas...
         </div>
       ) : (
@@ -248,7 +248,7 @@ export default function AdminOrders() {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
                     Sem encomendas neste estado.
                   </td>
                 </tr>
@@ -258,27 +258,24 @@ export default function AdminOrders() {
                 return (
                   <tr key={order.id} className="table-row transition">
                     <td className="px-4 py-3">
-                      <span className="font-mono text-xs text-gray-500 dark:text-slate-500">#{order.orderNumber}</span>
+                      <span className="font-mono text-xs text-slate-500 dark:text-slate-500">#{order.orderNumber}</span>
                       {order.notes && (
-                        <span
-                          title={order.notes}
-                          className="ml-1.5 text-amber-500 cursor-help text-xs"
-                        >
-                          📝
+                        <span title={order.notes} className="ml-1.5 text-amber-500 cursor-help inline-flex align-middle">
+                          <Icon icon={IconNotes} size={13} />
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-slate-200">{order.userFullName}</td>
-                    <td className="px-4 py-3 font-semibold text-green-700 dark:text-emerald-400">{order.totalAmount.toFixed(2)}€</td>
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{order.userFullName}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400">{order.totalAmount.toFixed(2)}€</td>
                     <td className="px-4 py-3">
                      <span className={orderStatusBadge[order.status] ?? "badge badge-slate"}>
                         {orderStatusLabel[order.status] ?? "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                       {parseDateTime(order.createdAt)?.toLocaleString("pt-PT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-slate-400">
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                       {order.deliverySlot
                         ? `${parseDateOnly(order.deliverySlot.deliveryDate)?.toLocaleDateString("pt-PT")} ${order.deliverySlot.startTime}–${order.deliverySlot.endTime}`
                         : "—"}
@@ -300,7 +297,7 @@ export default function AdminOrders() {
                             {isUpdating ? "..." : nextStatus.label}
                           </button>
                         )}
-                        {order.status !== 5 && order.status !== 4 && (
+                        {order.status !== 5 && order.status !== 4 && order.status !== 3 && (
                           <button
                             disabled={isUpdating}
                             onClick={() => handleCancel(order.id)}
@@ -375,8 +372,9 @@ export default function AdminOrders() {
                     </p>
                   )}
                   {detail.notes && (
-                    <p className="text-xs italic text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded px-2.5 py-1.5 mt-1">
-                      📝 {detail.notes}
+                    <p className="text-xs italic text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded px-2.5 py-1.5 mt-1 flex items-start gap-1.5">
+                      <Icon icon={IconNotes} size={13} className="flex-shrink-0 mt-0.5" />
+                      {detail.notes}
                     </p>
                   )}
                 </div>
