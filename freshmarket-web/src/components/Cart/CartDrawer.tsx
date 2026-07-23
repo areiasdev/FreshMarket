@@ -111,6 +111,7 @@ export default function CartDrawer({ open, onClose }: Props) {
             <p className="text-xs text-slate-400 dark:text-slate-400">{t("cart.shippingNote")}</p>
             <button
               onClick={() => { onClose(); navigate("/checkout"); }}
+              data-testid="go-to-checkout"
               className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
             >
               {t("cart.checkout")}

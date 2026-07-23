@@ -86,6 +86,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 </button>
                 <button
                   onClick={() => { logout(); navigate("/"); }}
+                  data-testid="nav-signout"
                   className="text-xs text-emerald-400 hover:text-red-300 transition-colors font-medium"
                 >
                   {t("nav.signOut")}

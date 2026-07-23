@@ -84,7 +84,7 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 export default function CheckoutPage() {
-  const { items, totalAmount, clearCart } = useCart();
+  const { items, totalAmount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -242,7 +242,8 @@ export default function CheckoutPage() {
       // Redirect flows (Stripe/MB WAY): don't clear the cart yet — the payment isn't
       // confirmed until PaymentResultPage sees a success. Cash confirms immediately, so clear now.
       if (payRes.data.redirectUrl) { window.location.href = payRes.data.redirectUrl; return; }
-      clearCart();
+      // The cart is cleared on OrderDetailPage once it mounts with ?confirmed=true —
+      // clearing it here raced this page's own "redirect to /cart when empty" effect.
       navigate(`/orders/${order.id}?confirmed=true`);
     } catch {
       setOrderError(t("checkout.orderError"));
@@ -303,6 +304,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="label">{t("checkout.address")}</label>
                     <input className="input" placeholder={t("checkout.addressPlaceholder")}
+                      data-testid="checkout-address"
                       value={form.deliveryAddress}
                       onChange={e => setForm({ ...form, deliveryAddress: e.target.value })} />
                   </div>
@@ -311,6 +313,7 @@ export default function CheckoutPage() {
                     <div>
                       <label className="label">{t("checkout.postalCode")}</label>
                       <input className="input font-mono" placeholder="3750-123" maxLength={8}
+                        data-testid="checkout-postal"
                         value={form.deliveryPostalCode}
                         onChange={e => setForm({ ...form, deliveryPostalCode: e.target.value })} />
                     </div>
@@ -419,7 +422,7 @@ export default function CheckoutPage() {
                     <button onClick={() => navigate("/cart")} className="btn-secondary flex items-center gap-1.5">
                       <Icon icon={IconArrowLeft} size={14} /> {t("checkout.back")}
                     </button>
-                    <button onClick={validateAddress} className="btn-primary bg-emerald-700 flex items-center gap-1.5">
+                    <button onClick={validateAddress} data-testid="checkout-continue" className="btn-primary bg-emerald-700 flex items-center gap-1.5">
                       {t("checkout.continue")} <Icon icon={IconArrowRight} size={14} />
                     </button>
                   </div>
@@ -495,7 +498,7 @@ export default function CheckoutPage() {
                   <button onClick={() => setStep("address")} className="btn-secondary flex-1 justify-center flex items-center gap-1.5">
                     <Icon icon={IconArrowLeft} size={14} /> {t("checkout.back")}
                   </button>
-                  <button onClick={handlePlaceOrder} disabled={submitting}
+                  <button onClick={handlePlaceOrder} disabled={submitting} data-testid="checkout-pay"
                     className="btn-primary flex-[2] justify-center font-bold disabled:opacity-50">
                     {submitting ? t("checkout.processing") : t("checkout.pay", { amount: total.toFixed(2) })}
                   </button>

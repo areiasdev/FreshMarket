@@ -129,6 +129,7 @@ export default function AuthPage() {
               <button
                 key={t2}
                 onClick={() => { setTab(t2); setError(""); }}
+                data-testid={`auth-tab-${t2}`}
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
                   tab === t2
                     ? "border-emerald-700 text-emerald-700"

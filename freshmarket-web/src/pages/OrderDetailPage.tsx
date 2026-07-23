@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import client from "../api/client";
 import { endpoints } from "../lib/endpoints";
+import { useCart } from "../features/cart/CartContext";
 import type { OrderDto } from "../types";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
@@ -55,7 +56,7 @@ function ReviewSection({ items }: { items: OrderDto["items"] }) {
       await client.post(endpoints.reviews.create, { productId, rating: r.rating, comment: r.comment || null });
       setReviews(prev => ({ ...prev, [productId]: { ...prev[productId], submitted: true } }));
     } catch {
-      // silently ignore — user can retry
+      alert(t("orderDetail.reviewError"));
     } finally {
       setSaving(null);
     }
@@ -118,6 +119,15 @@ export default function OrderDetailPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
+  const { clearCart } = useCart();
+
+  // Clearing the cart here (once the order is safely confirmed and its own page has
+  // mounted) instead of on CheckoutPage avoids a race with CheckoutPage's own
+  // "redirect to /cart when items is empty" effect while the route transition is in flight.
+  useEffect(() => {
+    if (orderConfirmed) clearCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderConfirmed]);
 
   // Timelines built here so labels react to language changes
   const statusLabel = (s: number) => t(`orderStatus.${s}`);
@@ -157,7 +167,10 @@ export default function OrderDetailPage() {
   const timeline = isCash ? TIMELINE_CASH : TIMELINE_UPFRONT;
   const currentPos = timeline.findIndex(t => t.status === order.status);
 
-  const canCancel = order.status === 0 || order.status === 1;
+  // Matches the backend guard: Pending/Paid/Preparing can still be cancelled,
+  // Shipped/Delivered/Cancelled cannot. Cash orders jump straight to Preparing
+  // (skip Paid), so without status 2 here a cash order could never be self-cancelled.
+  const canCancel = order.status === 0 || order.status === 1 || order.status === 2;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -329,7 +342,7 @@ export default function OrderDetailPage() {
             )}
 
             {canCancel && (
-              <button onClick={handleCancel} disabled={cancelling}
+              <button onClick={handleCancel} disabled={cancelling} data-testid="cancel-order"
                 className="btn-danger w-full justify-center disabled:opacity-50">
                 {cancelling ? t("orderDetail.cancelling") : t("orderDetail.cancelOrder")}
               </button>

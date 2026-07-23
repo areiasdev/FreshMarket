@@ -29,11 +29,13 @@ client.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
-    // Ignora erros que não sejam 401, ou que já foram retentados, ou que sejam do próprio endpoint de refresh
+    // Ignora erros que não sejam 401, que já foram retentados, ou que venham de um endpoint
+    // de auth (login/register/refresh/logout) — um 401 aí é "credenciais inválidas", não uma
+    // sessão expirada, e não deve disparar o redirect/refresh automático abaixo.
     if (
       error.response?.status !== 401 ||
       original._retry ||
-      original.url?.includes("/auth/refresh")
+      original.url?.includes("/auth/")
     ) {
       return Promise.reject(error);
     }

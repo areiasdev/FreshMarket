@@ -39,6 +39,7 @@ export default function PaymentSelector({ value, onChange }: Props) {
 
         <button
           onClick={() => onChange(PaymentMethod.Cash)}
+          data-testid="payment-method-cash"
           className={`border rounded-xl p-3 text-sm col-span-2 flex items-center gap-2 justify-center transition-colors ${
             value === PaymentMethod.Cash
               ? "border-emerald-700 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
