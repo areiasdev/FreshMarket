@@ -1,7 +1,15 @@
 O que falta fazer (Lista)
 
-Ver tudo o que é incrementos de quantidades (ver entre kg e unity) e produtos que comecem com 0.1 e não possam
-Em encomendas, quando atualizo o estado de uma encomenda, vou para a outra coluna de estado e fica a carregar, tenho que sair e voltar a entrar na mesma coluna para aparecer (so esta a funcionar bem em entregue) ve todos as colunas de estados
+[RESOLVIDO] Ver tudo o que é incrementos de quantidades (ver entre kg e unity) e produtos que comecem com 0.1 e não possam
+  -> Causa: Banana e Laranja estavam marcados como "Unidade" mas com minQuantity=0.1 (o
+     stepper do carrinho usa minQuantity como incremento, deixava adicionar "0.3 un").
+     Corrigido nos dois produtos (minQuantity=1) e adicionada validação (backend +
+     formulário admin) que bloqueia minQuantity fracionário sempre que o tipo for "Unidade".
+
+[RESOLVIDO] Em encomendas, quando atualizo o estado de uma encomenda, vou para a outra coluna de estado e fica a carregar...
+  -> Já corrigido pelo commit 952b295 (AdminOrders passou a fazer refetch em vez de
+     alterar o array localmente). Testado ao vivo (Pendente->Pago e Em preparo->Enviado):
+     sem loading preso, sem necessidade de sair/voltar à coluna.
 
 
 

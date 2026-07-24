@@ -62,6 +62,10 @@ export default function ProductFormModal({ editItem, categories, onClose, reload
   );
 
   const handleSubmit = async () => {
+    if (form.unitType === 0 && form.minQuantity % 1 !== 0) {
+      alert("Para produtos vendidos por unidade, a quantidade mínima deve ser um número inteiro.");
+      return;
+    }
     try {
       if (editItem) {
         await client.put(endpoints.admin.products.update(editItem.id), form);
