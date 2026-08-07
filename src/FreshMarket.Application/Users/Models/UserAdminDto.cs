@@ -8,6 +8,7 @@ public class UserAdminDto
     public string? Phone { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+    public bool IsGuest { get; set; }
     public int OrderCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }

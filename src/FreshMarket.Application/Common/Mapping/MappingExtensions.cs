@@ -124,5 +124,6 @@ public static class MappingExtensions
         Email = u.Email,
         Phone = u.Phone,
         Role = u.Role,
+        IsGuest = u.IsGuest,
     };
 }

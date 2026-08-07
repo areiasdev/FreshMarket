@@ -38,6 +38,7 @@ interface Order {
   id: number;
   orderNumber: string;
   userFullName: string;
+  userIsGuest?: boolean;
   totalAmount: number;
   status: number;
   paymentMethod?: number | null;
@@ -217,7 +218,7 @@ export default function AdminOrders() {
             <input
               value={searchInput}
               onChange={e => { setSearchInput(e.target.value); if (e.target.value === "") { setSearch(""); setPage(1); } }}
-              placeholder="Nº encomenda ou cliente..."
+              placeholder="Nº encomenda, cliente ou email..."
               className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button type="submit" className="text-sm px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors">
@@ -289,7 +290,14 @@ export default function AdminOrders() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{order.userFullName}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
+                      {order.userFullName}
+                      {order.userIsGuest && (
+                        <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                          Convidado
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400">{order.totalAmount.toFixed(2)}€</td>
                     <td className="px-4 py-3">
                      <span className={orderStatusBadge[order.status] ?? "badge badge-slate"}>

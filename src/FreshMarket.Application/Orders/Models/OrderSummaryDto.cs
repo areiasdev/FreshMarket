@@ -14,6 +14,7 @@ public class OrderSummaryDto
     public string DeliveryPostalCode { get; set; } = string.Empty;
     public int ItemCount { get; set; }
     public string UserFullName { get; set; } = string.Empty;
+    public bool UserIsGuest { get; set; }
     public PaymentMethodEnum? PaymentMethod { get; set; }
     public DeliverySlotInfo? DeliverySlot { get; set; }
 

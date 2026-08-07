@@ -113,7 +113,8 @@ public class OrderService : IOrderService
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(o =>
                 (o.OrderNumber != null && o.OrderNumber.Contains(search)) ||
-                o.User.FullName.Contains(search));
+                o.User.FullName.Contains(search) ||
+                o.User.Email.Contains(search));
 
         var orderedQuery = query.OrderByDescending(o => o.CreatedAt);
 
@@ -503,6 +504,7 @@ public class OrderService : IOrderService
             PreferredDeliveryDate = o.PreferredDeliveryDate,
             ItemCount = o.Items.Count,
             UserFullName = o.User != null ? o.User.FullName : "—",
+            UserIsGuest = o.User != null && o.User.IsGuest,
             PaymentMethod = o.Payments
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => (PaymentMethodEnum?)p.Method)

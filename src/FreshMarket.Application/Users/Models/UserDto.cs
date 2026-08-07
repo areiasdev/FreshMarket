@@ -7,4 +7,5 @@ public class UserDto
     public string? Address { get; set; }
     public string? PostalCode { get; set; }
     public string Role { get; set; } = string.Empty;
+    public bool IsGuest { get; set; }
 }

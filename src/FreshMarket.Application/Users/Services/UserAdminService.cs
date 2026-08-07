@@ -41,6 +41,7 @@ public class UserAdminService : IUserAdminService
                 Phone = u.Phone,
                 Role = u.Role,
                 IsActive = u.IsActive,
+                IsGuest = u.IsGuest,
                 OrderCount = u.Orders.Count,
                 CreatedAt = u.CreatedAt,
             })
@@ -109,6 +110,7 @@ public class UserAdminService : IUserAdminService
         Phone = user.Phone,
         Role = user.Role,
         IsActive = user.IsActive,
+        IsGuest = user.IsGuest,
         OrderCount = user.Orders?.Count ?? 0,
         CreatedAt = user.CreatedAt,
     };

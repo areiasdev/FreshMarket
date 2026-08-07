@@ -13,6 +13,7 @@ interface UserAdmin {
   phone?: string;
   role: string;
   isActive: boolean;
+  isGuest: boolean;
   orderCount: number;
   createdAt: string;
 }
@@ -158,7 +159,14 @@ export default function AdminUsers({ dark }: { dark?: boolean }) {
               users.map(u => (
                 <tr key={u.id} className={`transition-colors ${d ? "hover:bg-slate-800/60" : "hover:bg-slate-50"}`}>
                   <td className={td}>
-                    <p className={`font-medium ${d ? "text-slate-100" : "text-slate-800"}`}>{u.fullName}</p>
+                    <p className={`font-medium flex items-center gap-1.5 ${d ? "text-slate-100" : "text-slate-800"}`}>
+                      {u.fullName}
+                      {u.isGuest && (
+                        <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${d ? "bg-amber-900/30 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
+                          Convidado
+                        </span>
+                      )}
+                    </p>
                     <p className={`text-xs ${d ? "text-slate-400" : "text-slate-500"}`}>{u.email}</p>
                   </td>
                   <td className={td}>
