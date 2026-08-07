@@ -112,6 +112,7 @@ export default function OrderDetailPage() {
   const { id }    = useParams<{ id: string }>();
   const [order, setOrder]         = useState<OrderDto | null>(null);
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [searchParams] = useSearchParams();
   const paymentFailed = searchParams.get("payment") === "failed";
@@ -135,8 +136,10 @@ export default function OrderDetailPage() {
   const TIMELINE_CASH    = [0, 2, 3, 4, 1].map(s => ({ status: s, label: statusLabel(s) }));
 
   useEffect(() => {
+    setLoadError(false);
     client.get(endpoints.orders.getById(Number(id)))
       .then(res => setOrder(res.data))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -146,6 +149,8 @@ export default function OrderDetailPage() {
     try {
       await client.put(endpoints.orders.cancel(order.id));
       setOrder({ ...order, status: 5 });
+    } catch {
+      alert(t("orderDetail.cancelError"));
     } finally { setCancelling(false); }
   };
 
@@ -159,7 +164,17 @@ export default function OrderDetailPage() {
   if (!order) return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
-      <p className="text-center py-20 text-sm text-slate-400">{t("orderDetail.notFound")}</p>
+      <div className="text-center py-20">
+        <p className="text-sm text-slate-400">{t(loadError ? "orderDetail.loadError" : "orderDetail.notFound")}</p>
+        {loadError && (
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+          >
+            {t("orderDetail.retry")}
+          </button>
+        )}
+      </div>
     </div>
   );
 

@@ -29,9 +29,16 @@ public class Payments : EndpointGroupBase
         return Results.Ok(result);
     }
 
-    public async Task<IResult> ConfirmPayment(ConfirmPaymentCommand command, ISender sender, CancellationToken ct)
+    public async Task<IResult> ConfirmPayment(ConfirmPaymentCommand command, ClaimsPrincipal user, ISender sender, CancellationToken ct)
     {
+        // Confirmation itself is safe regardless of caller — ConfirmPaymentAsync re-verifies
+        // status with Stripe before mutating anything. What must be gated is the response,
+        // which otherwise leaks another customer's order amount/status/paidAt (IDOR).
         var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        var order = await sender.Send(new GetOrderByIdQuery(result.OrderId), ct).ConfigureAwait(false);
+        if (!IsOwnerOrAdmin(order.UserId, user)) return Results.Forbid();
+
         return Results.Ok(result);
     }
 

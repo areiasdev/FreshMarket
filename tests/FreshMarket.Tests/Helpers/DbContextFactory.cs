@@ -1,6 +1,7 @@
 using FreshMarket.Infrastructure.Data.Context;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace FreshMarket.Tests.Helpers;
 
@@ -58,26 +59,30 @@ public sealed class DbContextFactory : IDisposable
         return category.Id;
     }
 
-    /// <summary>Seeds a Product with the given stock and returns it.</summary>
+    /// <summary>Seeds a Product with the given stock and returns it.
+    /// Uses raw SQL because EF Core marks RowVersion as ValueGeneratedOnAddOrUpdate,
+    /// so it won't include it in the INSERT — and SQLite has no auto-generator for it.
+    /// </summary>
     public Product SeedProduct(int categoryId, decimal stock = 10m, decimal reserved = 0m,
         decimal price = 2.50m, UnitType unitType = UnitType.Weight, bool trackStock = true)
     {
-        var product = new Product
-        {
-            Name        = "Cenouras",
-            Slug        = $"cenouras-{Guid.NewGuid():N}",
-            CategoryId  = categoryId,
-            PricePerUnit = price,
-            StockQuantity = stock,
-            ReservedStock = reserved,
-            MinQuantity = 0.5m,
-            UnitType    = unitType,
-            IsActive    = true,
-            TrackStock  = trackStock,
-        };
-        Context.Products.Add(product);
-        Context.SaveChanges();
-        return product;
+        var slug = $"cenouras-{Guid.NewGuid():N}";
+        var inv = CultureInfo.InvariantCulture;
+
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText =
+            "INSERT INTO Products " +
+            "(CategoryId, Name, Slug, PricePerUnit, MinQuantity, UnitType, IsActive, IsSeasonal, " +
+            "StockQuantity, TrackStock, LowStockAlert, ReservedStock, RowVersion, CreatedAt) " +
+            $"VALUES ({categoryId}, 'Cenouras', '{slug}', {price.ToString(inv)}, 0.5, {(int)unitType}, 1, 0, " +
+            $"{stock.ToString(inv)}, {(trackStock ? 1 : 0)}, 5, {reserved.ToString(inv)}, randomblob(8), datetime('now'))";
+        cmd.ExecuteNonQuery();
+
+        cmd.CommandText = "SELECT last_insert_rowid()";
+        var id = (int)(long)cmd.ExecuteScalar()!;
+
+        Context.ChangeTracker.Clear();
+        return Context.Products.IgnoreQueryFilters().First(p => p.Id == id);
     }
 
     /// <summary>Seeds a DeliverySlot and returns it.

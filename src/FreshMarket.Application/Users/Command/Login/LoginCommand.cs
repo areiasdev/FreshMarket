@@ -3,7 +3,7 @@ using FreshMarket.Application.Users.Models;
 
 namespace FreshMarket.Application.Users.Command.Login;
 
-public record LoginCommand(string Email, string Password) : IRequest<AuthResponseDto?>;
+public record LoginCommand(string Email, string Password) : IRequest<AuthResponseDto?>, ISensitiveRequest;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto?>
 {

@@ -249,19 +249,23 @@ public class OrderService : IOrderService
 
             var orderDto = await GetByIdAsync(order.Id, ct);
 
-            // Send confirmation email and notification (non-blocking — failure must not break the order)
-            _ = SendOrderPlacedEmailAsync(order.Id, userId, orderDto, ct);
-            _ = _notifications.CreateAsync(userId, NotificationType.OrderPlaced,
+            // Awaited sequentially — both touch the same scoped DbContext, which isn't thread-safe,
+            // and firing them unawaited let them outlive (and crash against) the disposed request scope.
+            // Each still swallows its own failure internally so it can't break the order response.
+            await SendOrderPlacedEmailAsync(order.Id, userId, orderDto, ct).ConfigureAwait(false);
+            await CreateNotificationSafeAsync(userId, NotificationType.OrderPlaced,
                     "Encomenda recebida!",
                     $"A tua encomenda {orderDto.OrderNumber} foi recebida e está a ser processada.",
-                    order.Id, ct);
+                    order.Id, ct).ConfigureAwait(false);
 
             return orderDto;
         }
         catch (DbUpdateConcurrencyException)
         {
+            // Now also fires for Product.RowVersion conflicts (concurrent stock reservation),
+            // not just DeliverySlot \u2014 message is deliberately generic to cover both.
             await transaction.RollbackAsync(ct);
-            throw new BusinessException("Algu\u00e9m acabou de reservar este slot. Tenta novamente.");
+            throw new BusinessException("Algo mudou entretanto (stock ou hor\u00e1rio de entrega). Tenta novamente.");
         }
         catch
         {
@@ -347,8 +351,9 @@ public class OrderService : IOrderService
         await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);
         await _cache.RemoveAsync(CacheKeys.OrdersByUser(order.UserId), ct);
 
-        _ = SendStatusUpdateEmailAsync(order, status, ct);
-        _ = CreateStatusNotificationAsync(order.UserId, order.Id, order.OrderNumber, status, ct);
+        // Awaited sequentially — see PlaceOrderAsync for why these can't be fire-and-forget.
+        await SendStatusUpdateEmailAsync(order, status, ct).ConfigureAwait(false);
+        await CreateStatusNotificationAsync(order.UserId, order.Id, order.OrderNumber, status, ct).ConfigureAwait(false);
     }
 
     private async Task SendStatusUpdateEmailAsync(Order order, OrderStatus status, CancellationToken ct)
@@ -372,50 +377,66 @@ public class OrderService : IOrderService
 
     public async Task CancelAsync(int orderId, CancellationToken ct)
     {
-        var order = await _db.Orders
-            .IgnoreQueryFilters()
-            .Include(o => o.User)
-            .Include(o => o.DeliverySlot)
-            .Include(o => o.Items).ThenInclude(i => i.Product)
-            .FirstOrDefaultAsync(o => o.Id == orderId, ct)
-            .ConfigureAwait(false)
-            ?? throw new NotFoundException(nameof(Order), orderId);
+        // Shares its key pattern with PaymentService's payment-confirm lock so a webhook
+        // confirming payment can't interleave with a customer cancelling the same order
+        // (which would otherwise double-deduct or double-restore stock).
+        var lockKey = $"order-lock:{orderId}";
+        var lockAcquired = await _cache.AcquireLockAsync(lockKey, TimeSpan.FromSeconds(15), ct);
+        if (!lockAcquired)
+            throw new BusinessException("A encomenda está a ser processada. Tenta novamente em breve.");
 
-        if (order.Status == OrderStatus.Cancelled)
-            throw new BusinessException("Encomenda já está cancelada.");
-        if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered)
-            throw new BusinessException("Não é possível cancelar uma encomenda já enviada ou entregue.");
-
-        // Paid/Preparing orders already had StockQuantity deducted (and ReservedStock cleared)
-        // when the payment was confirmed — cancelling them must give the stock back instead of
-        // touching ReservedStock again, or stock silently disappears.
-        var stockWasDeducted = order.Status != OrderStatus.Pending;
-
-        order.Status = OrderStatus.Cancelled;
-        order.UpdatedAt = DateTime.UtcNow;
-
-        foreach (var item in order.Items.Where(i => i.Product.TrackStock))
+        try
         {
-            if (stockWasDeducted)
-                item.Product.StockQuantity += item.Quantity;
-            else
-                item.Product.ReservedStock = Math.Max(0, item.Product.ReservedStock - item.Quantity);
+            var order = await _db.Orders
+                .IgnoreQueryFilters()
+                .Include(o => o.User)
+                .Include(o => o.DeliverySlot)
+                .Include(o => o.Items).ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId, ct)
+                .ConfigureAwait(false)
+                ?? throw new NotFoundException(nameof(Order), orderId);
+
+            if (order.Status == OrderStatus.Cancelled)
+                throw new BusinessException("Encomenda já está cancelada.");
+            if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered)
+                throw new BusinessException("Não é possível cancelar uma encomenda já enviada ou entregue.");
+
+            // Paid/Preparing orders already had StockQuantity deducted (and ReservedStock cleared)
+            // when the payment was confirmed — cancelling them must give the stock back instead of
+            // touching ReservedStock again, or stock silently disappears.
+            var stockWasDeducted = order.Status != OrderStatus.Pending;
+
+            order.Status = OrderStatus.Cancelled;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            foreach (var item in order.Items.Where(i => i.Product.TrackStock))
+            {
+                if (stockWasDeducted)
+                    item.Product.StockQuantity += item.Quantity;
+                else
+                    item.Product.ReservedStock = Math.Max(0, item.Product.ReservedStock - item.Quantity);
+            }
+
+            if (order.DeliverySlot != null && order.DeliverySlot.CurrentOrders > 0)
+                order.DeliverySlot.CurrentOrders--;
+
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+            await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);
+            await _cache.RemoveAsync(CacheKeys.OrdersByUser(order.UserId), ct);
+            await _cache.RemoveByPrefixAsync("slots:", ct);
+
+            // Awaited sequentially — see PlaceOrderAsync for why these can't be fire-and-forget.
+            await SendCancelledEmailAsync(order, ct).ConfigureAwait(false);
+            await CreateNotificationSafeAsync(order.UserId, NotificationType.OrderCancelled,
+                    "Encomenda cancelada",
+                    $"A encomenda {order.OrderNumber ?? $"#{orderId}"} foi cancelada.",
+                    orderId, ct).ConfigureAwait(false);
         }
-
-        if (order.DeliverySlot != null && order.DeliverySlot.CurrentOrders > 0)
-            order.DeliverySlot.CurrentOrders--;
-
-        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-
-        await _cache.RemoveAsync(CacheKeys.OrderById(orderId), ct);
-        await _cache.RemoveAsync(CacheKeys.OrdersByUser(order.UserId), ct);
-        await _cache.RemoveByPrefixAsync("slots:", ct);
-
-        _ = SendCancelledEmailAsync(order, ct);
-        _ = _notifications.CreateAsync(order.UserId, NotificationType.OrderCancelled,
-                "Encomenda cancelada",
-                $"A encomenda {order.OrderNumber ?? $"#{orderId}"} foi cancelada.",
-                orderId, ct);
+        finally
+        {
+            await _cache.ReleaseLockAsync(lockKey, ct);
+        }
     }
 
     private async Task SendCancelledEmailAsync(Order order, CancellationToken ct)
@@ -452,6 +473,18 @@ public class OrderService : IOrderService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to create status notification for order {OrderId}", orderId);
+        }
+    }
+
+    private async Task CreateNotificationSafeAsync(int userId, NotificationType type, string title, string message, int orderId, CancellationToken ct)
+    {
+        try
+        {
+            await _notifications.CreateAsync(userId, type, title, message, orderId, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create notification for order {OrderId}", orderId);
         }
     }
 

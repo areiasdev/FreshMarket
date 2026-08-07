@@ -2,7 +2,7 @@ using FreshMarket.Application.Common.Interfaces;
 
 namespace FreshMarket.Application.Users.Command.Logout;
 
-public record LogoutCommand(string RefreshToken) : IRequest;
+public record LogoutCommand(string RefreshToken) : IRequest, ISensitiveRequest;
 
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
 {

@@ -45,6 +45,10 @@ client.interceptors.response.use(
       return new Promise((resolve, reject) => {
         failedQueue.push({
           resolve: (token) => {
+            // Sem isto, um pedido reenfileirado que volte a levar 401 (ex: relógio
+            // dessincronizado) reentra no interceptor sem _retry e dispara um novo
+            // ciclo de refresh em vez de falhar de forma definitiva.
+            original._retry = true;
             original.headers.Authorization = `Bearer ${token}`;
             resolve(client(original));
           },
@@ -61,6 +65,8 @@ client.interceptors.response.use(
     if (!refreshToken) {
       isRefreshing = false;
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       window.location.href = "/auth";
       return Promise.reject(error);
     }
@@ -83,6 +89,7 @@ client.interceptors.response.use(
       processQueue(refreshError, null);
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       window.location.href = "/auth";
       return Promise.reject(refreshError);
     } finally {

@@ -52,14 +52,19 @@ builder.Services.AddAuthorization(options =>
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
 {
-    // Auth endpoints: max 10 attempts per minute per IP
-    options.AddFixedWindowLimiter("auth", opt =>
-    {
-        opt.Window            = TimeSpan.FromMinutes(1);
-        opt.PermitLimit       = 10;
-        opt.QueueLimit        = 0;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    });
+    // Auth endpoints: max 10 attempts per minute, partitioned per client IP.
+    // AddFixedWindowLimiter alone shares one global bucket across every caller —
+    // one client hammering /login would lock out login/register/refresh for everyone.
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 10,
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            }));
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 

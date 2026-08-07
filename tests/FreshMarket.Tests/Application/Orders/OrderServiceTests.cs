@@ -19,6 +19,8 @@ public class OrderServiceTests : IDisposable
     public OrderServiceTests()
     {
         _factory = new DbContextFactory();
+        _cache.AcquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+              .Returns(true);
         _sut = new OrderService(_factory.Context, _cache, _email, _notify, _logger);
     }
 

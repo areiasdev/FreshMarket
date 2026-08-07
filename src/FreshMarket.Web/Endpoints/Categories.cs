@@ -1,6 +1,3 @@
-using FreshMarket.Application.Categories.Commands.Create;
-using FreshMarket.Application.Categories.Commands.Delete;
-using FreshMarket.Application.Categories.Commands.Update;
 using FreshMarket.Application.Categories.Queries;
 using FreshMarket.Web.Infrastructure;
 using MediatR;
@@ -12,12 +9,10 @@ public class Categories : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
+        // Public read-only catalog. Mutations live under AdminCategories (/api/admin/categories, AdminPolicy).
         app.MapGroup(this)
             .MapGet(GetAllCategories)
-            .MapGet(GetCategoryById, "{id}")
-            .MapPost(CreateCategory)
-            .MapPut(UpdateCategory, "{id}")
-            .MapDelete(DeleteCategory, "{id}");
+            .MapGet(GetCategoryById, "{id}");
     }
 
     public async Task<IResult> GetAllCategories(ISender sender)
@@ -30,23 +25,5 @@ public class Categories : EndpointGroupBase
     {
         var result = await sender.Send(new GetCategoryByIdQuery(id)).ConfigureAwait(false);
         return Results.Ok(result);
-    }
-
-    public async Task<IResult> CreateCategory(CreateCategoryCommand command, ISender sender)
-    {
-        var result = await sender.Send(command).ConfigureAwait(false);
-        return Results.Created($"/api/categories/{result.Id}", result);
-    }
-
-    public async Task<IResult> UpdateCategory(int id, UpdateCategoryCommand command, ISender sender)
-    {
-        var result = await sender.Send(command with { Id = id }).ConfigureAwait(false);
-        return Results.Ok(result);
-    }
-
-    public async Task<IResult> DeleteCategory(int id, ISender sender)
-    {
-        await sender.Send(new DeleteCategoryCommand(id)).ConfigureAwait(false);
-        return Results.NoContent();
     }
 }

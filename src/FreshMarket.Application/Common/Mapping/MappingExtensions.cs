@@ -24,6 +24,7 @@ public static class MappingExtensions
         MinQuantity = p.MinQuantity,
         StockQuantity = p.StockQuantity,
         TrackStock = p.TrackStock,
+        LowStockAlert = p.LowStockAlert,
         ImageUrl = p.ImageUrl,
         IsSeasonal = p.IsSeasonal,
         IsActive = p.IsActive
@@ -41,6 +42,7 @@ public static class MappingExtensions
         UnitType = p.UnitType,
         StockQuantity = p.StockQuantity,
         TrackStock = p.TrackStock,
+        LowStockAlert = p.LowStockAlert,
         ImageUrl = p.ImageUrl,
         IsSeasonal = p.IsSeasonal,
         IsActive = p.IsActive,

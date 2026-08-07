@@ -1,3 +1,4 @@
+using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Payments.Models;
 using Microsoft.EntityFrameworkCore;
@@ -23,10 +24,10 @@ public class PaymentService : IPaymentService
         var order = await _db.Orders
             .Include(o => o.Items).ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct)
-            ?? throw new Exception("Order not found");
+            ?? throw new NotFoundException(nameof(Order), orderId);
 
         if (order.Status != OrderStatus.Pending)
-            throw new Exception("Order já não pode ser paga");
+            throw new BusinessException("Order já não pode ser paga");
 
         var provider = _factory.Get(method);
         var result   = await provider.CreateAsync(order.TotalAmount, "eur", $"Order {order.OrderNumber}");
@@ -51,7 +52,7 @@ public class PaymentService : IPaymentService
             foreach (var item in order.Items.Where(i => i.Product.TrackStock))
             {
                 if (item.Product.StockQuantity < item.Quantity)
-                    throw new Exception($"Stock inconsistente para {item.Product.Name}");
+                    throw new BusinessException($"Stock inconsistente para {item.Product.Name}");
 
                 item.Product.StockQuantity -= item.Quantity;
                 item.Product.ReservedStock  = Math.Max(0, item.Product.ReservedStock - item.Quantity);
@@ -80,7 +81,7 @@ public class PaymentService : IPaymentService
         {
             var inFlight = await _db.Payments
                 .FirstOrDefaultAsync(p => p.ExternalTransactionId == externalTransactionId, ct)
-                ?? throw new Exception("Payment not found");
+                ?? throw new NotFoundException(nameof(Payment), externalTransactionId);
             return Map(inFlight);
         }
 
@@ -91,7 +92,7 @@ public class PaymentService : IPaymentService
                     .ThenInclude(o => o.Items)
                     .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(p => p.ExternalTransactionId == externalTransactionId, ct)
-                ?? throw new Exception("Payment not found");
+                ?? throw new NotFoundException(nameof(Payment), externalTransactionId);
 
             if (payment.Status == PaymentStatusEnum.Succeeded)
                 return Map(payment);
@@ -99,35 +100,51 @@ public class PaymentService : IPaymentService
             var providerStatus = await _factory.Get(payment.Method).GetStatusAsync(externalTransactionId);
 
             if (providerStatus.Status is not ("paid" or "succeeded"))
-                throw new Exception("Pagamento não concluído");
-
-            payment.Status = PaymentStatusEnum.Succeeded;
-            payment.PaidAt = DateTime.UtcNow;
+                throw new BusinessException("Pagamento não concluído");
 
             var order = payment.Order;
-            var needsStatusUpdate = order.Status != OrderStatus.Paid;
 
-            if (needsStatusUpdate)
+            // Second, order-scoped lock (shared key pattern with OrderService.CancelAsync) so a
+            // customer cancelling this order can't interleave with the webhook confirming it —
+            // without it, stock could be double-deducted or double-restored.
+            var orderLockKey = $"order-lock:{order.Id}";
+            var orderLockAcquired = await _cache.AcquireLockAsync(orderLockKey, TimeSpan.FromSeconds(15), ct);
+            if (!orderLockAcquired)
+                throw new BusinessException("A encomenda está a ser processada. Tenta novamente em breve.");
+
+            try
             {
-                order.PaidAt = DateTime.UtcNow;
+                payment.Status = PaymentStatusEnum.Succeeded;
+                payment.PaidAt = DateTime.UtcNow;
 
-                foreach (var item in order.Items.Where(i => i.Product.TrackStock))
+                var needsStatusUpdate = order.Status != OrderStatus.Paid;
+
+                if (needsStatusUpdate)
                 {
-                    if (item.Product.StockQuantity < item.Quantity)
-                        throw new Exception($"Stock inconsistente para {item.Product.Name}");
+                    order.PaidAt = DateTime.UtcNow;
 
-                    item.Product.StockQuantity -= item.Quantity;
-                    item.Product.ReservedStock  = Math.Max(0, item.Product.ReservedStock - item.Quantity);
+                    foreach (var item in order.Items.Where(i => i.Product.TrackStock))
+                    {
+                        if (item.Product.StockQuantity < item.Quantity)
+                            throw new BusinessException($"Stock inconsistente para {item.Product.Name}");
+
+                        item.Product.StockQuantity -= item.Quantity;
+                        item.Product.ReservedStock  = Math.Max(0, item.Product.ReservedStock - item.Quantity);
+                    }
                 }
+
+                await _db.SaveChangesAsync(ct);
+
+                // Trigger the full status pipeline: cache invalidation + email + in-app notification
+                if (needsStatusUpdate)
+                    await _orders.UpdateStatusAsync(order.Id, OrderStatus.Paid, ct);
+
+                return Map(payment);
             }
-
-            await _db.SaveChangesAsync(ct);
-
-            // Trigger the full status pipeline: cache invalidation + email + in-app notification
-            if (needsStatusUpdate)
-                await _orders.UpdateStatusAsync(order.Id, OrderStatus.Paid, ct);
-
-            return Map(payment);
+            finally
+            {
+                await _cache.ReleaseLockAsync(orderLockKey, ct);
+            }
         }
         finally
         {

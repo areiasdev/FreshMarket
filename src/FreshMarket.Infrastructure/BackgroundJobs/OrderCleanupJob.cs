@@ -31,12 +31,22 @@ public class OrderCleanupJob : BackgroundService
                 var expiredOrders = await db.Orders
                     .Include(o => o.DeliverySlot)
                     .Include(o => o.Items).ThenInclude(i => i.Product)
+                    .Include(o => o.Payments)
                     .Where(o =>
                         o.Status == OrderStatus.Pending &&
                         o.CreatedAt < expirationTime)
                     .ToListAsync(stoppingToken);
 
-                foreach (var order in expiredOrders)
+                // An order with a Pending payment may already be charged on Stripe's side — the
+                // webhook confirming it just hasn't landed yet. Cancelling it now and releasing
+                // stock would abandon a paid customer with no product and no alert, so leave those
+                // for the next cycle (or manual reconciliation) instead of blind-cancelling.
+                var stuckPayments = expiredOrders
+                    .Where(o => o.Payments.Any(p => p.Status == PaymentStatusEnum.Pending))
+                    .ToList();
+                var toCancel = expiredOrders.Except(stuckPayments).ToList();
+
+                foreach (var order in toCancel)
                 {
                     order.Status = OrderStatus.Cancelled;
                     order.UpdatedAt = DateTime.UtcNow;
@@ -50,10 +60,15 @@ public class OrderCleanupJob : BackgroundService
                         item.Product.ReservedStock = Math.Max(0, item.Product.ReservedStock - item.Quantity);
                 }
 
-                if (expiredOrders.Any())
+                if (toCancel.Count > 0)
                     await db.SaveChangesAsync(stoppingToken);
 
-                _logger.LogInformation("Expired orders cleaned: {Count}", expiredOrders.Count);
+                if (stuckPayments.Count > 0)
+                    _logger.LogWarning(
+                        "Skipped auto-cancel for {Count} expired order(s) with an unresolved payment: {OrderIds}",
+                        stuckPayments.Count, string.Join(", ", stuckPayments.Select(o => o.Id)));
+
+                _logger.LogInformation("Expired orders cleaned: {Count}", toCancel.Count);
             }
             catch (Exception ex)
             {

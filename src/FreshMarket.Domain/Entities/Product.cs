@@ -1,5 +1,6 @@
 using FreshMarket.Domain.Common;
 using FreshMarket.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace FreshMarket.Domain.Entities;
 
@@ -22,6 +23,9 @@ public class Product : BaseEntity
     public decimal LowStockAlert { get; set; } = 5;
 
     public decimal ReservedStock { get; set; } = 0;
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = default!;
 
     public Category Category { get; set; } = null!;
     public ICollection<OrderItem> Items { get; set; } = [];

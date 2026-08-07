@@ -17,5 +17,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => new { p.IsActive, p.IsSeasonal });
         builder.HasQueryFilter(p => p.DeletedAt == null);
         builder.Property(p => p.ReservedStock).HasPrecision(10, 3);
+        builder.Property(p => p.RowVersion).IsRowVersion();
     }
 }

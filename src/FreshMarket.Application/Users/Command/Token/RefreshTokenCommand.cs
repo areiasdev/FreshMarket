@@ -3,7 +3,7 @@ using FreshMarket.Application.Users.Models;
 
 namespace FreshMarket.Application.Users.Command.Token;
 
-public record RefreshTokenCommand(string RefreshToken) : IRequest<AuthResponseDto?>;
+public record RefreshTokenCommand(string RefreshToken) : IRequest<AuthResponseDto?>, ISensitiveRequest;
 
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResponseDto?>
 {

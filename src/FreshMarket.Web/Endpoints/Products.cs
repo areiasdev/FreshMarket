@@ -1,7 +1,3 @@
-using FreshMarket.Application.Products.Commands.BulkUpdatePrice;
-using FreshMarket.Application.Products.Commands.Create;
-using FreshMarket.Application.Products.Commands.Delete;
-using FreshMarket.Application.Products.Commands.Update;
 using FreshMarket.Application.Products.Queries;
 using FreshMarket.Web.Infrastructure;
 using MediatR;
@@ -13,13 +9,10 @@ public class Products : EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
+        // Public read-only catalog. Mutations live under AdminProducts (/api/admin/products, AdminPolicy).
         app.MapGroup(this)
             .MapGet(GetAllProducts)
-            .MapGet(GetProductById, "{id}")
-            .MapPost(CreateProduct)
-            .MapPut(UpdateProduct, "{id}")
-            .MapDelete(DeleteProduct, "{id}")
-            .MapPut(BulkUpdatePrice, "bulk-price");
+            .MapGet(GetProductById, "{id}");
     }
 
     public async Task<IResult> GetAllProducts(ISender sender, int page = 1, int pageSize = 20, int? categoryId = null, string? search = null, bool? isSeasonal = null)
@@ -32,29 +25,5 @@ public class Products : EndpointGroupBase
     {
         var result = await sender.Send(new GetProductByIdQuery(id)).ConfigureAwait(false);
         return Results.Ok(result);
-    }
-
-    public async Task<IResult> CreateProduct(CreateProductCommand command, ISender sender)
-    {
-        var result = await sender.Send(command).ConfigureAwait(false);
-        return Results.Created($"/api/products/{result.Id}", result);
-    }
-
-    public async Task<IResult> UpdateProduct(int id, UpdateProductCommand command, ISender sender)
-    {
-        var result = await sender.Send(command with { Id = id }).ConfigureAwait(false);
-        return Results.Ok(result);
-    }
-
-    public async Task<IResult> DeleteProduct(int id, ISender sender)
-    {
-        await sender.Send(new DeleteProductCommand(id)).ConfigureAwait(false);
-        return Results.NoContent();
-    }
-
-    public async Task<IResult> BulkUpdatePrice(BulkUpdatePriceCommand command, ISender sender)
-    {
-        await sender.Send(command).ConfigureAwait(false);
-        return Results.NoContent();
     }
 }

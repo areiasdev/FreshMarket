@@ -6,10 +6,12 @@ namespace FreshMarket.Web.Infrastructure;
 
 public class CustomExceptionHandler : IExceptionHandler
 {
+    private readonly ILogger<CustomExceptionHandler> _logger;
     private readonly Dictionary<Type, Func<HttpContext, Exception, Task>> _exceptionHandlers;
 
-    public CustomExceptionHandler()
+    public CustomExceptionHandler(ILogger<CustomExceptionHandler> logger)
     {
+        _logger = logger;
         _exceptionHandlers = new Dictionary<Type, Func<HttpContext, Exception, Task>>
         {
             { typeof(NotFoundException), HandleNotFoundException },
@@ -25,10 +27,15 @@ public class CustomExceptionHandler : IExceptionHandler
 
         if (_exceptionHandlers.TryGetValue(type, out var handler))
         {
+            _logger.LogWarning(exception, "Handled {ExceptionType} on {Path}", type.Name, context.Request.Path);
             await handler.Invoke(context, exception);
             return true;
         }
 
+        // Unrecognized exception type — framework falls back to a generic 500, but log it here
+        // so it isn't invisible. This matters most on the Stripe webhook path: an unlogged crash
+        // there leaves a paid order stuck at Pending with no trace until OrderCleanupJob touches it.
+        _logger.LogError(exception, "Unhandled {ExceptionType} on {Path}", type.Name, context.Request.Path);
         return false;
     }
 

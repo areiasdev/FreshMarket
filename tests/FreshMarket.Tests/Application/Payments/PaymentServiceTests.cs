@@ -1,3 +1,4 @@
+using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Models;
 using FreshMarket.Tests.Helpers;
@@ -172,6 +173,32 @@ public class PaymentServiceTests : IDisposable
 
         var stockAfter = _factory.Context.Products.Find(product.Id)!.StockQuantity;
         stockAfter.Should().Be(stockBefore); // no double deduction
+    }
+
+    // Regression tests: ConfirmPaymentAsync used to throw plain Exception for these cases,
+    // which fell through CustomExceptionHandler's typed dictionary to an unlogged 500 —
+    // see CRITICAL #3 in the whole-project review this session.
+
+    [Fact]
+    public async Task ConfirmPayment_ProviderNotPaid_ThrowsBusinessException()
+    {
+        SeedPendingStripePayment();
+        var provider = Substitute.For<IPaymentProvider>();
+        provider.GetStatusAsync(Arg.Any<string>())
+                .Returns(Task.FromResult(new PaymentProviderResult { ExternalId = "sess_1", Status = "pending" }));
+        _providerFactory.Get(Arg.Any<PaymentMethodEnum>()).Returns(provider);
+
+        var act = () => _sut.ConfirmPaymentAsync("sess_1", CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    [Fact]
+    public async Task ConfirmPayment_UnknownTransactionId_ThrowsNotFoundException()
+    {
+        var act = () => _sut.ConfirmPaymentAsync("nonexistent", CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 
     public void Dispose() => _factory.Dispose();
