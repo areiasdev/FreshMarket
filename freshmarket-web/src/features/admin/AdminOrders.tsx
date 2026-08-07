@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 import client from "../../api/client";
 import { endpoints } from "../../lib/endpoints";
 import Pagination from "../../components/utils/Pagination";
@@ -79,6 +80,9 @@ export default function AdminOrders() {
   const [updating, setUpdating]         = useState<number | null>(null);
   const [detail, setDetail]             = useState<OrderDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [refundOpen, setRefundOpen]     = useState(false);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refunding, setRefunding]       = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -133,6 +137,8 @@ export default function AdminOrders() {
   const openDetail = async (id: number) => {
     setLoadingDetail(true);
     setDetail(null);
+    setRefundOpen(false);
+    setRefundAmount("");
     try {
       const res = await client.get(endpoints.orders.getById(id));
       setDetail(res.data);
@@ -140,6 +146,24 @@ export default function AdminOrders() {
       alert("Erro ao carregar detalhe da encomenda.");
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  const handleRefund = async () => {
+    if (!detail) return;
+    setRefunding(true);
+    try {
+      const amount = refundAmount.trim() === "" ? undefined : parseFloat(refundAmount.replace(",", "."));
+      await client.post(endpoints.admin.orders.refund(detail.id), { amount });
+      setDetail(d => d ? { ...d, paymentStatus: 3 } : null);
+      setRefundOpen(false);
+      setRefundAmount("");
+      await load();
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
+      alert(msg || "Erro ao processar o reembolso.");
+    } finally {
+      setRefunding(false);
     }
   };
 
@@ -390,6 +414,45 @@ export default function AdminOrders() {
                       </span>
                     )}
                   </p>
+
+                  {detail.paymentStatus === 1 && !refundOpen && (
+                    <button
+                      onClick={() => { setRefundOpen(true); setRefundAmount(detail.totalAmount.toFixed(2)); }}
+                      className="text-xs text-red-500 hover:underline mt-1"
+                    >
+                      Reembolsar
+                    </button>
+                  )}
+
+                  {refundOpen && (
+                    <div className="mt-2 p-3 rounded-lg border border-slate-200 dark:border-slate-600 space-y-2">
+                      <label className="block">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Valor a reembolsar (€)</span>
+                        <input
+                          type="text" inputMode="decimal"
+                          className="input mt-1 text-sm"
+                          value={refundAmount}
+                          onChange={e => setRefundAmount(e.target.value)}
+                        />
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setRefundOpen(false)}
+                          disabled={refunding}
+                          className="btn-secondary flex-1 justify-center text-xs py-1.5"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleRefund}
+                          disabled={refunding}
+                          className="flex-1 justify-center text-xs py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                        >
+                          {refunding ? "A processar..." : "Confirmar reembolso"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Items */}

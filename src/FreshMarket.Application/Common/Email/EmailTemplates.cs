@@ -157,6 +157,30 @@ public static class EmailTemplates
         return Wrap("Encomenda cancelada", body);
     }
 
+    public static string PaymentRefunded(
+        string customerName,
+        string orderNumber,
+        decimal refundedAmount,
+        bool isPartial)
+    {
+        var body = $"""
+            <p style="font-size:15px;margin:0 0 16px;">Olá <strong>{customerName}</strong>,</p>
+            <p style="font-size:15px;color:#57534e;margin:0 0 24px;">
+              Foi processado um reembolso {(isPartial ? "parcial" : "total")} da tua encomenda <strong>{orderNumber}</strong>.
+            </p>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+              <p style="margin:0;font-size:13px;color:#166534;">
+                Valor reembolsado: <strong>{refundedAmount:0.00}€</strong>. Deve aparecer na tua conta em 3–5 dias úteis.
+              </p>
+            </div>
+            <p style="font-size:13px;color:#9c8f83;margin:0;">
+              Se tiveres alguma dúvida, responde a este email e ajudamos com todo o gosto.
+            </p>
+            """;
+
+        return Wrap("Reembolso processado", body);
+    }
+
     public static (string Label, string Message, string Color) StatusInfo(OrderStatus status) => status switch
     {
         OrderStatus.Paid      => ("Pagamento confirmado",     "O teu pagamento foi recebido e a encomenda está confirmada. Vamos começar a preparar tudo!", "#166534"),

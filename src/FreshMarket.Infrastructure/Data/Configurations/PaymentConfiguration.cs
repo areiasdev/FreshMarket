@@ -13,6 +13,7 @@ namespace FreshMarket.Infrastructure.Data.Configurations
         {
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Amount).HasPrecision(10, 2);
+            builder.Property(p => p.RefundedAmount).HasPrecision(10, 2);
             builder.Property(p => p.Status).HasConversion<int>();
             builder.Property(p => p.Method).HasConversion<int>();
             builder.Property(p => p.ExternalTransactionId).HasMaxLength(200);

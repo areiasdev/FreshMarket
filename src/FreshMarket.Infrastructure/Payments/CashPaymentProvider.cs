@@ -28,4 +28,15 @@ public class CashPaymentProvider : IPaymentProvider
             Status = "pending",
         });
     }
+
+    public Task<PaymentProviderResult> RefundAsync(string externalId, decimal? amount, string currency)
+    {
+        // No external gateway ever charged this — "refund" is just the admin's own
+        // bookkeeping (e.g. handing cash back). Nothing to call out to.
+        return Task.FromResult(new PaymentProviderResult
+        {
+            ExternalId = externalId,
+            Status = "succeeded",
+        });
+    }
 }

@@ -65,4 +65,24 @@ public class StripePaymentProvider : IPaymentProvider
             Status = session.PaymentStatus // paid, unpaid
         };
     }
+
+    public async Task<PaymentProviderResult> RefundAsync(string externalId, decimal? amount, string currency)
+    {
+        // externalId is the Checkout Session id — refunds are issued against the PaymentIntent.
+        var sessionService = new SessionService();
+        var session = await sessionService.GetAsync(externalId);
+
+        var options = new RefundCreateOptions { PaymentIntent = session.PaymentIntentId };
+        if (amount.HasValue)
+            options.Amount = (long)(amount.Value * 100);
+
+        var refundService = new RefundService();
+        var refund = await refundService.CreateAsync(options);
+
+        return new PaymentProviderResult
+        {
+            ExternalId = session.Id,
+            Status = refund.Status // succeeded, pending, failed, canceled
+        };
+    }
 }

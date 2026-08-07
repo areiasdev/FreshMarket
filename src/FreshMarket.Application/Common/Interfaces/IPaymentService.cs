@@ -9,4 +9,5 @@ public interface IPaymentService
     Task MarkFailedAsync(string externalTransactionId, CancellationToken ct);
 
     Task<PaymentDto?> GetByOrderIdAsync(int orderId, CancellationToken ct);
+    Task<PaymentDto> RefundAsync(int orderId, decimal? amount, CancellationToken ct);
 }

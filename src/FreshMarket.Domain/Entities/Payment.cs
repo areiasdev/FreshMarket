@@ -12,6 +12,8 @@ public class Payment : BaseEntity
     public string? ExternalTransactionId { get; set; }
     public string? Provider { get; set; }
     public DateTime? PaidAt { get; set; }
+    public decimal? RefundedAmount { get; set; }
+    public DateTime? RefundedAt { get; set; }
 
     public Order Order { get; set; } = null!;
 }

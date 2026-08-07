@@ -1,7 +1,9 @@
+using FreshMarket.Application.Common.Email;
 using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Payments.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 public class PaymentService : IPaymentService
 {
@@ -9,13 +11,18 @@ public class PaymentService : IPaymentService
     private readonly IPaymentProviderFactory _factory;
     private readonly IOrderService _orders;
     private readonly ICacheService _cache;
+    private readonly IEmailService _email;
+    private readonly ILogger<PaymentService> _logger;
 
-    public PaymentService(IApplicationDbContext db, IPaymentProviderFactory factory, IOrderService orders, ICacheService cache)
+    public PaymentService(IApplicationDbContext db, IPaymentProviderFactory factory, IOrderService orders,
+        ICacheService cache, IEmailService email, ILogger<PaymentService> logger)
     {
         _db      = db;
         _factory = factory;
         _orders  = orders;
         _cache   = cache;
+        _email   = email;
+        _logger  = logger;
     }
 
     public async Task<PaymentDto> CreatePaymentAsync(int orderId, PaymentMethodEnum method, CancellationToken ct)
@@ -173,6 +180,49 @@ public class PaymentService : IPaymentService
         return payment is null ? null : Map(payment);
     }
 
+    public async Task<PaymentDto> RefundAsync(int orderId, decimal? amount, CancellationToken ct)
+    {
+        var payment = await _db.Payments
+            .Include(p => p.Order).ThenInclude(o => o.User)
+            .Where(p => p.OrderId == orderId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException(nameof(Payment), orderId);
+
+        if (payment.Status != PaymentStatusEnum.Succeeded)
+            throw new BusinessException("Só é possível reembolsar um pagamento com sucesso.");
+
+        var refundAmount = amount ?? payment.Amount;
+        if (refundAmount <= 0 || refundAmount > payment.Amount)
+            throw new BusinessException("Valor de reembolso inválido.");
+
+        await _factory.Get(payment.Method).RefundAsync(payment.ExternalTransactionId!, amount, "eur")
+            .ConfigureAwait(false);
+
+        payment.Status = PaymentStatusEnum.Refunded;
+        payment.RefundedAmount = refundAmount;
+        payment.RefundedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        // Refund already succeeded server-side above — a failed notification email must not
+        // undo that or fail the request, just get logged like every other order/payment email.
+        try
+        {
+            var isPartial = refundAmount < payment.Amount;
+            var html = EmailTemplates.PaymentRefunded(
+                payment.Order.User.FullName, payment.Order.OrderNumber ?? $"#{orderId}", refundAmount, isPartial);
+            await _email.SendAsync(payment.Order.User.Email, $"Reembolso — {payment.Order.OrderNumber}", html, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send refund email for order {OrderId}", orderId);
+        }
+
+        return Map(payment);
+    }
+
     private static PaymentDto Map(Payment payment) => new()
     {
         Id                    = payment.Id,
@@ -184,5 +234,7 @@ public class PaymentService : IPaymentService
         Provider              = payment.Provider,
         PaidAt                = payment.PaidAt,
         CreatedAt             = payment.CreatedAt,
+        RefundedAmount        = payment.RefundedAmount,
+        RefundedAt            = payment.RefundedAt,
     };
 }

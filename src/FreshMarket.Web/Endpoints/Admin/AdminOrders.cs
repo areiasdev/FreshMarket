@@ -1,6 +1,7 @@
 using FreshMarket.Application.Orders.Commands.Cancel;
 using FreshMarket.Application.Orders.Commands.UpdateStatus;
 using FreshMarket.Application.Orders.Queries;
+using FreshMarket.Application.Payments.Commands.Refund;
 using FreshMarket.Domain.Enums;
 using FreshMarket.Web.Infrastructure;
 using MediatR;
@@ -17,7 +18,8 @@ public class AdminOrders : EndpointGroupBase
             .MapGet(GetOrdersBySlot, "slot/{slotId}")
             .MapGet(GetHarvestList, "harvest")
             .MapPut(UpdateOrderStatus, "{id}/status")
-            .MapPut(CancelOrder, "{id}/cancel");
+            .MapPut(CancelOrder, "{id}/cancel")
+            .MapPost(RefundOrder, "{id}/refund");
     }
 
     public async Task<IResult> GetOrdersByStatus([AsParameters] GetOrdersByStatusQuery query, ISender sender)
@@ -49,4 +51,12 @@ public class AdminOrders : EndpointGroupBase
         await sender.Send(new CancelOrderCommand(id)).ConfigureAwait(false);
         return Results.NoContent();
     }
+
+    public async Task<IResult> RefundOrder(int id, RefundOrderRequest? body, ISender sender)
+    {
+        var result = await sender.Send(new RefundPaymentCommand(id, body?.Amount)).ConfigureAwait(false);
+        return Results.Ok(result);
+    }
 }
+
+public record RefundOrderRequest(decimal? Amount);

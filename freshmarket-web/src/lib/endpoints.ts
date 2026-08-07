@@ -83,6 +83,7 @@ export const endpoints = {
       harvestList: (from: string, to: string) => `${ADMIN}/orders/harvest?from=${from}&to=${to}`,
       updateStatus:(id: number)     => `${ADMIN}/orders/${id}/status`,
       cancel:      (id: number)     => `${ADMIN}/orders/${id}/cancel`,
+      refund:      (id: number)     => `${ADMIN}/orders/${id}/refund`,
     },
     slots: {
       getAll:       `${ADMIN}/slots`,

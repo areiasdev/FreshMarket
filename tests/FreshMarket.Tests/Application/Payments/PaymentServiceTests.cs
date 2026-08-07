@@ -2,6 +2,7 @@ using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Models;
 using FreshMarket.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace FreshMarket.Tests.Application.Payments;
 
@@ -11,6 +12,9 @@ public class PaymentServiceTests : IDisposable
     private readonly IPaymentProviderFactory _providerFactory = Substitute.For<IPaymentProviderFactory>();
     private readonly IOrderService _orderService             = Substitute.For<IOrderService>();
     private readonly ICacheService _cache                    = Substitute.For<ICacheService>();
+    private readonly IEmailService _email                    = Substitute.For<IEmailService>();
+    private readonly ILogger<PaymentService> _logger         = Substitute.For<ILogger<PaymentService>>();
+    private readonly IPaymentProvider _provider               = Substitute.For<IPaymentProvider>();
     private readonly PaymentService _sut;
 
     public PaymentServiceTests()
@@ -18,13 +22,12 @@ public class PaymentServiceTests : IDisposable
         _factory = new DbContextFactory();
         _cache.AcquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
               .Returns(true);
-        _sut = new PaymentService(_factory.Context, _providerFactory, _orderService, _cache);
+        _sut = new PaymentService(_factory.Context, _providerFactory, _orderService, _cache, _email, _logger);
 
         // Default provider stub: always returns "paid"
-        var provider = Substitute.For<IPaymentProvider>();
-        provider.GetStatusAsync(Arg.Any<string>())
+        _provider.GetStatusAsync(Arg.Any<string>())
                 .Returns(Task.FromResult(new PaymentProviderResult { ExternalId = "sess_1", Status = "paid" }));
-        _providerFactory.Get(Arg.Any<PaymentMethodEnum>()).Returns(provider);
+        _providerFactory.Get(Arg.Any<PaymentMethodEnum>()).Returns(_provider);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -199,6 +202,95 @@ public class PaymentServiceTests : IDisposable
         var act = () => _sut.ConfirmPaymentAsync("nonexistent", CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    // ── RefundAsync ──────────────────────────────────────────────────────────
+
+    private (Order order, Payment payment) SeedSucceededPayment(decimal amount = 9.00m)
+    {
+        var order = new Order
+        {
+            UserId = _factory.DefaultUserId,
+            Status = OrderStatus.Paid,
+            TotalAmount = amount,
+            ShippingFee = 0m,
+            DeliveryStreet = "Rua A",
+            DeliveryPostalCode = "3810-123",
+            DeliveryCity = "Aveiro",
+            DeliveryCountry = "PT",
+            OrderNumber = "FM-TEST-REFUND",
+        };
+        _factory.Context.Orders.Add(order);
+        _factory.Context.SaveChanges();
+
+        var payment = new Payment
+        {
+            OrderId = order.Id,
+            Method = PaymentMethodEnum.Card,
+            Status = PaymentStatusEnum.Succeeded,
+            Amount = amount,
+            ExternalTransactionId = "sess_refund",
+            Provider = "Stripe",
+            PaidAt = DateTime.UtcNow,
+        };
+        _factory.Context.Payments.Add(payment);
+        _factory.Context.SaveChanges();
+
+        return (order, payment);
+    }
+
+    [Fact]
+    public async Task Refund_FullAmount_SetsStatusRefundedAndRefundedAmount()
+    {
+        var (order, _) = SeedSucceededPayment(amount: 9.00m);
+
+        var result = await _sut.RefundAsync(order.Id, amount: null, CancellationToken.None);
+
+        result.Status.Should().Be(PaymentStatusEnum.Refunded);
+        result.RefundedAmount.Should().Be(9.00m);
+        result.RefundedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Refund_PartialAmount_RecordsThatAmountOnly()
+    {
+        var (order, _) = SeedSucceededPayment(amount: 9.00m);
+
+        var result = await _sut.RefundAsync(order.Id, amount: 3.00m, CancellationToken.None);
+
+        result.RefundedAmount.Should().Be(3.00m);
+    }
+
+    [Fact]
+    public async Task Refund_AmountAboveOriginalPayment_ThrowsBusinessException()
+    {
+        var (order, _) = SeedSucceededPayment(amount: 9.00m);
+
+        var act = () => _sut.RefundAsync(order.Id, amount: 50.00m, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    [Fact]
+    public async Task Refund_AlreadyRefundedPayment_ThrowsBusinessException()
+    {
+        var (order, _) = SeedSucceededPayment(amount: 9.00m);
+        await _sut.RefundAsync(order.Id, amount: null, CancellationToken.None);
+
+        var act = () => _sut.RefundAsync(order.Id, amount: null, CancellationToken.None);
+
+        await act.Should().ThrowAsync<BusinessException>();
+    }
+
+    [Fact]
+    public async Task Refund_CallsProviderRefundWithExternalTransactionId()
+    {
+        var (order, payment) = SeedSucceededPayment(amount: 9.00m);
+
+        await _sut.RefundAsync(order.Id, amount: null, CancellationToken.None);
+
+        await _provider.Received(1)
+            .RefundAsync(payment.ExternalTransactionId!, null, Arg.Any<string>());
     }
 
     public void Dispose() => _factory.Dispose();
