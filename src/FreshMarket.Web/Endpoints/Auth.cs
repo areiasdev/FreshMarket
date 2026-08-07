@@ -15,6 +15,7 @@ public class Auth : EndpointGroupBase
             .RequireRateLimiting("auth")
             .MapPost(Login, "login")
             .MapPost(Register, "register")
+            .MapPost(GuestCheckout, "guest")
             .MapPost(RefreshToken, "refresh-token")
             .MapPost(Logout, "logout");
     }
@@ -29,6 +30,12 @@ public class Auth : EndpointGroupBase
     {
         var result = await sender.Send(command).ConfigureAwait(false);
         return Results.Created("/api/auth/login", result);
+    }
+
+    public async Task<IResult> GuestCheckout(GuestCheckoutCommand command, ISender sender)
+    {
+        var result = await sender.Send(command).ConfigureAwait(false);
+        return Results.Ok(result);
     }
 
     public async Task<IResult> RefreshToken(RefreshTokenCommand command, ISender sender)

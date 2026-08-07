@@ -39,11 +39,7 @@ export default function AppRouter() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/shop" element={<Navigate to="/" replace />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={
-            <PrivateRoute>
-              <CheckoutPage />
-            </PrivateRoute>
-          } />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment/result" element={<PaymentResultPage />} />
           <Route path="/orders" element={
             <PrivateRoute>

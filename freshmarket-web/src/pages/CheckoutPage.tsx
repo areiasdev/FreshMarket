@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import client from "../api/client";
@@ -83,12 +83,96 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
+interface GuestFormState { fullName: string; email: string; phone: string; }
+
+function GuestCheckoutGate({
+  form, setForm, onContinue, submitting, error,
+}: {
+  form: GuestFormState;
+  setForm: (f: GuestFormState) => void;
+  onContinue: () => void;
+  submitting: boolean;
+  error: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="card overflow-hidden">
+      <div className="card-header">{t("checkout.guestTitle")}</div>
+      <div className="p-5 space-y-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("checkout.guestSubtitle")}</p>
+
+        {error && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 dark:bg-red-900/20 dark:border-red-800">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        <div>
+          <label className="label">{t("checkout.guestFullName")}</label>
+          <input className="input" value={form.fullName}
+            onChange={e => setForm({ ...form, fullName: e.target.value })} />
+        </div>
+        <div>
+          <label className="label">{t("checkout.guestEmail")}</label>
+          <input type="email" className="input" value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })} />
+        </div>
+        <div>
+          <label className="label">{t("checkout.guestPhone")}</label>
+          <input className="input" value={form.phone}
+            onChange={e => setForm({ ...form, phone: e.target.value })} />
+        </div>
+
+        <button
+          onClick={onContinue}
+          disabled={submitting || !form.fullName || !form.email}
+          className="btn-primary w-full justify-center font-bold disabled:opacity-50"
+        >
+          {submitting ? t("checkout.guestSubmitting") : t("checkout.guestContinue")}
+        </button>
+
+        <div className="flex items-center gap-2 my-1">
+          <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
+          <span className="text-xs text-slate-400">{t("checkout.guestOr")}</span>
+          <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
+        </div>
+
+        <Link to="/auth" className="block text-center text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
+          {t("checkout.guestLoginInstead")}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const { items, totalAmount } = useCart();
-  const { user } = useAuth();
+  const { user, login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "en" ? "en-GB" : "pt-PT";
+
+  const [guestForm, setGuestForm]           = useState<GuestFormState>({ fullName: "", email: "", phone: "" });
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
+  const [guestError, setGuestError]           = useState("");
+
+  const handleGuestContinue = async () => {
+    setGuestError("");
+    setGuestSubmitting(true);
+    try {
+      const { data } = await client.post(endpoints.auth.guest, {
+        fullName: guestForm.fullName,
+        email: guestForm.email,
+        phone: guestForm.phone || null,
+      });
+      login(data);
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
+      setGuestError(msg || t("checkout.guestError"));
+    } finally {
+      setGuestSubmitting(false);
+    }
+  };
 
   const [step, setStep]   = useState<Step>("address");
   const [form, setForm]   = useState({ deliveryAddress: "", deliveryPostalCode: "", preferredDate: "", notes: "" });
@@ -135,9 +219,17 @@ export default function CheckoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]);
 
-  // Auto-select express when the chosen date is tomorrow
+  // Auto-select express the first time the date is set to tomorrow — never overrides a
+  // shipping speed the customer already picked by hand. Previously this re-ran (and silently
+  // reverted their choice) whenever shippingOptions refetched for an unrelated reason, e.g.
+  // switching saved address triggers the country-keyed effect above.
+  const userPickedShippingRef = useRef(false);
+  const autoSelectedForDateRef = useRef<string | null>(null);
   useEffect(() => {
     if (!form.preferredDate || shippingOptions.length === 0) return;
+    if (userPickedShippingRef.current) return;
+    if (autoSelectedForDateRef.current === form.preferredDate) return;
+
     const d = new Date();
     d.setDate(d.getDate() + 1);
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -145,6 +237,7 @@ export default function CheckoutPage() {
     if (form.preferredDate === tomorrow && shippingOptions.find(o => o.key === "express")) {
       setShippingSpeed("express");
     }
+    autoSelectedForDateRef.current = form.preferredDate;
   }, [form.preferredDate, shippingOptions]);
 
   // Fetch slots when postal code + date are ready — debounced + abortable
@@ -261,6 +354,18 @@ export default function CheckoutPage() {
           { label: t("checkout.breadcrumbCheckout") },
         ]} />
 
+        {!isAuthenticated && (
+          <GuestCheckoutGate
+            form={guestForm}
+            setForm={setGuestForm}
+            onContinue={handleGuestContinue}
+            submitting={guestSubmitting}
+            error={guestError}
+          />
+        )}
+
+        {isAuthenticated && (
+        <>
         <StepIndicator current={step} />
 
         <div className="grid md:grid-cols-[1fr_260px] gap-6 items-start">
@@ -339,7 +444,7 @@ export default function CheckoutPage() {
                         <button
                           key={s.key}
                           type="button"
-                          onClick={() => setShippingSpeed(s.key)}
+                          onClick={() => { userPickedShippingRef.current = true; setShippingSpeed(s.key); }}
                           className={`text-left px-3.5 py-3 rounded-lg border text-sm transition-colors ${
                             shippingSpeed === s.key
                               ? "border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300"
@@ -542,6 +647,8 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
 
       <Footer />

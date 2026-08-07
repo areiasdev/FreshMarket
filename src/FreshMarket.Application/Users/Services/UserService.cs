@@ -1,4 +1,5 @@
 using FreshMarket.Application.Common.Constants;
+using FreshMarket.Application.Common.Exceptions;
 using FreshMarket.Application.Common.Interfaces;
 using FreshMarket.Application.Common.Mapping;
 using FreshMarket.Application.Common.Security;
@@ -46,6 +47,44 @@ public class UserService : IUserService
         };
 
         _db.Users.Add(user);
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        return await GenerateAuthResponseAsync(user, ct).ConfigureAwait(false);
+    }
+
+    public async Task<AuthResponseDto> GuestCheckoutAsync(string fullName, string email, string? phone, CancellationToken ct)
+    {
+        var normalizedEmail = email.ToLowerInvariant();
+        var existing = await _db.Users
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct)
+            .ConfigureAwait(false);
+
+        // A real registered account already owns this email — don't silently issue a session
+        // for it without a password. Point them at login instead.
+        if (existing is not null && !existing.IsGuest)
+            throw new BusinessException("Já existe uma conta com este email. Inicia sessão para continuar.");
+
+        User user;
+        if (existing is not null)
+        {
+            existing.FullName = fullName;
+            existing.Phone = phone;
+            user = existing;
+        }
+        else
+        {
+            user = new User
+            {
+                FullName = fullName,
+                Email = normalizedEmail,
+                // Random, never handed back — a guest account has no password to log in with.
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+                Phone = phone,
+                IsGuest = true,
+            };
+            _db.Users.Add(user);
+        }
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
         return await GenerateAuthResponseAsync(user, ct).ConfigureAwait(false);

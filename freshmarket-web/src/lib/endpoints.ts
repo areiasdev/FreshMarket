@@ -6,6 +6,7 @@ export const endpoints = {
   auth: {
     login:    `${BASE}/auth/login`,
     register: `${BASE}/auth/register`,
+    guest:    `${BASE}/auth/guest`,
     refresh:  `${BASE}/auth/refresh-token`,
     logout:   `${BASE}/auth/logout`,
   },
