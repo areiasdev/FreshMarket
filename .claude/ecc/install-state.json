@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "ecc.install.v1",
+  "installedAt": "2026-08-07T12:15:48.606Z",
+  "target": {
+    "id": "claude-project",
+    "target": "claude-project",
+    "kind": "project",
+    "root": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude",
+    "installStatePath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\ecc\\install-state.json"
+  },
+  "request": {
+    "profile": null,
+    "modules": [],
+    "includeComponents": [
+      "skill:dotnet-patterns",
+      "skill:csharp-testing",
+      "skill:react-patterns",
+      "skill:react-performance",
+      "skill:react-testing",
+      "skill:accessibility"
+    ],
+    "excludeComponents": [],
+    "legacyLanguages": [],
+    "legacyMode": false
+  },
+  "resolution": {
+    "selectedModules": [
+      "skill-accessibility",
+      "skill-csharp-testing",
+      "skill-dotnet-patterns",
+      "skill-react-patterns",
+      "skill-react-performance",
+      "skill-react-testing"
+    ],
+    "skippedModules": []
+  },
+  "source": {
+    "repoVersion": "2.1.0",
+    "repoCommit": "623f2c020f052319657674e4e6c29ab5d0ad566b",
+    "manifestVersion": 1
+  },
+  "operations": [
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-accessibility",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\accessibility\\SKILL.md",
+      "sourceRelativePath": "skills\\accessibility\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\accessibility\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-csharp-testing",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\csharp-testing\\SKILL.md",
+      "sourceRelativePath": "skills\\csharp-testing\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\csharp-testing\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-dotnet-patterns",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\dotnet-patterns\\SKILL.md",
+      "sourceRelativePath": "skills\\dotnet-patterns\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\dotnet-patterns\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-react-patterns",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\react-patterns\\SKILL.md",
+      "sourceRelativePath": "skills\\react-patterns\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\react-patterns\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-react-performance",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\react-performance\\SKILL.md",
+      "sourceRelativePath": "skills\\react-performance\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\react-performance\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "skill-react-testing",
+      "sourcePath": "C:\\Users\\joa52\\.claude\\plugins\\marketplaces\\ecc\\skills\\react-testing\\SKILL.md",
+      "sourceRelativePath": "skills\\react-testing\\SKILL.md",
+      "destinationPath": "C:\\Users\\joa52\\source\\repos\\areiasdev\\FreshMarket\\.claude\\skills\\react-testing\\SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    }
+  ]
+}
